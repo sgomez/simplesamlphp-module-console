@@ -12,6 +12,10 @@ _Avoid_: Admin panel, dashboard, backoffice
 A SAML entity (`saml20-sp-remote`, `saml20-idp-remote` or `saml20-idp-hosted`) whose metadata is edited in the Console. It is identified by its entity ID together with its set, so the same entity ID may be a managed entity in more than one set.
 _Avoid_: Record, metadata row
 
+**External entity**:
+A SAML entity in one of the managed sets that reaches SimpleSAMLphp from a metadata source other than the Console, whether written by hand or produced by `metarefresh`. The Console shows it but never edits it.
+_Avoid_: Federated entity, remote entity, imported entity
+
 **Managed authsource**:
 An authentication source edited in the Console, as opposed to one declared by hand in `config/authsources.php`.
 _Avoid_: DB source, dynamic source
@@ -21,8 +25,12 @@ An authentication source declared by hand in `config/authsources.php`. The Conso
 _Avoid_: Static source, legacy source
 
 **Shadowed**:
-Said of a managed authsource whose id is also a file authsource on a node. That node serves the file authsource.
-_Avoid_: Overridden, conflicting
+Said of a managed authsource whose id is also a file authsource on a node, or of a managed entity that shares entity ID and set with an External entity whose source comes first on that node. The node serves the other one.
+_Avoid_: Conflicting, hidden
+
+**Override**:
+A managed entity that shares entity ID and set with an External entity and is the one nodes serve. It no longer follows changes made in the external source.
+_Avoid_: Fork, local copy, overridden
 
 **Snapshot**:
 A complete, validated, numbered and immutable copy of all managed configuration, produced by a Publication. Each node holds a local copy, which is the only thing SSO requests read.
