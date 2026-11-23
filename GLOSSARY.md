@@ -16,6 +16,14 @@ _Avoid_: Record, metadata row
 An authentication source edited in the Console, as opposed to one declared by hand in `config/authsources.php`.
 _Avoid_: DB source, dynamic source
 
+**File authsource**:
+An authentication source declared by hand in `config/authsources.php`. The Console lists it but never edits it.
+_Avoid_: Static source, legacy source
+
+**Shadowed**:
+Said of a managed authsource whose id is also a file authsource on a node. That node serves the file authsource.
+_Avoid_: Overridden, conflicting
+
 **Snapshot**:
 A complete, validated, numbered and immutable copy of all managed configuration, produced by a Publication. Each node holds a local copy, which is the only thing SSO requests read.
 _Avoid_: Cache, export, dump
