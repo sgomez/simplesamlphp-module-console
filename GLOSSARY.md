@@ -24,6 +24,10 @@ _Avoid_: DB source, dynamic source
 An authentication source declared by hand in `config/authsources.php`. The Console lists it but never edits it.
 _Avoid_: Static source, legacy source
 
+**Authsource type**:
+A kind of authentication source the Console knows how to edit. A managed authsource always has one; an authentication source of any other kind can only be a file authsource.
+_Avoid_: Plugin, driver, provider
+
 **Shadowed**:
 Said of a managed authsource whose id is also a file authsource on a node, or of a managed entity that shares entity ID and set with an External entity whose source comes first on that node. The node serves the other one.
 _Avoid_: Conflicting, hidden
