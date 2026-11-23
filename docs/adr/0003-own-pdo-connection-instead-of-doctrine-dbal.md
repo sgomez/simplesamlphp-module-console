@@ -11,6 +11,6 @@ The Console talks to its database through a PDO connection of its own, built fro
 
 - DDL is written by hand for PostgreSQL, MySQL/MariaDB and SQLite. `oidc` does the same but only really exercises MySQL and SQLite, so it is no proof that this stays cheap.
 - JSON lives in text columns, decoded and validated in PHP; anything searched for gets a column of its own. No SQL reaches inside the JSON.
-- Migrations are forward-only, one DDL statement each on MySQL/MariaDB because DDL is not transactional there. Undoing one means restoring a backup.
+- Migrations are forward-only and hold exactly one statement each on every engine, because DDL is not transactional on MySQL/MariaDB and a migration number must mean the same everywhere. Undoing one means restoring a backup.
 - Concurrency (two Publications, two migration runs) is settled by unique constraints, never by advisory locks, which differ per engine.
 - SQL is confined to a persistence namespace behind repository interfaces, with an architecture check forbidding `PDO` elsewhere. That is the seam for moving to DBAL if the SQL surface grows.
