@@ -43,3 +43,7 @@ _Avoid_: Key path, cert file
 **Secret reference**:
 A placeholder stored in place of a sensitive value, which each node replaces with the real value from its own environment when it builds its Snapshot.
 _Avoid_: Vault key, env placeholder, secret path
+
+**Audit trail**:
+The append-only record of every change of state made in the Console: who made it, when, and what the affected managed entity, managed authsource, Publication or schema looked like afterwards.
+_Avoid_: Log, history, changelog
