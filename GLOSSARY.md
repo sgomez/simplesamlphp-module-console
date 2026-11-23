@@ -27,3 +27,7 @@ _Avoid_: Sync, deploy, flush
 **Key reference**:
 The pointer inside a managed entity to its private key or certificate, which may resolve to a file or to the database.
 _Avoid_: Key path, cert file
+
+**Secret reference**:
+A placeholder stored in place of a sensitive value, which each node replaces with the real value from its own environment when it builds its Snapshot.
+_Avoid_: Vault key, env placeholder, secret path
