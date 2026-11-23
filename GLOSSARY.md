@@ -36,6 +36,10 @@ _Avoid_: Conflicting, hidden
 A managed entity that shares entity ID and set with an External entity and is the one nodes serve. It no longer follows changes made in the external source.
 _Avoid_: Fork, local copy, overridden
 
+**Import**:
+The act of creating managed entities from External entities, one or many at a time. The originals stay where they are, so an imported entity starts out as an Override or Shadowed.
+_Avoid_: Migration, sync, takeover
+
 **Snapshot**:
 A complete, validated, numbered and immutable copy of all managed configuration, produced by a Publication. Each node holds a local copy, which is the only thing SSO requests read.
 _Avoid_: Cache, export, dump
