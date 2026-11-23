@@ -1,0 +1,2 @@
+{"users":[{"username":"student","password":"studentpass","attributes":[{"name":"uid","values":["student"]},{"name":"eduPersonAffiliation","values":["member","student"]}]},
+          {"username":"employee","password":"employeepass","attributes":[{"name":"uid","values":["employee"]}]}]}

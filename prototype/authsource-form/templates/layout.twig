@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PROTOTYPE {{ variant }} · {{ title }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;font:15px/1.45 system-ui,sans-serif;color:#222;background:#f3f3f3;padding-bottom:5rem}
+header.ssp{background:#db0100;color:#fff;padding:.7rem 1.5rem;font-weight:600}
+header.ssp small{font-weight:400;opacity:.85;margin-left:.8rem}
+nav.types{background:#333;padding:0 1.5rem;display:flex;gap:.2rem}
+nav.types a{color:#ddd;text-decoration:none;padding:.5rem .9rem;font-family:ui-monospace,monospace;font-size:13px}
+nav.types a.on{background:#f3f3f3;color:#111}
+main{max-width:1100px;margin:1.2rem auto;padding:0 1.5rem}
+h1{font-size:1.35rem;margin:.2rem 0 1rem}
+input[type=text],input[type=password],input[type=number],select,textarea{font:inherit;padding:.35rem .5rem;border:1px solid #aaa;border-radius:3px;width:100%;background:#fff}
+textarea{font-family:ui-monospace,monospace;font-size:13px}
+input[type=number]{max-width:9rem}
+select{max-width:16rem}
+[aria-invalid=true]{border-color:#c00!important;background:#fff6f6!important}
+button{font:inherit;padding:.35rem .8rem;border:1px solid #888;border-radius:3px;background:#eee;cursor:pointer}
+button.primary{background:#1f6fb2;border-color:#1f6fb2;color:#fff;font-weight:600;padding:.5rem 1.4rem}
+button.mini{padding:.1rem .45rem;font-size:13px}
+.error{color:#b00000;margin:.15rem 0;font-size:13px;font-weight:600}
+.help,.when,.kept{color:#666;font-size:13px;margin:.15rem 0;display:block}
+.when{font-style:italic}
+abbr{color:#c00;text-decoration:none}
+.radio{display:inline-flex;gap:.3rem;margin-right:1rem;font-weight:400}
+.flash{background:#e3f4e1;border:1px solid #7fbf7a;padding:.6rem 1rem;border-radius:3px;margin-bottom:1rem}
+.summary{background:#fdeaea;border:1px solid #d99;padding:.6rem 1rem;border-radius:3px;margin-bottom:1rem}
+.summary ul{margin:.3rem 0 0;padding-left:1.2rem}
+.badge{background:#c00;color:#fff;border-radius:9px;padding:0 .45rem;font-size:12px;margin-left:.4rem}
+.sr{position:absolute;left:-9999px}
+.clear{font-size:13px;color:#666;display:block}
+/* A */
+.a-group{background:#fff;border:1px solid #ccc;border-radius:4px;margin:0 0 1.2rem;padding:.6rem 1.2rem 1rem}
+.a-group>legend{font-weight:700;font-size:1.05rem;padding:0 .4rem}
+.a-field{margin:.9rem 0;max-width:42rem}
+.a-field>label{display:block;font-weight:600;margin-bottom:.15rem}
+.a-field.inactive{opacity:.5}
+.a-sub{border:0;border-left:3px solid #ddd;margin:1rem 0;padding:0 0 0 1rem}
+.a-sub>legend{font-weight:700;padding:0}
+.a-item{border:1px solid #ccc;border-radius:4px;padding:.2rem 1rem .6rem;margin:.6rem 0;background:#fafafa}
+.a-item-head{display:flex;gap:.3rem;align-items:center;margin-top:.5rem}
+.a-item-head strong{margin-right:auto}
+/* B */
+.b-group{background:#fff;border:1px solid #ccc;border-radius:4px;margin-bottom:.5rem}
+.b-group>summary{padding:.5rem 1rem;font-weight:700;cursor:pointer;background:#e9e9e9}
+.b-body{padding:.6rem 1rem}
+.b-row{display:grid;grid-template-columns:15rem 1fr;gap:.2rem 1rem;padding:.3rem 0;border-bottom:1px solid #eee;align-items:start}
+.b-row>label{font-weight:600;padding-top:.35rem;font-size:14px}
+.b-inline{display:flex;gap:.5rem;align-items:center}
+.b-sub{margin:.6rem 0}
+.b-sub>h4{margin:.6rem 0 .2rem;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:#555}
+table.b-list{border-collapse:collapse;width:100%;font-size:14px}
+table.b-list th{text-align:left;font-size:12px;text-transform:uppercase;color:#555;padding:.2rem .3rem;border-bottom:2px solid #ccc}
+table.b-list td{padding:.25rem .3rem;vertical-align:top;border-bottom:1px solid #eee}
+table.b-list td.ops{white-space:nowrap;width:1%}
+.b-block{border:1px solid #ccc;padding:.4rem .8rem;margin:.4rem 0}
+/* C */
+.c-wrap{display:grid;grid-template-columns:14rem 1fr;gap:1.5rem;align-items:start}
+.c-nav{position:sticky;top:1rem;background:#fff;border:1px solid #ccc;border-radius:4px;padding:.6rem}
+.c-nav a{display:block;padding:.35rem .5rem;color:#1f4f82;text-decoration:none;border-radius:3px}
+.c-nav a:hover{background:#eef3f8}
+.c-nav button{width:100%;margin-top:.6rem}
+.c-group{background:#fff;border:1px solid #ccc;border-radius:4px;padding:.4rem 1.2rem 1rem;margin-bottom:1.2rem;scroll-margin-top:1rem}
+.c-group>h2{font-size:1.05rem;margin:.6rem 0}
+.c-field{margin:.8rem 0;max-width:40rem}
+.c-field>label{display:block;font-weight:600}
+.c-sub{margin:1rem 0;padding-left:1rem;border-left:3px solid #ddd}
+.c-sub>h3{font-size:1rem;margin:0}
+.c-items{counter-reset:item}
+.c-item{counter-increment:item;border:1px solid #ccc;border-radius:4px;padding:.2rem 1rem .6rem;margin:.6rem 0;background:#fafafa}
+.c-item-head{display:flex;gap:.3rem;align-items:center;margin-top:.5rem}
+.c-item-head strong{margin-right:auto}
+.c-item-head strong::after{content:" #" counter(item)}
+/* prototype chrome */
+.state{margin-top:2rem;background:#1e1e1e;color:#ddd;border-radius:4px;padding:.6rem 1rem;font-size:12px}
+.state summary{cursor:pointer;color:#fc6;font-weight:700}
+.state pre{white-space:pre-wrap;margin:.3rem 0 1rem}
+.state h5{margin:.8rem 0 0;color:#9cf;font-size:12px}
+.state a{color:#fc6}
+.switch{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#111;color:#fff;border-radius:999px;padding:.4rem .6rem;display:flex;gap:.8rem;align-items:center;box-shadow:0 4px 14px #0006;font-size:14px;z-index:9}
+.switch a{color:#fc6;text-decoration:none;font-size:18px;padding:0 .5rem}
+</style>
+</head>
+<body>
+<header class="ssp">SimpleSAMLphp<small>Console · authsources · edit “campus-login”</small></header>
+<nav class="types">{% for k, label in types %}<a class="{{ k == type ? 'on' }}" href="?type={{ k }}&variant={{ variant }}">{{ label }}</a>{% endfor %}</nav>
+<main>
+<h1>{{ title }}</h1>
+{% if saved %}<p class="flash">Saved. Not published yet.</p>{% endif %}
+{% for e in rootErrors %}<p class="summary error">{{ e }}</p>{% endfor %}
+{% block form %}{% endblock %}
+<details class="state" open>
+<summary>PROTOTYPE STATE (not part of the design) · <a href="{{ self }}&reset=1">reset stored documents</a></summary>
+{% if state.action %}<h5>Last action</h5><pre>{{ state.action }}</pre>{% endif %}
+{% if state.errors %}<h5>Errors by JSON pointer (schema + cross-field rules)</h5><pre>{{ state.errors }}</pre>{% endif %}
+{% if state.bound %}<h5>Document bound from this submission (rejected)</h5><pre>{{ state.bound }}</pre>{% endif %}
+<h5>Stored document (secrets in clear here only to show they are kept)</h5><pre>{{ state.stored }}</pre>
+</details>
+</main>
+<div class="switch"><a id="sw-prev" href="?type={{ type }}&variant={{ prev }}">←</a><span><b>{{ variant }}</b> ({{ variantName }})</span><a id="sw-next" href="?type={{ type }}&variant={{ next }}">→</a></div>
+<script>
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input,textarea,select,[contenteditable]')) return;
+  if (e.key === 'ArrowLeft') document.getElementById('sw-prev').click();
+  if (e.key === 'ArrowRight') document.getElementById('sw-next').click();
+});
+</script>
+{% block script %}{% endblock %}
+</body>
+</html>

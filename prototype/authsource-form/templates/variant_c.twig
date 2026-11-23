@@ -1,0 +1,101 @@
+{# Variant C: sidebar navigation with error counts, plus ~40 lines of inline script (no bundle):
+   conditional fields toggle live and list rows are added, removed and moved without a round trip.
+   With scripting off the same buttons fall back to the server round trip. #}
+{% extends 'layout.twig' %}
+
+{% macro field(n) %}
+{% import '_control.twig' as c %}
+{% if n.kind == 'scalar' %}
+<div class="c-field"{% if n.when %} data-when-name="{{ n.when.name }}" data-when-values="{{ n.when.values|json_encode }}"{% endif %}{% if not n.active %} hidden{% endif %}>
+  {% if n.widget == 'checkbox' %}
+  <label>{{ c.control(n) }} {{ n.title }}</label>
+  {% else %}
+  <label for="{{ n.id }}">{{ n.title }}{% if n.required %} <abbr title="required">*</abbr>{% endif %}</label>
+  {{ c.control(n) }}
+  {% endif %}
+  {% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+  {% if n.description %}<span class="help">{{ n.description }}</span>{% endif %}
+</div>
+{% elseif n.kind == 'object' %}
+<div class="c-sub"><h3>{{ n.title }}</h3>
+  {% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+  {% for ch in n.children %}{{ _self.field(ch) }}{% endfor %}
+</div>
+{% else %}
+<div class="c-sub" id="{{ n.id }}" data-list><h3>{{ n.title }}{% if n.required %} <abbr title="required">*</abbr>{% endif %}</h3>
+  {% if n.description %}<span class="help">{{ n.description }}</span>{% endif %}
+  {% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+  <div class="c-items">{% for it in n.items %}{{ _self.item(it, n) }}{% endfor %}</div>
+  <template data-depth="{{ n.depth }}" data-next="{{ n.items|length }}">{{ _self.item(n.template, n) }}</template>
+  <button data-act="add" name="__action" value="add:{{ n.pointer }}">Add {{ n.itemTitle }}</button>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro item(it, n) %}
+<div class="c-item">
+  <div class="c-item-head"><strong>{{ n.itemTitle|capitalize }}</strong>
+    <button class="mini" data-act="up" name="__action" value="up:{{ it.pointer }}" title="Move up">↑</button>
+    <button class="mini" data-act="down" name="__action" value="down:{{ it.pointer }}" title="Move down">↓</button>
+    <button class="mini" data-act="remove" name="__action" value="remove:{{ it.pointer }}">Remove</button>
+  </div>
+  <input type="hidden" name="{{ it.name }}[__origin]" value="{{ it.origin }}">
+  {% for ch in it.children %}{{ _self.field(ch) }}{% endfor %}
+</div>
+{% endmacro %}
+
+{% block form %}
+<form method="post" action="{{ self }}" novalidate class="c-wrap" id="proto">
+  <aside class="c-nav">
+    <button class="sr" name="__action" value="save" tabindex="-1">Save</button>
+    {% for g in groups %}<a href="#{{ g.id }}">{{ g.title }}{% if g.errorCount %}<span class="badge">{{ g.errorCount }}</span>{% endif %}</a>{% endfor %}
+    <button class="primary" name="__action" value="save">Save</button>
+    <noscript><button name="__action" value="refresh">Update form</button></noscript>
+  </aside>
+  <div>
+    {% for g in groups %}
+    <section class="c-group" id="{{ g.id }}"><h2>{{ g.title }}</h2>
+      {% for n in g.fields %}{{ _self.field(n) }}{% endfor %}
+    </section>
+    {% endfor %}
+  </div>
+</form>
+{% endblock %}
+
+{% block script %}
+<script>
+(() => {
+  const form = document.getElementById('proto');
+  const val = name => {
+    const el = form.elements[name];
+    if (!el) return null;
+    return el.type === 'checkbox' ? String(el.checked) : el.value;
+  };
+  const sync = () => form.querySelectorAll('[data-when-name]').forEach(w => {
+    w.hidden = !JSON.parse(w.dataset.whenValues).includes(val(w.dataset.whenName));
+  });
+  form.addEventListener('change', sync);
+  form.addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]');
+    if (!b) return;
+    e.preventDefault();
+    if (b.dataset.act === 'add') {
+      const list = b.closest('[data-list]');
+      const t = list.querySelector(':scope > template');
+      const i = +t.dataset.next;
+      t.dataset.next = i + 1;
+      const items = list.querySelector(':scope > .c-items');
+      items.insertAdjacentHTML('beforeend', t.innerHTML.replaceAll(`__I${t.dataset.depth}__`, i));
+      sync();
+      items.lastElementChild.querySelector('input:not([type=hidden]),textarea,select')?.focus();
+      return;
+    }
+    const item = b.closest('.c-item');
+    if (b.dataset.act === 'remove') item.remove();
+    if (b.dataset.act === 'up' && item.previousElementSibling) item.previousElementSibling.before(item);
+    if (b.dataset.act === 'down' && item.nextElementSibling) item.nextElementSibling.after(item);
+  });
+  document.querySelector('[aria-invalid=true]')?.focus();
+})();
+</script>
+{% endblock %}

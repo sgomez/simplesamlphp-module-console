@@ -1,0 +1,77 @@
+{# Variant B: dense. Collapsible groups, label/control grid, lists as tables. Zero JavaScript;
+   fields that do not apply are not rendered, an "Apply" button next to the controlling field redraws. #}
+{% extends 'layout.twig' %}
+
+{% macro cell(n) %}
+{% import '_control.twig' as c %}
+{{ c.control(n) }}
+{% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+{% endmacro %}
+
+{% macro row(n) %}
+{% import '_control.twig' as c %}
+{% if n.kind == 'scalar' %}
+{% if n.active %}
+<div class="b-row">
+  <label for="{{ n.id }}">{{ n.title }}{% if n.required %} <abbr title="required">*</abbr>{% endif %}</label>
+  <div>
+    <div class="b-inline">{{ c.control(n) }}{% if n.controls %}<button class="mini" name="__action" value="refresh">Apply</button>{% endif %}</div>
+    {% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    {% if n.description %}<span class="help">{{ n.description }}</span>{% endif %}
+  </div>
+</div>
+{% endif %}
+{% elseif n.kind == 'object' %}
+<div class="b-sub"><h4>{{ n.title }}</h4>
+  {% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+  {% for ch in n.children %}{{ _self.row(ch) }}{% endfor %}
+</div>
+{% else %}
+<div class="b-sub" id="{{ n.id }}"><h4>{{ n.title }}{% if n.required %} <abbr title="required">*</abbr>{% endif %}</h4>
+  {% if n.description %}<span class="help">{{ n.description }}</span>{% endif %}
+  {% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+  {% if n.flat %}
+  <table class="b-list">
+    <thead><tr><th>#</th>{% for col in n.columns %}<th>{{ col }}</th>{% endfor %}<th></th></tr></thead>
+    <tbody>
+    {% for it in n.items %}
+    <tr>
+      <td>{{ loop.index }}<input type="hidden" name="{{ it.name }}[__origin]" value="{{ it.origin }}"></td>
+      {% for ch in it.children %}<td>{{ _self.cell(ch) }}</td>{% endfor %}
+      <td class="ops">{{ _self.ops(it, loop) }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  {% for it in n.items %}
+  <div class="b-block">
+    <div class="b-inline"><strong style="margin-right:auto">{{ n.itemTitle|capitalize }} #{{ loop.index }}</strong>{{ _self.ops(it, loop) }}</div>
+    <input type="hidden" name="{{ it.name }}[__origin]" value="{{ it.origin }}">
+    {% for ch in it.children %}{{ _self.row(ch) }}{% endfor %}
+  </div>
+  {% endfor %}
+  {% endif %}
+  <button class="mini" name="__action" value="add:{{ n.pointer }}">+ Add {{ n.itemTitle }}</button>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro ops(it, loop) %}
+<button class="mini" name="__action" value="up:{{ it.pointer }}"{{ loop.first ? ' disabled' }}>↑</button>
+<button class="mini" name="__action" value="down:{{ it.pointer }}"{{ loop.last ? ' disabled' }}>↓</button>
+<button class="mini" name="__action" value="remove:{{ it.pointer }}">✕</button>
+{% endmacro %}
+
+{% block form %}
+<form method="post" action="{{ self }}" novalidate>
+  <button class="sr" name="__action" value="save" tabindex="-1">Save</button>
+  {% for g in groups %}
+  <details class="b-group"{% if not errorList or g.errorCount %} open{% endif %}>
+    <summary>{{ g.title }}{% if g.errorCount %}<span class="badge">{{ g.errorCount }}</span>{% endif %}</summary>
+    <div class="b-body">{% for n in g.fields %}{{ _self.row(n) }}{% endfor %}</div>
+  </details>
+  {% endfor %}
+  <p><button class="primary" name="__action" value="save">Save</button></p>
+</form>
+{% endblock %}

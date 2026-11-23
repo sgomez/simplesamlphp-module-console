@@ -1,0 +1,9 @@
+{
+    "name": "prototype/authsource-form",
+    "description": "THROWAWAY PROTOTYPE. Not module code.",
+    "require": {
+        "php": "^8.3",
+        "twig/twig": "^3.0",
+        "opis/json-schema": "^2.6"
+    }
+}

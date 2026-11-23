@@ -1,0 +1,5 @@
+{"databases":[{"name":"staff","dsn":"pgsql:host=db1.example.org;dbname=staff","username":"ssp","password":"staff-secret"},
+              {"name":"students","dsn":"mysql:host=db2.example.org;dbname=students","username":"ssp","password":"students-secret"}],
+ "auth_queries":[{"name":"staff_login","database":"staff","query":"SELECT uid, password_hash FROM users WHERE uid = :username","password_verify_hash_column":"password_hash"},
+                 {"name":"student_login","database":"students","query":"SELECT uid FROM alumni WHERE uid = :username AND pass = SHA2(:password, 256)","username_regex":"/^a[0-9]+$/"}],
+ "attr_queries":[{"database":"staff","query":"SELECT mail, cn FROM users WHERE uid = :username","only_for_auth":["staff_login"]}]}

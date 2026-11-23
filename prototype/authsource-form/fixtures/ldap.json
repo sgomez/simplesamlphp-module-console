@@ -1,0 +1,4 @@
+{"connection_string":"ldaps://ldap1.example.org ldaps://ldap2.example.org","encryption":"ssl","timeout":3,"connector":"Ldap","debug":false,
+ "search":{"enable":true,"base":["ou=people,dc=example,dc=org"],"attributes":["uid","mail"],"scope":"sub","username":"cn=reader,dc=example,dc=org","password":"s3arch-secret"},
+ "attributes":{"mode":"list","list":["uid","cn","mail","eduPersonAffiliation"]},
+ "priv":{"username":"cn=priv,dc=example,dc=org","password":"%env(CONSOLE_LDAP_PRIV)%"}}

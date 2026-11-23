@@ -1,0 +1,19 @@
+{% macro control(n) %}
+{%- set inv = n.errors ? 'true' : 'false' -%}
+{% if n.widget == 'checkbox' %}
+<input type="checkbox" id="{{ n.id }}" name="{{ n.name }}" value="1"{% if n.value %} checked{% endif %}>
+{% elseif n.widget == 'select' %}
+<select id="{{ n.id }}" name="{{ n.name }}" aria-invalid="{{ inv }}">
+<option value="">{{ n.placeholder ? 'default (' ~ n.placeholder ~ ')' : '' }}</option>
+{% for o in n.options %}<option{% if o == n.value %} selected{% endif %}>{{ o }}</option>{% endfor %}
+</select>
+{% elseif n.widget == 'radio' %}
+{% for o in n.options %}<label class="radio"><input type="radio" name="{{ n.name }}" value="{{ o }}"{% if o == n.value %} checked{% endif %}> {{ o }}</label>{% endfor %}
+{% elseif n.widget == 'textarea' or n.widget == 'lines' %}
+<textarea id="{{ n.id }}" name="{{ n.name }}" rows="{{ max(2, n.value|split("\n")|length) }}" placeholder="{{ n.placeholder }}" aria-invalid="{{ inv }}">{{ n.value }}</textarea>
+{% else %}
+<input type="{{ n.widget }}" id="{{ n.id }}" name="{{ n.name }}" value="{{ n.value }}" placeholder="{{ n.hasStored ? '••••••••  (stored)' : n.placeholder }}" aria-invalid="{{ inv }}"{% if n.sensitive %} autocomplete="new-password"{% endif %}>
+{% endif %}
+{% if n.hasStored %}<small class="kept">A value is stored and is never shown. Leave empty to keep it.</small>
+{% if n.clearName %}<label class="clear"><input type="checkbox" name="{{ n.clearName }}" value="1"> Remove the stored value</label>{% endif %}{% endif %}
+{% endmacro %}

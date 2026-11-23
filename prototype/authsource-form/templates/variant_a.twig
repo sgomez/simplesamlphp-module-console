@@ -1,0 +1,59 @@
+{# Variant A: everything on one page, zero JavaScript. Lists change through server round trips. #}
+{% extends 'layout.twig' %}
+
+{% macro field(n) %}
+{% import '_control.twig' as c %}
+{% if n.kind == 'scalar' %}
+<div class="a-field{{ n.active ? '' : ' inactive' }}">
+  {% if n.widget == 'checkbox' %}
+  <label>{{ c.control(n) }} {{ n.title }}</label>
+  {% else %}
+  <label for="{{ n.id }}">{{ n.title }}{% if n.required %} <abbr title="required">*</abbr>{% endif %}</label>
+  {% endif %}
+  {% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+  {% if n.widget != 'checkbox' %}{{ c.control(n) }}{% endif %}
+  {% if n.description %}<span class="help">{{ n.description }}</span>{% endif %}
+  {% if n.when %}<span class="when">Only used when “{{ n.when.title }}” is {{ n.when.values|join(' or ') }}{{ n.active ? '' : '; ignored on save' }}.</span>{% endif %}
+</div>
+{% elseif n.kind == 'object' %}
+<fieldset class="a-sub"><legend>{{ n.title }}</legend>
+  {% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+  {% for ch in n.children %}{{ _self.field(ch) }}{% endfor %}
+</fieldset>
+{% else %}
+<fieldset class="a-sub" id="{{ n.id }}"><legend>{{ n.title }}{% if n.required %} <abbr title="required">*</abbr>{% endif %}</legend>
+  {% if n.description %}<span class="help">{{ n.description }}</span>{% endif %}
+  {% for e in n.errors %}<p class="error">{{ e }}</p>{% endfor %}
+  {% for it in n.items %}
+  <div class="a-item">
+    <div class="a-item-head"><strong>{{ n.itemTitle|capitalize }} #{{ loop.index }}</strong>
+      <button class="mini" name="__action" value="up:{{ it.pointer }}" title="Move up"{{ loop.first ? ' disabled' }}>↑</button>
+      <button class="mini" name="__action" value="down:{{ it.pointer }}" title="Move down"{{ loop.last ? ' disabled' }}>↓</button>
+      <button class="mini" name="__action" value="remove:{{ it.pointer }}">Remove</button>
+    </div>
+    <input type="hidden" name="{{ it.name }}[__origin]" value="{{ it.origin }}">
+    {% for ch in it.children %}{{ _self.field(ch) }}{% endfor %}
+  </div>
+  {% endfor %}
+  <button name="__action" value="add:{{ n.pointer }}">Add {{ n.itemTitle }}</button>
+</fieldset>
+{% endif %}
+{% endmacro %}
+
+{% block form %}
+{% if errorList %}
+<div class="summary"><strong>{{ errorList|length }} problem(s) to fix</strong>
+  <ul>{% for e in errorList %}<li><a href="#{{ e.id }}">{{ e.pointer }}</a>: {{ e.message }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+<form method="post" action="{{ self }}" novalidate>
+  <button class="sr" name="__action" value="save" tabindex="-1">Save</button>
+  {% for g in groups %}
+  <fieldset class="a-group"><legend>{{ g.title }}</legend>
+    {% for n in g.fields %}{{ _self.field(n) }}{% endfor %}
+  </fieldset>
+  {% endfor %}
+  <button class="primary" name="__action" value="save">Save</button>
+  <button name="__action" value="refresh">Update form</button>
+</form>
+{% endblock %}

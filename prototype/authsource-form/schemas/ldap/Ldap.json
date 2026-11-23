@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LDAP directory (ldap:Ldap)",
+  "type": "object",
+  "additionalProperties": false,
+  "x-groups": [
+    {"title": "Connection", "properties": ["connection_string", "encryption", "version", "timeout", "connector", "debug"]},
+    {"title": "Finding the user", "properties": ["search"]},
+    {"title": "Attributes", "properties": ["attributes", "priv"]}
+  ],
+  "required": ["connection_string", "search", "attributes"],
+  "properties": {
+    "connection_string": {
+      "title": "Connection string",
+      "description": "One or more LDAP URIs separated by spaces. They are tried in order.",
+      "type": "string",
+      "pattern": "^ldaps?://\\S+( ldaps?://\\S+)*$",
+      "examples": ["ldaps://ldap1.example.org ldaps://ldap2.example.org"]
+    },
+    "encryption": {"title": "Encryption", "type": "string", "enum": ["none", "ssl", "tls"], "default": "ssl"},
+    "version": {"title": "Protocol version", "type": "integer", "minimum": 2, "maximum": 3, "default": 3},
+    "timeout": {"title": "Timeout", "description": "Seconds to wait for the directory.", "type": "integer", "minimum": 0, "default": 3},
+    "connector": {"title": "Connector", "type": "string", "enum": ["Ldap", "ActiveDirectory"], "x-widget": "radio"},
+    "debug": {"title": "Log the LDAP conversation", "type": "boolean"},
+    "search": {
+      "title": "User lookup",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base"],
+      "properties": {
+        "enable": {
+          "title": "Search for the user before binding",
+          "description": "Unchecked: the DN is built from a pattern.",
+          "type": "boolean"
+        },
+        "base": {"title": "Search bases", "description": "One DN per line.", "type": "array", "items": {"type": "string"}, "minItems": 1, "examples": ["ou=people,dc=example,dc=org"]},
+        "dnpattern": {"title": "DN pattern", "description": "%username% is replaced by what the user typed.", "type": "string", "pattern": "%username%", "examples": ["uid=%username%,ou=people,dc=example,dc=org"], "x-when": {"enable": [false]}},
+        "attributes": {"title": "Attributes matched against the username", "description": "One per line.", "type": "array", "items": {"type": "string"}, "minItems": 1, "examples": ["uid"], "x-when": {"enable": [true]}},
+        "filter": {"title": "Additional filter", "type": "string", "examples": ["(objectClass=inetOrgPerson)"], "x-when": {"enable": [true]}},
+        "scope": {"title": "Scope", "type": "string", "enum": ["base", "one", "sub"], "default": "sub", "x-when": {"enable": [true]}},
+        "username": {"title": "Bind DN for the search", "description": "Empty means anonymous.", "type": "string", "x-when": {"enable": [true]}},
+        "password": {"title": "Password for the search", "type": "string", "x-sensitive": true, "x-when": {"enable": [true]}}
+      },
+      "if": {"properties": {"enable": {"const": true}}},
+      "then": {"required": ["attributes"]},
+      "else": {"required": ["dnpattern"]}
+    },
+    "attributes": {
+      "title": "Attributes released",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": {"title": "Which attributes to read", "type": "string", "enum": ["none", "all", "list"], "x-widget": "radio"},
+        "list": {"title": "Attribute names", "description": "One per line.", "type": "array", "items": {"type": "string"}, "minItems": 1, "x-when": {"mode": ["list"]}},
+        "binary": {"title": "Binary attributes", "description": "One per line. Base64-encoded after retrieval.", "type": "array", "items": {"type": "string"}, "x-when": {"mode": ["all", "list"]}}
+      },
+      "if": {"properties": {"mode": {"const": "list"}}},
+      "then": {"required": ["list"]}
+    },
+    "priv": {
+      "title": "Privileged bind to read attributes",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "username": {"title": "Bind DN", "type": "string"},
+        "password": {"title": "Password", "type": "string", "x-sensitive": true}
+      }
+    }
+  }
+}
