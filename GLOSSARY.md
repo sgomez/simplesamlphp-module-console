@@ -32,6 +32,14 @@ _Avoid_: Cache, export, dump
 The act of producing a new Snapshot from the Console's database and making it the current one, which every node then fetches.
 _Avoid_: Sync, deploy, flush
 
+**Pending change**:
+A difference between what is saved in the Console and the current Snapshot: a managed entity or managed authsource that is new, modified, withdrawn or deleted and has not been through a Publication yet.
+_Avoid_: Draft, unpublished edit, dirty record
+
+**Rollback**:
+The act of making a retained Snapshot other than the current one the current one. It changes what nodes serve and leaves what is saved in the Console untouched.
+_Avoid_: Revert, restore, undo
+
 **Node**:
 One running SimpleSAMLphp instance that serves SSO from its local copy of a Snapshot and shares nothing with the others but the database.
 _Avoid_: Server, replica, instance
