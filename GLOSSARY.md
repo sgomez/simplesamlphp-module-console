@@ -37,7 +37,7 @@ One running SimpleSAMLphp instance that serves SSO from its local copy of a Snap
 _Avoid_: Server, replica, instance
 
 **Key reference**:
-The pointer inside a managed entity to its private key or certificate, which may resolve to a file or to the database.
+The pointer inside a managed entity or a managed authsource to a private key or a certificate. A private key is always a file that each node provides, never held by the Console; a certificate may instead be held by the Console itself.
 _Avoid_: Key path, cert file
 
 **Secret reference**:
