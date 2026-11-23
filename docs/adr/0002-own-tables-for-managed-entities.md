@@ -10,6 +10,6 @@ The Console stores managed entities in tables of its own and never reads or writ
 ## Consequences
 
 - The core PDO tables are an external source, like flat files: the Console does not modify them and does not empty them after an import.
-- A site that keeps `pdo` in `metadata.sources` loses the guarantee that SSO survives a database outage, because the `pdo` source's constructor throws and breaks every metadata operation. The Console cannot prevent this; it warns on its status screen and on the command line.
+- A site that keeps `pdo` in `metadata.sources` loses the guarantee that SSO survives a database outage, because the `pdo` source's constructor throws and breaks every metadata operation. The Console cannot prevent this; it warns on its status screen.
 - After an import, the same entity exists in both places until the administrator removes `pdo`. If `pdo` comes before the Console in `metadata.sources`, published changes to those entities have no effect; the Console warns about the shadowed entities.
 - Sites already using the core tables must import.

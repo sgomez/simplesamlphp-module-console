@@ -15,4 +15,4 @@ SimpleSAMLphp 2.5 has no extension point for resolving authsource ids: everythin
 - An unreadable authsources section in the Snapshot is ignored as a whole with a warning; inside a readable one, structurally invalid entries are dropped one by one. Either way the file authsources keep working.
 - The id `admin` is reserved for the file, so a broken Snapshot can never lock the administrator out. Ids that PHP casts to integer keys are rejected, and an id is immutable once created.
 - The Console sees only the `authsources.php` of the node it runs on. A shadowed managed authsource is therefore a warning, not an error, and still travels in the Snapshot; each node settles the collision against its own file.
-- The method records that it ran, which lets the Console and the status command report a node where the fragment is missing. Without it, managed authsources can be edited and published but have no effect.
+- The method records that it ran, which lets the Console report a node where the fragment is missing. Without it, managed authsources can be edited and published but have no effect.
