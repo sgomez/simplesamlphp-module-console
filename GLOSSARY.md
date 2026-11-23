@@ -17,12 +17,16 @@ An authentication source edited in the Console, as opposed to one declared by ha
 _Avoid_: DB source, dynamic source
 
 **Snapshot**:
-A complete, validated, node-local copy of all managed configuration, which is the only thing SSO requests read.
+A complete, validated, numbered and immutable copy of all managed configuration, produced by a Publication. Each node holds a local copy, which is the only thing SSO requests read.
 _Avoid_: Cache, export, dump
 
 **Publication**:
-The act of producing a new Snapshot from the Console's database and making it reach every node.
+The act of producing a new Snapshot from the Console's database and making it the current one, which every node then fetches.
 _Avoid_: Sync, deploy, flush
+
+**Node**:
+One running SimpleSAMLphp instance that serves SSO from its local copy of a Snapshot and shares nothing with the others but the database.
+_Avoid_: Server, replica, instance
 
 **Key reference**:
 The pointer inside a managed entity to its private key or certificate, which may resolve to a file or to the database.
