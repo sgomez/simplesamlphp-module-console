@@ -9,7 +9,7 @@ The administrative interface and its database, where administrators edit managed
 _Avoid_: Admin panel, dashboard, backoffice
 
 **Managed entity**:
-A SAML entity (`saml20-sp-remote`, `saml20-idp-remote` or `saml20-idp-hosted`) whose metadata is edited in the Console.
+A SAML entity (`saml20-sp-remote`, `saml20-idp-remote` or `saml20-idp-hosted`) whose metadata is edited in the Console. It is identified by its entity ID together with its set, so the same entity ID may be a managed entity in more than one set.
 _Avoid_: Record, metadata row
 
 **Managed authsource**:
