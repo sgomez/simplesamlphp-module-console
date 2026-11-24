@@ -24,10 +24,10 @@ The Console coexists with everything SimpleSAMLphp already reads. Hand-written m
 | SimpleSAMLphp | 2.5. Earlier 2.x minors are not supported. |
 | PHP | `^8.4`. SimpleSAMLphp 2.5 itself accepts 8.3; the module does not. |
 | Database | PostgreSQL 15, MariaDB 10.11, MySQL 8.4 or SQLite 3.24.0, as a minimum (section 4.2). |
-| Browser | JavaScript is required. There is no fallback without it. |
+| Browser | A current browser that runs ES modules, as targeted by Vite's default build. JavaScript is required; there is no fallback without it. |
 | Language | English only. The Console has no translations and no language selector. |
 
-The module is the maintainer's own package. It follows the conventions of official SimpleSAMLphp modules for packaging, routing, controllers, templates and assets, except that its pages use a shell and a stylesheet of their own (section 10). Adoption by the SimpleSAMLphp project is not a goal.
+The module is the maintainer's own package. It follows the conventions of official SimpleSAMLphp modules for packaging, routing and controllers, except that its interface is a single-page application served by a shell of its own (section 10). Adoption by the SimpleSAMLphp project is not a goal.
 
 ### 1.3 Principles
 
@@ -71,7 +71,7 @@ The Console does none of the following in v1.
 - **Delegated or per-entity permissions.**
 - **Deleting the originals of imported entities**, whether files or core PDO rows.
 - **Background checks of Overrides against their external source.** The check runs only when the administrator looks.
-- **Command-line tools and a JSON status endpoint.**
+- **Command-line tools and a JSON status endpoint.** The Console's API (section 10.4) serves its own interface only; it is not a public or status API.
 - **A SimpleSAMLphp theme.** Login, discovery, consent, error and core admin pages keep their own look.
 - **Translations.**
 
@@ -91,6 +91,8 @@ The Console does none of the following in v1.
 ### 2.1 Package
 
 The module is the Composer package `sgomez/simplesamlphp-module-console` and installs as the SimpleSAMLphp module `console`. Its production dependencies beyond SimpleSAMLphp 2.5 are listed in section 3.7.
+
+The package ships the built front end under `public/assets/app/`, with Vite's manifest, and the JSON Schemas under `docs/spec/schemas/`. The front-end sources, `package.json`, `package-lock.json` and the Node tooling are `export-ignore`. Installing the module needs no Node.
 
 ### 2.2 Installation steps
 
@@ -122,6 +124,7 @@ The module reads its options from `config/module_console.php`. The file is optio
 | `node_forget_after` | `3600` | Seconds without a check after which a node is dropped from the node list. |
 | `snapshot_retention` | `10` | Number of Snapshots kept in the database. |
 | `cert_expiry_warning_days` | `30` | Days before its expiry that a certificate is flagged. |
+| `dev_server` | `false` | Development only: the page shell references the Vite development server's paths on the same origin instead of the built files (section 10.17). Never set in production. |
 
 The Snapshot directory is an absolute path outside `cachedir`. Core caches the module's kernel under `<cachedir>/console` and an upgrade clears it; a Snapshot under `cachedir` would be lost to a cache wipe and leave the node with nothing to serve while the database is down.
 
@@ -209,7 +212,7 @@ The module has two sides that share no code path at run time other than the Snap
 
 | Point | Mechanism | Use |
 | --- | --- | --- |
-| Web interface | Routes under `routing/routes/`, autowired controllers in `src/Controller/`, templates through core's `Template` class, assets under `public/assets/` referenced with `asset()` | Every Console screen |
+| Web interface | Routes under `routing/routes/` and autowired controllers in `src/Controller/`: one page shell rendered through core's `Template` class, and the JSON API; the built front end under `public/assets/app/`, resolved through Vite's manifest | Every Console screen |
 | Access control | `requireAdmin()` | The only access check (section 3.8) |
 | Metadata | `SimpleSAML\Module\console\MetadataStore\Snapshot`, named `console:Snapshot` in `metadata.sources` | Serves managed entities from the local Snapshot |
 | Authsources | `Authsources::merge()`, called by the fragment in `authsources.php` | Merges managed authsources from the local Snapshot into the file's array |
@@ -234,13 +237,13 @@ A managed entity or a managed authsource is stored as a **Console document**: a 
 Each of the three entity sets and each of the five Authsource types has:
 
 - a **JSON Schema** (2020-12) describing its document, with annotations for sensitive values, authsource references and presentation;
-- a PHP class holding the **cross-field rules** the schema cannot express;
+- a PHP class holding the **cross-field rules** the schema does not express;
 - a **translator** from the document to the array core expects;
 - an **inverse translator** from that array back to the document, used by the PHP view, by Import and by creation from pasted configuration.
 
 Authsource schemas are closed: an option outside the schema is rejected. Entity schemas are open through an `extra` bag of uncataloged options. See [ADR 0006](docs/adr/0006-closed-catalog-of-authsource-types.md) and [ADR 0008](docs/adr/0008-open-entity-documents-with-an-extra-bag.md). The schemas and their rules are specified in sections 5 and 6.
 
-The catalog of schemas ships with the module. A deployment or another module cannot add to it.
+The catalog of schemas ships with the module. A deployment or another module cannot add to it. The front end compiles the same schemas at build time to validate while editing and to generate its TypeScript types; the server's validation stays authoritative (section 10.10).
 
 Translation into core's array happens **on the node**, after Secret references are resolved, never at Publication. The Console itself translates only to show an object as PHP, with Secret references left unresolved.
 
@@ -306,13 +309,15 @@ The module's code under `src/` is split in three layers. Dependencies point inwa
 | --- | --- | --- |
 | `Domain` | Documents, validation, translators, Pending changes, the Snapshot | `SimpleSAML\*`, PDO, HTTP |
 | `Application` | One use case per class: save, publish, Rollback, Import and the like | PDO, HTTP |
-| `Infrastructure` | Persistence, integration with core, controllers, Twig | |
+| `Infrastructure` | Persistence, integration with core, the page shell and the JSON API | |
 
 - SQL and `PDO` appear only in the persistence namespace, behind repository interfaces.
 - The serving side (the `MetadataStore` and the fragment's method) does not depend on persistence, except for the first-request fetch.
 - There is no command bus, no domain events, no CQRS and no value object per scalar. An interface exists only where two real implementations do: the database engines and test doubles.
 
 These boundaries are enforced by the architecture checks of section 12.
+
+The front end lives in `frontend/`, outside `src/`. It is a client of the JSON API only. The API is a client of `Application`, as any other controller.
 
 ### 3.7 Dependencies
 
@@ -322,18 +327,32 @@ These boundaries are enforced by the architecture checks of section 12.
 | `nikic/php-parser` | Reading pasted PHP array literals without executing them | Already a production dependency of SimpleSAMLphp 2.5 |
 | `symfony/var-exporter` | Writing PHP arrays | Already shipped with SimpleSAMLphp 2.5 |
 
-The module adds no database abstraction layer, no Symfony CSRF component and no JavaScript dependency. Its front end is one stylesheet and one hand-written script served as static files, with no build step.
+The module adds no database abstraction layer and no Symfony CSRF component.
+
+The front end has a build step (section 10.17). Its npm dependencies are pinned to exact versions in a committed `package-lock.json` and never reach an installation, which receives only the built files:
+
+| Package | Use |
+| --- | --- |
+| `react`, `react-dom` | Components |
+| `react-router` | Client routing over the Console's paths |
+| `ajv`, and `ajv-formats` when the schemas use `format` | JSON Schema 2020-12 validation in the browser, compiled at build time |
+| `vite`, `@vitejs/plugin-react`, `typescript` | Build and type checking |
+| `eslint`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks` | Lint, including the rules of section 12.4 |
+| `vitest`, `@testing-library/react`, `jsdom` | Component tests |
+| `json-schema-to-typescript` | Types generated from the schemas |
+
+Adding an npm package is a decision recorded in this table.
 
 `opis/json-schema` is configured to report every error rather than stop at the first, and with defaults off: validation never writes a `default` into a document.
 
 ### 3.8 Requests
 
-- Every Console route calls `requireAdmin()`. There is no other permission check.
-- No GET request changes state. Every state-changing request is a POST carrying a request-forgery token kept in the SimpleSAMLphp session, and when it succeeds it redirects to a GET (section 10.1). A preference kept in the session, such as the last view of the edit screen, is not state in this sense.
-- Core's kernel runs no listeners for a module, so both checks are explicit: one service calls `requireAdmin()` and, after the database state check, validates the token, and every POST goes through it. A request without a valid token gets a plain HTTP 403 page; nothing is written to the Audit trail and a warning goes to the SimpleSAMLphp log.
-- After `requireAdmin()` and before anything else, every Console route checks the state of the database and answers with a state page instead of an error when it cannot proceed, Run migrations excepted (section 4.7).
-- Pages that carry a sensitive value, stored or not yet stored, are served with `Cache-Control: no-store` (section 7.3).
-- Every page passes core's default Content Security Policy: no inline scripts, no inline styles, no `style` attributes, nothing loaded from another origin.
+- Every Console route calls `requireAdmin()`. There is no other permission check. The page shell lets core redirect to its login; an API route answers 401 instead.
+- No GET request changes state. Every state-changing request is a POST to the API with a JSON body, carrying the request-forgery token kept in the SimpleSAMLphp session in an `X-Console-Token` header, and answers JSON (section 10.1). A preference kept in the session, such as the last view of the edit screen, is not state in this sense.
+- Core's kernel runs no listeners for a module, so the checks are explicit: one service calls `requireAdmin()`, checks the state of the database and, for a POST, validates the token and the `application/json` content type, and every API route goes through it. A request without a valid token gets HTTP 403; nothing is written to the Audit trail and a warning goes to the SimpleSAMLphp log.
+- After `requireAdmin()` and before anything else, every API route checks the state of the database and answers 503 with that state when it cannot proceed, Run migrations excepted (section 4.7). The interface shows the state page.
+- API responses that carry a sensitive value, stored or not yet stored, are served with `Cache-Control: no-store` (section 7.3).
+- Every page passes core's default Content Security Policy, in production and in development: no inline scripts, no inline styles, no `style` attributes, nothing loaded from another origin, no `eval`.
 
 ## 4. Storage
 
@@ -551,7 +570,7 @@ A later migration may transform stored documents only mechanically. A document t
 
 The schema matches the code when the numbers in `console_schema_version` are exactly 1 to N, for the N the code knows.
 
-After `requireAdmin()` and before doing anything else, every Console route establishes which of these states the database is in. Only the first lets the request proceed, except Run migrations (`POST /migrate`), which proceeds in the two pending migrations states and in no other; each of the others has a page of its own and is an ordinary state, not an exception.
+After `requireAdmin()` and before doing anything else, every Console route establishes which of these states the database is in. Only the first lets the request proceed, except Run migrations (`POST /api/migrate`), which proceeds in the two pending migrations states and in no other; each of the others has a page of its own and is an ordinary state, not an exception.
 
 | State | Page |
 | --- | --- |
@@ -574,14 +593,14 @@ None of these states affects SSO, which reads only the local Snapshot.
 
 No advisory locks and no global edit counter are used. Races are settled by conditions on `UPDATE` statements and by primary keys.
 
-**Saving an object.** The edit form carries the `version` it was loaded with. The save is `UPDATE … SET version = version + 1 … WHERE version = ?`. Zero rows means the object changed or was deleted meanwhile, and the save is rejected. Every change that can become a Pending change increments `version`, enabling and disabling included.
+**Saving an object.** A save sends the `version` the object was loaded with. The save is `UPDATE … SET version = version + 1 … WHERE version = ?`. Zero rows means the object changed or was deleted meanwhile, and the save is rejected. Every change that can become a Pending change increments `version`, enabling and disabling included.
 
-**Creating an object that already exists.** On save the Console first checks whether the (set, entity ID) or the authsource id exists. If it does, the form is shown again with what was typed, an "already exists" error at the identity field and a link to the existing object. A primary-key clash on `console_entity` or `console_authsource` after that check passed, a lost race, gives the same field error and not the conflict error below, which would reload someone else's object and throw away what was typed. In a multi-entity create (section 9.6) such an entity is skipped with the reason "already exists".
+**Creating an object that already exists.** On save the Console first checks whether the (set, entity ID) or the authsource id exists. If it does, the editor keeps what was typed and shows an "already exists" error at the identity field and a link to the existing object. A primary-key clash on `console_entity` or `console_authsource` after that check passed, a lost race, gives the same field error and not the conflict error below, which would reload someone else's object and throw away what was typed. In a multi-entity create (section 9.6) such an entity is skipped with the reason "already exists".
 
 **Publication.** One transaction:
 
 1. It runs at `REPEATABLE READ`, set with `SET TRANSACTION ISOLATION LEVEL`, because entities and authsources are read in separate queries and must describe one instant. On SQLite it opens with `BEGIN IMMEDIATE` and a 5 second `busy_timeout` instead, so the loser of a race waits and then fails at step 2 or 3.
-2. It recomputes a hash of the Pending changes, made of their keys and `version` values, and compares it with the hash the confirmation screen carried. A mismatch shows the confirmation screen again.
+2. It recomputes a hash of the Pending changes, made of their keys and `version` values, and compares it with the hash the confirmation screen was loaded with. A mismatch shows the confirmation screen with the current state.
 3. It takes the next number with `UPDATE console_pointer SET last_number = ?, current_number = ? WHERE last_number = ?`, the new values being the old `last_number` plus one.
 4. It inserts the Snapshot row and the `publish` row of the Audit trail.
 
@@ -598,7 +617,7 @@ No advisory locks and no global edit counter are used. Races are settled by cond
 | Driver error code 1020, reported under SQLSTATE `HY000` | MariaDB 11.6.2 and later |
 | `SQLITE_BUSY` after the `busy_timeout` | SQLite |
 
-For the administrator the outcome is always the same: the form or the confirmation screen is shown again with the current state. Nothing is retried automatically.
+For the administrator the outcome is always the same: the editor or the confirmation screen shows the current state. Nothing is retried automatically.
 
 ### 4.9 Snapshot size
 
@@ -771,7 +790,7 @@ Errors of all three are reported together, each by the JSON pointer of the value
 | `saml20-idp-remote` | `sharedkey`, `privatekey_pass` of `signature_key` |
 | `saml20-idp-hosted` | `privatekey_pass` of `key`, `next_key` and `metadata_sign_key` |
 
-A stored literal of a sensitive option is sent only to the edit form of its own entity; everywhere else it is a marker (sections 7 and 10). `contacts` hold personal data and are not masked. Neither is anything in `extra` or in the configuration of a processing filter; the Console recommends a Secret reference in a filter.
+A stored literal of a sensitive option is sent only to the edit screen of its own entity; everywhere else it is a marker (sections 7 and 10). `contacts` hold personal data and are not masked. Neither is anything in `extra` or in the configuration of a processing filter; the Console recommends a Secret reference in a filter.
 
 ### 5.8 Checks at Publication
 
@@ -1070,7 +1089,7 @@ Every schema is JSON Schema 2020-12 and describes the Console document, not the 
 - **Labels and help.** `title` and `description`. Help text states the fallback the SimpleSAMLphp code applies when the option is not set.
 - **`default` and `examples`.** Shown as a hint only. Validation never writes a `default` into a document, and a required option that has a default is still required. An option that is not set gets its value from the SimpleSAMLphp module on the node.
 - **Order.** The declaration order of `properties` is the order of the form and of the keys in the PHP text.
-- **`$ref`.** Only to files of the catalog, resolved in PHP before the form is built.
+- **`$ref`.** Only to files of the catalog, resolved by the server and, for the form, at build time.
 - **Messages.** Every `pattern` carries its own message in `$error`.
 
 The annotations the Console adds:
@@ -1079,12 +1098,12 @@ The annotations the Console adds:
 | --- | --- | --- |
 | `x-sensitive: true` | A string | A sensitive value (section 6.8) |
 | `x-literal: true` | A string without an `enum` | The value refuses a Secret reference, because the Console compares it or core needs it before secrets are resolved (section 6.8) |
-| `x-authsource-reference: true` | A string | The value is the id of another authsource. Publication checks it without knowing the type (section 6.9), and the form renders it as a select built on the server. |
+| `x-authsource-reference: true` | A string | The value is the id of another authsource. Publication checks it without knowing the type (section 6.9), and the form renders it as a select of the ids the API gives. |
 | `x-groups` | The root | A list of `{title, properties}`. Every root option belongs to exactly one group. |
 | `x-widget` | Any property | `radio`, `textarea`, `suggest`, `certificate`, `key-slot` or `certificates`; otherwise the widget follows from the type. On a value that is not a string, `textarea` means the value is edited as JSON text. `suggest` on a string offers all its `examples` as suggestions. `certificate` is carried by `certificate`, `key-slot` by `keySlot` and `certificates` by `remoteCertificates` (sections 5.5 and 6.7); the node needs neither, since it knows those shapes. |
-| `x-when` | A property | Names a sibling and the values of it for which the property applies. A property that does not apply is hidden and dropped on save. |
+| `x-when` | A property | Names a sibling and the values of it for which the property applies. A property that does not apply is hidden, and the server drops it on save. |
 
-`if`/`then`/`else` keeps expressing what is required; `x-when` expresses what applies. Every property a branch requires carries a compatible `x-when`. How the form uses these annotations is specified in section 10.10; see [ADR 0007](docs/adr/0007-authsource-forms-rendered-by-twig-from-the-schema.md).
+`if`/`then`/`else` keeps expressing what is required; `x-when` expresses what applies. Every property a branch requires carries a compatible `x-when`. How the form uses these annotations is specified in section 10.10; see [ADR 0012](docs/adr/0012-console-ui-as-a-spa.md).
 
 ### 6.7 Shared shapes
 
@@ -1166,7 +1185,7 @@ The options marked `x-literal`, because the Console compares them or core needs 
 | `multiauth:MultiAuth` | none |
 | `exampleauth:UserPass` | `password` of each user |
 
-A stored literal of a sensitive option is sent only to the edit form of its own authsource; everywhere else it is a marker (sections 7 and 10). The configuration of a processing filter is free-form, so a literal secret inside it is shown unmasked; the Console recommends a Secret reference there. The `contacts` of `saml:SP` hold personal data and are not masked.
+A stored literal of a sensitive option is sent only to the edit screen of its own authsource; everywhere else it is a marker (sections 7 and 10). The configuration of a processing filter is free-form, so a literal secret inside it is shown unmasked; the Console recommends a Secret reference there. The `contacts` of `saml:SP` hold personal data and are not masked.
 
 **Warnings on save.** They never block.
 
@@ -1398,9 +1417,9 @@ A private key is never a value of a document. It is always a file that each node
 
 The options annotated `x-sensitive` are listed in sections 5.7 and 6.8. A literal stored in one of them is a sensitive value.
 
-- It is sent to the browser only by the edit screen of its own object: in the form, in a password field with a reveal control; in the PHP view, as a fixed sentinel that a Reveal round trip to the server replaces with the value (section 10.11). The raw view of an Unreadable row (section 10.8) counts as that edit screen and shows the stored bytes as they are.
-- An unsaved editor, such as a managed copy or an object created from pasted configuration, is the edit screen of the object that will hold the value, so it carries the value to the browser: in the form, in a password field; in the PHP view, as it is, with no sentinel. On its POST round trips the value travels like any other field.
-- Every page above, and every response of an unsaved editor, is served with `Cache-Control: no-store`.
+- It is sent to the browser only by the edit screen of its own object: in the form, in a password field with a reveal control; in the PHP view, as a fixed sentinel that a Reveal request to the server replaces with the value (section 10.11). The raw view of an Unreadable row (section 10.8) counts as that edit screen and shows the stored bytes as they are.
+- An unsaved editor, such as a managed copy or an object created from pasted configuration, is the edit screen of the object that will hold the value, so it carries the value to the browser: in the form, in a password field; in the PHP view, as it is, with no sentinel. In its API requests the value travels like any other field.
+- Every API response above, and every response of an unsaved editor, is served with `Cache-Control: no-store`. The browser keeps the value in memory only.
 - In the form an empty field means an empty value. In the PHP view a sentinel left untouched keeps the stored value; a sentinel anywhere other than its own option is an error.
 - Everywhere else it is a marker: lists, Pending changes and the Publication and Rollback diffs, the Audit trail, logs, `cron` summaries and node status. In a diff and in the Audit trail the marker says only whether the value changed.
 - A Secret reference in a sensitive option is not a sensitive value and is shown as it is.
@@ -1546,7 +1565,7 @@ Warnings need no separate acknowledgement. Publication is not offered when there
 **The confirming request** runs the transaction of section 4.8: it compares the hash, revalidates, takes the next number, stores the Snapshot with its format version, checksum, comment, time and identity, makes it current, and writes the `publish` row of the Audit trail. It then purges Snapshots beyond retention (section 4.10).
 
 - A hash mismatch, a lost race or a new blocking problem shows the confirmation screen again with the current state. Nothing is written and nothing is recorded in the Audit trail.
-- After the commit, the node serving the request builds the new Snapshot within that request (section 3.5). The other nodes fetch it on their next `cron` check. The request redirects to Nodes with the message "Snapshot N published", where each node's progress is read from the Node table (section 10.16).
+- After the commit, the node serving the request builds the new Snapshot within that request (section 3.5). The other nodes fetch it on their next `cron` check. The interface moves to Nodes with the message "Snapshot N published", where each node's progress is read from the Node table (section 10.16).
 
 ### 8.5 Rollback
 
@@ -1668,7 +1687,7 @@ Each ticked entity goes through the inverse translator of its set (section 5.14)
 | Certificate of a `saml20-idp-hosted`, or of the `signature_key` of a remote entity, in a file | A file reference |
 | Certificate of a `saml20-idp-hosted`, or of the `signature_key` of a remote entity, at a `pdo://` location | Stored pasted, and reported |
 
-**The report** is the message on External entities, where the Import redirects (section 10.1). It lists, per entity, whether it was imported or skipped with its reason, and the conversions applied. Per source, it lists the entity IDs the administrator may now remove from the original by hand. When a source comes before `console:Snapshot` in `metadata.sources`, it says prominently that the entities imported from it are Shadowed, and that publishing changes nothing nodes serve until the originals are removed.
+**The report** is the message on External entities, where the interface returns after the Import (section 10.1). It lists, per entity, whether it was imported or skipped with its reason, and the conversions applied. Per source, it lists the entity IDs the administrator may now remove from the original by hand. When a source comes before `console:Snapshot` in `metadata.sources`, it says prominently that the entities imported from it are Shadowed, and that publishing changes nothing nodes serve until the originals are removed.
 
 **Originals.** The Console deletes nothing: no file, no row of the core PDO tables. Until the administrator removes them, the originals remain External entities in collision with the warnings of section 9.3.
 
@@ -1692,9 +1711,9 @@ There is no fetch from a URL and no export format. PHP is the interchange format
 
 **Authsources.** The type is read from key `0`. A type outside the five Authsource types stops there (section 6.16).
 
-**One object.** The editor opens filled and unsaved, carried by POST, with a report panel above it: what was converted, what was moved to `extra`, what was ignored. What needs the administrator shows as validation errors. Nothing is saved until the administrator saves.
+**One object.** The editor opens filled and unsaved, held by the browser, with a report panel above it: what was converted, what was moved to `extra`, what was ignored. What needs the administrator shows as validation errors. Nothing is saved until the administrator saves.
 
-**Several entities**, from an `EntitiesDescriptor` or several `$metadata[...]` statements, give a selectable list. Entities already managed in the set cannot be selected; those colliding with an External entity are marked as future Overrides or Shadowed (section 9.3). One selected entity opens in the editor as above. Several are saved on their own as Pending changes, invalid ones and those that already exist skipped with their reason, and the request redirects to the entity list of the set with a report like that of section 9.5. Each is recorded as `create`: creating from pasted configuration is not Import.
+**Several entities**, from an `EntitiesDescriptor` or several `$metadata[...]` statements, give a selectable list. Entities already managed in the set cannot be selected; those colliding with an External entity are marked as future Overrides or Shadowed (section 9.3). One selected entity opens in the editor as above. Several are saved on their own as Pending changes, invalid ones and those that already exist skipped with their reason, and the interface moves to the entity list of the set with a report like that of section 9.5. Each is recorded as `create`: creating from pasted configuration is not Import.
 
 When pasted configuration holds what looks like a secret in clear, the Console suggests a Secret reference.
 
@@ -1710,31 +1729,32 @@ Replacing from PHP is pasting over the text of the PHP view. Authsources have no
 
 ## 10. Console UI
 
-This section specifies what the administrator sees and the requests behind it. The branches [`prototype/console-ui`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/console-ui/prototype/console-ui) (a design export of every screen, light and dark, with `console.css`) and [`prototype/authsource-form`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/authsource-form/prototype/authsource-form) (a form rendered by Twig over three authsource schemas) illustrate it. The visual design of `prototype/console-ui` is normative: the tokens and component classes of its `console.css`, and the layout and look of its boards, light and dark. The implementation does not depart from it unless the maintainer decides so, and such a decision is recorded here. The boards' Google Fonts and inline styles are artefacts of the design tool and are not adopted. The content of a screen (its fields, texts and actions) follows this section.
+This section specifies what the administrator sees and the requests behind it. The branches [`prototype/console-ui`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/console-ui/prototype/console-ui) (a design export of every screen, light and dark, with `console.css`) and [`prototype/authsource-form`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/authsource-form/prototype/authsource-form) (the form over three authsource schemas; its Twig rendering is superseded by section 10.17) illustrate it. The visual design of `prototype/console-ui` is normative: the tokens and component classes of its `console.css`, and the layout and look of its boards, light and dark. The implementation does not depart from it unless the maintainer decides so, and such a decision is recorded here. Where a board is missing for a screen or state, or the implementation would contradict a board, the maintainer decides before it is built. The boards' Google Fonts and inline styles are artefacts of the design tool and are not adopted. The content of a screen (its fields, texts and actions) follows this section.
 
 **Fundamental rule: a clean interface.** The UI shows data, labels and actions, and nothing that explains what is obvious from them. A sentence appears only when the administrator cannot act correctly without it: an error, a warning about the configuration, or a confirmation of an action that cannot be undone. No sentence restates what a control does, what just happened when the page already shows it, or how the Console works internally. When in doubt, leave it out.
 
 ### 10.1 Rendering
 
-- Every page is rendered on the server by Twig, through core's `Template` class. There is no single-page application, no client-side framework and no build step.
-- JavaScript is required. The front end is one hand-written script file and one stylesheet, both under `public/assets/` and referenced with `asset()`. The script has no dependencies, knows no schema and validates nothing; it acts on `data-` attributes (section 10.17).
-- Every page passes core's default Content Security Policy (section 3.8): no inline scripts or styles, no `style` attributes, no inline event handlers, nothing from another origin. Icons are inline SVG.
-- A state-changing request is a form POST. When it succeeds, the response redirects to the page that follows, with no exception, and that page shows the outcome as a one-shot message kept in the SimpleSAMLphp session. A result, such as the report of an Import, is that message; there are no result screens. When it is rejected, the form or the confirmation screen is rendered again with the errors.
-- Some POST requests render a page without changing state: switching between the form and the PHP view, Reveal, opening the editor from pasted configuration or "Replace from…", and the Import confirmation step. They save nothing and leave no row in the Audit trail.
+- The interface is a single-page application in React and TypeScript, built with Vite. One page shell serves it on every Console path, and every screen gets its data from the JSON API of section 10.4. See [ADR 0012](docs/adr/0012-console-ui-as-a-spa.md).
+- JavaScript is required. The front end is specified in section 10.17.
+- Every page passes core's default Content Security Policy (section 3.8): no inline scripts or styles, no `style` attributes, no inline event handlers, nothing from another origin, no `eval`. Icons are inline SVG.
+- A state-changing request is an API POST. When it succeeds, the interface moves to the screen that follows, with no exception, and that screen shows the outcome as a one-shot message. A result, such as the report of an Import, is that message; there are no result screens. When it is rejected, the screen stays as it was, with what the administrator entered, and shows the errors.
+- Some API POSTs save nothing: translating between the form and the PHP view, validating while editing, Reveal, reading pasted configuration or "Replace from…", and the Import confirmation step. They leave no row in the Audit trail.
 - The Console is English only. It has no translations, and option titles, help texts and error messages are written in the module.
 
 ### 10.2 Page shell
 
-Console pages use a shell template of the module that does not extend core's `base.twig`. See [ADR 0011](docs/adr/0011-own-page-shell-instead-of-base-twig.md).
+Console pages are served by one shell template of the module that does not extend core's `base.twig`. See [ADR 0012](docs/adr/0012-console-ui-as-a-spa.md).
 
-- The shell sets `lang="en" dir="ltr"` on the root element whatever the site's language cookie says, and its own `<title>`, favicon, `robots` (no indexing) and viewport lines.
-- It loads the module's stylesheet and script only: not core's stylesheet, not core's script, not the deployer's `_head.twig`.
+- The shell answers every GET under `module.php/console/` that is not under `api/` or `assets/`, after `requireAdmin()`. The client router resolves the path, so every URL of section 10.4 can be bookmarked and reloaded.
+- It sets `lang="en" dir="ltr"` on the root element whatever the site's language cookie says, and its own `<title>`, favicon, `robots` (no indexing) and viewport lines.
+- It loads the entry script and the stylesheet named by Vite's manifest only: not core's stylesheet, not core's script, not the deployer's `_head.twig`. It carries the request-forgery token in a `<meta>` element and holds no other markup.
 - Fonts are system font stacks, a sans-serif for the interface and a monospace for entity IDs, authsource ids, option names, URLs, file paths and PHP. The module ships no font files.
 - Colours follow the system's light or dark setting through CSS custom properties.
 - The layout is a sidebar on the left, a header and one content column. Below a width of 900 px the sidebar becomes an overlay opened from a button in the header.
 - The header holds a breadcrumb and the Pending changes indicator (section 10.3).
 - The foot of the sidebar shows the identity of the session (section 10.6) and two fixed links to core: its admin front page and logout, through `Utils\Auth::getAdminLogoutURL()`. Admin entries of other modules are not listed; `Menu::insert()` is not used.
-- The shell renders the same under any installed theme. A theme can override the Console's templates, shell included, through `themes/<theme>/console/`; this is possible but not supported.
+- The Console renders the same under any installed theme.
 
 The Console is reached from core through a link "Console" on core's Configuration tab, added by a `ConfigPageEvent` listener (section 3.2). That listener never queries the database.
 
@@ -1762,53 +1782,78 @@ The set of an entity is always shown by its friendly name with the set name besi
 
 ### 10.4 Routes
 
-Every route is declared under `routing/routes/` and served by an autowired controller (section 3.2). Every route passes the checks of section 3.8 in this order: `requireAdmin()`, the state of the database (section 10.5), and, for a POST, the request-forgery token (section 10.6). Run migrations is the one route that proceeds when the schema does not match the code.
+Every route is declared under `routing/routes/` and served by an autowired controller (section 3.2). All paths are under `module.php/console/`. `{set}` is core's set name, `{id}` an authsource id, `{n}` a Snapshot number (digits only).
 
-All paths are under `module.php/console/`. `{set}` is core's set name, `{id}` an authsource id, `{n}` a Snapshot number (digits only).
+**Screens.** Each is a GET served by the page shell (section 10.2) and resolved by the client router.
 
-| Method | Path | Route | Does |
-| --- | --- | --- | --- |
-| GET | `/` | Overview | Section 10.7; also the target of the link on core's Configuration tab |
-| GET | `/entities/{set}` | Entity list, per set | Section 10.8; `q`, filters and `page` in the query string |
-| GET | `/entities/{set}/new` | Add entity, per set | The paste area of section 9.6 |
-| POST | `/entities/{set}/new` | Read pasted entity configuration | Renders the editor filled and unsaved, or the selectable list of several entities (section 9.6) |
-| POST | `/entities/{set}/new/create` | Create several entities | Saves the selected entities and redirects to the entity list of the set with the report (section 9.6) |
-| GET | `/entities/{set}/edit?entityid=…` | Entity | The edit screen (section 10.9) |
-| POST | `/entities/{set}/save` | Save entity | Create or edit, from the form or the PHP view |
-| POST | `/entities/{set}/view` | Switch view, Reveal | Renders the other view, or the PHP view with sensitive values, without saving; a switch records the view in the session (section 10.9) |
-| POST | `/entities/{set}/{op}` | Enable, disable, delete, discard, Promote, Replace from… | `op` is `enable`, `disable`, `delete`, `discard`, `promote` or `replace` (sections 8.1 and 9.7); `replace` renders the editor with the merged document, unsaved |
-| GET | `/entities/{set}/override?entityid=…` | Override comparison | Section 10.13 |
-| POST | `/entities/{set}/reviewed` | Mark as reviewed | Section 9.4 |
-| GET | `/authsources` | Authsource list | Section 10.8 |
-| GET | `/authsources/new` | Add authsource | The paste area, and the choice of type for "Start empty" |
-| POST | `/authsources/new` | Read pasted authsource configuration | Renders the editor filled and unsaved |
-| POST | `/authsources/save` | Save a new authsource | The id travels in the body |
-| GET | `/authsources/{id}/edit` | Authsource | The edit screen |
-| POST | `/authsources/{id}/save`, `/authsources/{id}/view`, `/authsources/{id}/{op}` | Save authsource, switch view, Reveal, enable, disable, delete, discard, Promote | As for entities |
-| GET | `/external` | External entities | Section 10.13; `source`, `set`, `q` and `page` in the query string |
-| GET | `/external/{set}?entityid=…` | External entity | Its detail |
-| GET | `/external/{set}/copy?entityid=…&source=N` | Managed copy | The editor of the set filled with the External entity, unsaved (section 9.5) |
-| POST | `/external/import/confirm` | Confirm Import | The confirmation step for the ticked entities |
-| POST | `/external/import` | Import | Runs the Import and redirects to External entities with its report (section 9.5) |
-| GET | `/publish` | Publish | The confirmation screen (section 10.14) |
-| POST | `/publish` | Publish | The confirming request (section 8.4); redirects to Nodes |
-| POST | `/changes/discard` | Discard all | Section 8.3 |
-| GET | `/history` | Snapshots | The first tab of History (section 10.15) |
-| GET | `/history/{n}/rollback` | Rollback confirmation | For one retained Snapshot |
-| POST | `/history/{n}/rollback` | Roll back | The confirming request (section 8.5) |
-| GET | `/history/audit` | Audit trail | The second tab of History; filters and `page` in the query string |
-| GET | `/nodes` | Nodes | Section 10.16 |
-| POST | `/migrate` | Run migrations | Applies the pending migrations (section 4.6) |
+| Path | Screen |
+| --- | --- |
+| `/` | Overview (section 10.7); also the target of the link on core's Configuration tab |
+| `/entities/{set}` | Entity list, per set (section 10.8); `q`, filters and `page` in the query string |
+| `/entities/{set}/new` | Add entity, per set: the paste area of section 9.6 |
+| `/entities/{set}/edit?entityid=…` | The edit screen (section 10.9) |
+| `/entities/{set}/override?entityid=…` | Override comparison (section 10.13) |
+| `/authsources` | Authsource list (section 10.8) |
+| `/authsources/new` | Add authsource: the paste area, and the choice of type for "Start empty" |
+| `/authsources/{id}/edit` | The edit screen |
+| `/external` | External entities (section 10.13); `source`, `set`, `q` and `page` in the query string |
+| `/external/{set}?entityid=…` | External entity, its detail |
+| `/external/{set}/copy?entityid=…&source=N` | Managed copy: the editor of the set filled with the External entity, unsaved (section 9.5) |
+| `/publish` | Publish, the confirmation screen (section 10.14) |
+| `/history` | Snapshots, the first tab of History (section 10.15) |
+| `/history/{n}/rollback` | Rollback confirmation, for one retained Snapshot |
+| `/history/audit` | Audit trail, the second tab of History; filters and `page` in the query string |
+| `/nodes` | Nodes (section 10.16) |
+
+A path the router does not know shows "Not found".
+
+**API.** Every route under `/api/` passes the checks of section 3.8 in this order: `requireAdmin()`, the state of the database (section 10.5), and, for a POST, the request-forgery token and the JSON content type (section 10.6). Run migrations is the one route that proceeds when the schema does not match the code. Bodies and responses are JSON.
+
+| Method | Path | Does |
+| --- | --- | --- |
+| GET | `/api/session` | Identity, the two links to core, the number of Pending changes and the current Snapshot (sections 10.2 and 10.3) |
+| GET | `/api/overview` | Section 10.7 |
+| GET | `/api/entities/{set}` | A page of the entity list; `q`, filters and `page` in the query string |
+| GET | `/api/entities/{set}/entity?entityid=…` | The object of the edit screen: document, PHP text, `version`, state, notices and warnings; an Unreadable row's stored bytes |
+| POST | `/api/entities/{set}/read` | Reads pasted entity configuration: the editor's content unsaved with its report, or the selectable list of several entities (section 9.6) |
+| POST | `/api/entities/{set}/create` | Saves the selected entities and returns the report (section 9.6) |
+| POST | `/api/entities/{set}/save` | Create or edit, from the form or the PHP view |
+| POST | `/api/entities/{set}/validate` | Validates the editor's content as a save would, saving nothing (section 10.10) |
+| POST | `/api/entities/{set}/view` | Translates the editor's content to the other view, or returns the PHP view with sensitive values for Reveal; a switch records the view in the session (section 10.9) |
+| POST | `/api/entities/{set}/{op}` | Enable, disable, delete, discard, Promote, Replace from…; `op` is `enable`, `disable`, `delete`, `discard`, `promote` or `replace` (sections 8.1 and 9.7); `replace` returns the merged document, unsaved |
+| GET | `/api/entities/{set}/override?entityid=…` | Override comparison |
+| POST | `/api/entities/{set}/reviewed` | Mark as reviewed (section 9.4) |
+| GET | `/api/authsources` | Authsource list |
+| POST | `/api/authsources/read` | Reads pasted authsource configuration |
+| POST | `/api/authsources/save` | Save a new authsource; the id travels in the body |
+| GET | `/api/authsources/{id}` | The object of the edit screen |
+| POST | `/api/authsources/{id}/save`, `/api/authsources/{id}/validate`, `/api/authsources/{id}/view`, `/api/authsources/{id}/{op}` | As for entities |
+| GET | `/api/external` | External entities |
+| GET | `/api/external/{set}?entityid=…` | An External entity's detail |
+| GET | `/api/external/{set}/copy?entityid=…&source=N` | The Managed copy's content, unsaved |
+| POST | `/api/external/import/confirm` | The confirmation step for the ticked entities |
+| POST | `/api/external/import` | Runs the Import and returns its report (section 9.5) |
+| GET | `/api/publication` | The Publish screen (section 10.14) |
+| POST | `/api/publication` | The confirming request (section 8.4) |
+| POST | `/api/changes/discard` | Discard all (section 8.3) |
+| GET | `/api/history` | Snapshots |
+| GET | `/api/history/{n}/rollback` | Rollback confirmation |
+| POST | `/api/history/{n}/rollback` | Roll back (section 8.5) |
+| GET | `/api/history/audit` | Audit trail |
+| GET | `/api/nodes` | Nodes |
+| POST | `/api/migrate` | Run migrations (section 4.6) |
+
+**Statuses.** 200 with the result; 401 without an admin session, after which the interface reloads the page so core asks for login; 403 for a missing or wrong token; 404 for an object or source position that does not exist; 409 for a lost race or a moved Publication, with the current state; 415 for a body that is not JSON; 422 for a save with errors, with every error; 503 for a database that is not ready, with its state (section 10.5).
 
 Every object, every list with its filters and every page of results has a URL that can be bookmarked. An entity is addressed by its set and entity ID, an authsource by its id; neither is a surrogate key.
 
-- **The entity ID is never in the path.** A GET carries it in the query string as `entityid`, URL-encoded; a POST carries it in the body, as a hidden field next to the request-forgery token. An encoded `%2F` in a path is refused with a 404 by Apache's default `AllowEncodedSlashes Off` and decoded by nginx, and base64url cannot be read or edited by hand.
-- **An External entity is identified by (set, entity ID).** Its detail lists every copy held by the `metadata.sources` of the serving node, in source order, and marks the one the node serves. A source is named by its 0-based position in `metadata.sources` only where one copy is meant: `source` on the Managed copy GET and in the body of the Import POSTs. The position is checked again on every request; when it no longer holds that entity, the page is a "not found", never another source's copy.
-- **The authsource page is `/authsources/{id}/edit`**, not `/authsources/{id}`, because `new` is a valid authsource id. Entity paths do not collide, because `{set}` and `{op}` are closed lists.
+- **The entity ID is never in the path.** A GET carries it in the query string as `entityid`, URL-encoded; a POST carries it in the JSON body. An encoded `%2F` in a path is refused with a 404 by Apache's default `AllowEncodedSlashes Off` and decoded by nginx, and base64url cannot be read or edited by hand.
+- **An External entity is identified by (set, entity ID).** Its detail lists every copy held by the `metadata.sources` of the serving node, in source order, and marks the one the node serves. A source is named by its 0-based position in `metadata.sources` only where one copy is meant: `source` on the Managed copy and in the body of the Import POSTs. The position is checked again on every request; when it no longer holds that entity, the answer is a 404, never another source's copy.
+- **The authsource page is `/authsources/{id}/edit`**, not `/authsources/{id}`, because `new` is a valid authsource id. API paths under `/api/authsources/` do not collide for the same reason: `read` and `save` are POST only, and an authsource named `read` or `save` is read with GET. Entity paths do not collide, because `{set}` and `{op}` are closed lists.
 
 ### 10.5 State pages
 
-After `requireAdmin()` and before anything else, every route establishes the state of the database (section 4.7). In any state but the first the route answers with its page instead of the requested screen:
+After `requireAdmin()` and before anything else, every API route establishes the state of the database (section 4.7). In any state but the first it answers 503 with that state, and the interface shows its page instead of the requested screen:
 
 | State | Page |
 | --- | --- |
@@ -1828,14 +1873,13 @@ A state page takes the whole content area. The sidebar is shown, but neither the
 **Request forgery.**
 
 - One token per SimpleSAMLphp session, made with `random_bytes()` and kept in that session. There is no Symfony CSRF component and no check of `Origin` or `Sec-Fetch-Site`.
-- Every form carries it as a hidden field. No GET request changes state.
-- One service of the module calls `requireAdmin()` and, after the database state check, compares the submitted token with `hash_equals()`. Every POST goes through it.
-- A POST without a valid token gets HTTP 403 and a plain error page with a link back to the Console. The form is not rendered again with the submitted data. Nothing is written to the Audit trail; a warning goes to the SimpleSAMLphp log.
-- The script makes no requests of its own.
+- The page shell carries it in a `<meta>` element; the interface sends it in an `X-Console-Token` header on every API POST. No GET request changes state.
+- One service of the module calls `requireAdmin()` and, after the database state check, compares the token with `hash_equals()` and requires the `application/json` content type. Every API POST goes through it. A cross-site form can set neither the header nor that content type.
+- A POST without a valid token gets HTTP 403. The interface shows "Request refused" with a link back to the Console and keeps nothing of the refused request. Nothing is written to the Audit trail; a warning goes to the SimpleSAMLphp log.
 - The protection is needed because the SimpleSAMLphp session cookie is `SameSite=None` by default, a setting that belongs to the deployment.
-- An HTTP-level test walks every POST route and checks that it answers 403 without a token (section 12).
+- An API-level test walks every POST route and checks that it answers 403 without a token (section 12).
 
-**Caching.** Pages that carry a sensitive value are served with `Cache-Control: no-store`: the edit screen in either view, the response to Reveal, every response of an unsaved editor (the managed copy, a view switch, a save that fails validation, the editor opened from pasted configuration or by "Replace from…") and the raw view of an Unreadable row.
+**Caching.** API responses that carry a sensitive value are served with `Cache-Control: no-store`: the object of the edit screen, the response to Reveal, every response of an unsaved editor (the managed copy, a view switch, a validation, a save that fails validation, reading pasted configuration, "Replace from…") and the stored bytes of an Unreadable row. The interface keeps sensitive values in memory only, never in Web Storage.
 
 ### 10.7 Overview
 
@@ -1873,32 +1917,33 @@ One edit screen serves managed entities of the three sets and managed authsource
 
 **Notices**, above the content, when they apply: the object is disabled; it is an Override, with a link to the comparison of section 10.13; its external source changed or was not reviewed; it is Shadowed, by an External entity or by a File authsource; it has warnings.
 
-**Two views** of the same object: Settings, the form of section 10.10, and PHP, the editor of section 10.11. Switching is a POST that renders the other view from the submitted content without saving. Text in the PHP view that cannot be read blocks the switch. A new object opens in the PHP view with its required options; otherwise the editor opens in the view last used, which the switch records in the SimpleSAMLphp session and which is lost on logout. The script is not involved.
+**Two views** of the same object: Settings, the form of section 10.10, and PHP, the editor of section 10.11. Switching sends the editor's content to the API, which returns the other view without saving. Text in the PHP view that cannot be read blocks the switch. A new object opens in the PHP view with its required options; otherwise the editor opens in the view last used, which the switch records in the SimpleSAMLphp session and which is lost on logout.
 
 **Save bar.** Fixed at the bottom of the content, with Save and the object's state: unsaved edits on the page, saved but not published (one of the states of section 8.2), or up to date.
 
-**Secondary actions**, grouped apart from Save: Discard this change, offered when the object has a Pending change (section 8.3); Delete; Promote, on an object whose `next_key` is set (section 7.7); "Replace from…", on a managed entity (section 9.7). Delete, Discard and Promote ask for confirmation in a dialog of the script (section 10.17), saying what will happen. Promote says that the previous key leaves the configuration and that messages encrypted to the old certificate will no longer decrypt. Disabling or deleting an Override warns that nodes will serve the External entity again after the next Publication.
+**Secondary actions**, grouped apart from Save: Discard this change, offered when the object has a Pending change (section 8.3); Delete; Promote, on an object whose `next_key` is set (section 7.7); "Replace from…", on a managed entity (section 9.7). Delete, Discard and Promote ask for confirmation in the dialog component (section 10.17), saying what will happen. Promote says that the previous key leaves the configuration and that messages encrypted to the old certificate will no longer decrypt. Disabling or deleting an Override warns that nodes will serve the External entity again after the next Publication.
 
 **Saving.**
 
-- The form carries the `version` the object was loaded with (section 4.8).
-- A valid save redirects back to the edit screen with a message.
-- A save with errors writes nothing and renders the screen again with the submitted content: a list of every error at the top, each linked to its field or line, and each error at its field or line. Errors are those of sections 5.7 and 6.8, each located by the JSON pointer of the value it concerns.
-- A save that loses a race (section 4.8) renders the screen again with the object as it now stands and says that it changed meanwhile. The submitted edits are not kept.
+- A save sends the `version` the object was loaded with (section 4.8).
+- While editing, the interface validates the content against the schema in the browser and, debounced, through the API's validate route (section 10.10). Save is never blocked by them; the server decides.
+- A valid save shows the saved object on the edit screen with a message.
+- A save with errors writes nothing and keeps the content on screen: a list of every error at the top, each linked to its field or line, and each error at its field or line. Errors are those of sections 5.7 and 6.8, each located by the JSON pointer of the value it concerns.
+- A save that loses a race (section 4.8) shows the object as it now stands and says that it changed meanwhile. The unsaved edits are not kept.
 - Warnings (sections 5.9, 6.8 and 7.5) look different from errors and never block. They are shown after a save and whenever the object is opened.
 
 ### 10.10 The form
 
-The form is generated on the server from the JSON Schema of the set or type, with `$ref` resolved in PHP. PHP binds the submitted strings into a document guided by the schema and builds a tree that Twig renders. See [ADR 0007](docs/adr/0007-authsource-forms-rendered-by-twig-from-the-schema.md).
+The form is generated in the browser from the JSON Schema of the set or type, bundled at build time with `$ref` resolved, and edits the Console document directly. See [ADR 0012](docs/adr/0012-console-ui-as-a-spa.md).
 
 **Groups.** The root options are rendered in the groups of `x-groups`, in that order, each as a collapsible section headed by its title and "N of M set". N counts the root options of the group that are set; M those that currently apply. An "On this page" index lists the groups with their counts of set options and of errors.
 
 **Only what is set.** An option is set when its key exists in the document.
 
 - Only the root options that are set are rendered. Options in the root `required` list, and options that an `if`/`then` branch currently makes required, are always rendered and cannot be unset. A new object shows only those.
-- Every option that is not set is in the page as an inert `<template>`. It is offered as an add button under its group and through the finder. Adding it activates the template; nothing is fetched from the server.
+- Every option that is not set is offered as an add button under its group and through the finder. Adding it fetches nothing from the server.
 - Each rendered root option has a control to unset it. Unsetting removes the key on save, with no confirmation.
-- Presence is submitted apart from the value, as one marker per root option, and is never inferred from the value. A set option left empty, switched off or with no rows is saved as such and judged by the schema.
+- Presence is the existence of the key in the document sent, never inferred from the value. A set option left empty, switched off or with no rows is saved as such and judged by the schema.
 - A newly added boolean starts at the opposite of its `default`. Anything else starts empty, an `enum` with no selection.
 - After a rejected save the options added before it stay on screen with their errors.
 - The rule applies to root options only. A nested object or a list row renders all its fields, and there an empty optional field means absent.
@@ -1909,7 +1954,7 @@ The form is generated on the server from the JSON Schema of the set or type, wit
 
 - An option that a branch makes required appears on its own when the sibling takes one of those values.
 - An optional one that starts to apply is offered as an add button only.
-- One that stops applying leaves its group and its count. If it was set, it is hidden and dropped on save.
+- One that stops applying leaves its group and its count. If it was set, it is hidden and the server drops it on save.
 
 **Each option** shows its `title`, its option name in monospace, its `description`, its control, and as a hint the first of its `examples` or its `default`. The `default` is never written into the document.
 
@@ -1917,7 +1962,7 @@ The form is generated on the server from the JSON Schema of the set or type, wit
 
 | Schema | Control |
 | --- | --- |
-| String | Text field; a text area with `x-widget: textarea`; with `x-widget: suggest`, a text field with a native `<datalist>` built from all its `examples`, free text still accepted |
+| String | Text field; a text area with `x-widget: textarea`; with `x-widget: suggest`, a text field with suggestions built from all its `examples`, free text still accepted |
 | String with `enum` | Select; radio buttons with `x-widget: radio` |
 | Boolean | Switch |
 | Integer, number | Number field |
@@ -1927,13 +1972,13 @@ The form is generated on the server from the JSON Schema of the set or type, wit
 | Any value that is not a string, with `x-widget: textarea` | JSON text area |
 | `authproc` | JSON text area |
 | `extra` | JSON text area, alone in a last group "Uncataloged options", rendered only once added |
-| `x-authsource-reference` | Select built on the server from the ids of the managed authsources and the File authsources of the node serving the page |
+| `x-authsource-reference` | Select of the ids of the managed authsources and the File authsources of the node serving the page, given by the API |
 | `x-widget: certificate` | The certificate control below |
 | `x-widget: key-slot` | The key slot control below |
 | `x-widget: certificates` | The certificate list below |
 | `x-sensitive` | Password field with a reveal control |
 
-A select whose values come from the same document, such as the database of a query in `sqlauth:SQL2`, is a plain text field checked on save.
+A select whose values come from the same document, such as the database of a query in `sqlauth:SQL2`, is a plain text field checked by the server.
 
 **Certificate control.** A certificate shows its source, pasted or file, and the PEM or the file reference. A valid pasted certificate shows its subject and its expiry date, flagged when it has expired or expires within `cert_expiry_warning_days`. A file the node serving the page cannot find or read is a warning of section 7.5. `https_certificate` of `saml20-idp-hosted` uses it on its own.
 
@@ -1941,9 +1986,15 @@ A select whose values come from the same document, such as the database of a que
 
 **Certificate list.** The certificates of a remote entity (section 5.5) render as rows of PEM and use. Each valid certificate shows its subject and expiry date with the same flag as in a key slot.
 
-**Sensitive values.** A stored literal of an `x-sensitive` option is sent in a password field with a reveal control that works in the browser. An empty field means an empty value. A Secret reference is shown as plain text and is told apart from a literal by its look. A string field that accepts a Secret reference offers for completion the file names in the `secrets_dir` of the node serving the page, never their contents (section 7.2).
+**Sensitive values.** A stored literal of an `x-sensitive` option is sent in a password field with a reveal control that works in the browser. An empty field means an empty value. A Secret reference is shown as plain text and is told apart from a literal by its look. A string field that accepts a Secret reference offers for completion the file names in the `secrets_dir` of the node serving the page, given by the API, never their contents (section 7.2).
 
-**Messages.** Error texts are generic per JSON Schema keyword and written in the module. A `pattern` carries its own text in `$error`. Each cross-field rule words its own.
+**Validation while editing.**
+
+- The schemas are compiled with Ajv for JSON Schema 2020-12 at build time into standalone validators; the browser never compiles a schema. `$error` and `x-when` are declared once as Ajv keywords. Defaults are never applied.
+- Every change is checked against the schema at once. Cross-field rules, identifier checks and warnings come from the API's validate route, debounced; the browser holds no copy of them. Which rules the schema carries and which only the server checks is stated in sections 5 and 6 under "Rules".
+- The server validates again on save, with `opis/json-schema` and the cross-field rules, and is authoritative.
+
+**Messages.** Error texts are generic per JSON Schema keyword and written in the module, the same in the browser and on the server. A `pattern` carries its own text in `$error`. Each cross-field rule words its own.
 
 ### 10.11 The PHP view
 
@@ -1953,9 +2004,9 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 
 - a reference panel listing the options of the schema, each with "Insert" at the cursor;
 - Copy and Download as `.php`, which give what is on screen;
-- Reveal, a POST that renders the view again with the stored sensitive values in place of their sentinels. Text that cannot be read blocks it.
+- Reveal, an API request that returns the view again with the stored sensitive values in place of their sentinels. Text that cannot be read blocks it.
 
-**Reading.** The text is parsed with `nikic/php-parser` and an allowlist walk of the AST; it is never executed.
+**Reading.** The text is parsed on the server, never in the browser, with `nikic/php-parser` and an allowlist walk of the AST; it is never executed.
 
 - Accepted: one block, with its wrapper or as a bare array, made of literals and of the `SAML2\Constants::*` constants of a fixed list, which are written back as literals.
 - Text that cannot be read, a syntax error or a value that is not a literal, is an error with its line and column. It blocks saving, Reveal and the switch to Settings.
@@ -1977,12 +2028,12 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 
 ### 10.12 Adding objects
 
-"Add" on each entity list and "Add authsource" open the paste area of section 9.6: one text area, with the detected format (XML or PHP for an entity, PHP for an authsource) that the administrator can correct, "Choose file" read into the text area by the script, "Start empty", and for entities a link to External entities. Input is capped at 1 MiB.
+"Add" on each entity list and "Add authsource" open the paste area of section 9.6: one text area, with the detected format (XML or PHP for an entity, PHP for an authsource) that the administrator can correct, "Choose file" read into the text area in the browser, "Start empty", and for entities a link to External entities. Input is capped at 1 MiB.
 
 - "Start empty" for an entity opens the editor of the set with the required options only. For an authsource it first asks for the Authsource type, among the five, each with one line on what it is for.
-- Reading pasted configuration is a POST that opens the editor filled and unsaved, with a report panel above it listing what was converted, what was moved to `extra` and what was ignored. What needs the administrator shows as validation errors. Nothing is saved until the administrator saves.
+- Reading pasted configuration is an API request that opens the editor filled and unsaved, with a report panel above it listing what was converted, what was moved to `extra` and what was ignored. What needs the administrator shows as validation errors. Nothing is saved until the administrator saves.
 - XML that describes another kind of entity offers to switch to its set.
-- Several entities in the input give a selectable list. Entities already managed in the set cannot be selected; those colliding with an External entity are marked as future Overrides or Shadowed (section 9.3). One selected entity opens in the editor; several are saved on their own and the request redirects to the entity list with the report.
+- Several entities in the input give a selectable list. Entities already managed in the set cannot be selected; those colliding with an External entity are marked as future Overrides or Shadowed (section 9.3). One selected entity opens in the editor; several are saved on their own and the interface moves to the entity list with the report.
 - When pasted configuration holds what looks like a secret in clear, the report suggests a Secret reference.
 
 "Replace from…" on a managed entity takes metadata XML in the same kind of text area and opens the editor with the merged document, unsaved, with the same report (section 9.7).
@@ -1994,7 +2045,7 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 - An unreadable source is shown with its error; the other sources are still listed.
 - An expired External entity is marked, not hidden. One that is already managed in the same set is marked as such.
 - The detail of an entity lists every copy the node's sources hold, marks the one served, shows each as PHP (section 10.11) with its sensitive options masked, and offers "Create managed copy", which says that the copy stops following its source.
-- On `flatfile` and `pdo` sources each row has a checkbox, nothing ticked by default, and each source a "select all" that covers the whole source and not only the visible page. Rows already managed in the same set cannot be ticked. Import goes through a confirmation step, which lists only the ticked entity IDs, and redirects back here with the report of section 9.5.
+- On `flatfile` and `pdo` sources each row has a checkbox, nothing ticked by default, and each source a "select all" that covers the whole source and not only the visible page. Rows already managed in the same set cannot be ticked. Import goes through a confirmation step, which lists only the ticked entity IDs, and comes back here with the report of section 9.5.
 
 **Override comparison.** Reached from the notice on the edit screen and from Overview. It shows the current External entity against the managed one, as PHP text with the keys left out of the fingerprint hidden (section 9.4), and offers one action, "Mark as reviewed".
 
@@ -2006,7 +2057,7 @@ The confirmation screen of section 8.4.
 - The problems that block, first, each naming its object and linking to it.
 - The warnings, below, collapsed.
 - A panel with the number the new Snapshot will take, an optional comment and the Publish button. When Publication is not offered, the panel says why.
-- "Discard all", which asks for confirmation in a dialog of the script.
+- "Discard all", which asks for confirmation in the dialog component (section 10.17).
 
 States:
 
@@ -2015,9 +2066,9 @@ States:
 | Nothing to publish | The current Snapshot and that there are no Pending changes |
 | Ready | The above, Publish enabled |
 | Blocked | The problems; Publish disabled |
-| Moved | The confirming request found a hash mismatch, a lost race or a new problem (section 8.4): the screen again with the current state and a message saying it changed |
+| Moved | The confirming request found a hash mismatch, a lost race or a new problem (section 8.4): the screen with the current state and a message saying it changed |
 
-A successful Publication redirects to Nodes (section 8.4); reloading Nodes shows the progress.
+A successful Publication moves to Nodes (section 8.4); reloading Nodes shows the progress.
 
 ### 10.15 History
 
@@ -2037,20 +2088,22 @@ Two tabs.
 - The screen says that the problems of other nodes can only be read on those nodes.
 - With a single node the screen shows that node and its detail, without treating the absence of others as a problem.
 
-### 10.17 The script
+### 10.17 The front end
 
-The script is one static file, written by hand, with no dependencies and no build step. It knows no schema, validates nothing and makes no requests of its own. It:
+The front end lives in `frontend/`, outside `src/`, and talks to the module only through the API of section 10.4. See [ADR 0012](docs/adr/0012-console-ui-as-a-spa.md).
 
-- adds options from their templates, unsets them, filters the finder and keeps the group counts;
-- shows and hides conditional options as their sibling changes;
-- adds, removes and moves list rows;
-- reveals a sensitive value in its password field;
-- reads a chosen file into the paste area;
-- in the PHP view, inserts an option at the cursor, and copies or downloads as `.php` what is on screen;
-- asks for confirmation before Delete, Discard, Promote and Discard all, in a `<dialog>` whose text comes from a `data-confirm` attribute. Publish and Rollback have server confirmation screens instead, which carry a diff;
-- opens and closes the sidebar overlay, and copies values to the clipboard.
+**Design system.**
 
-There is no fallback without it. No browser test covers it in v1 (section 12).
+- One stylesheet: the `console.css` of `prototype/console-ui`, with its tokens and component classes, plus layout classes for what the boards write inline. It is linked by the shell, never imported into a component. There are no CSS modules, no CSS-in-JS and no `style` prop.
+- No colour, size or font is written outside the token definitions.
+- `frontend/src/components/ui/` holds the primitives, one per component class of `console.css`: button, field, select, text area, switch, check, segmented control, callout, status, chip, row, card, tabs, menu, code, diff, editor, empty state and the confirmation dialog. Only they render `<button>`, `<input>`, `<select>`, `<textarea>` and `<dialog>`; every screen composes them.
+- The confirmation dialog asks before Delete, Discard, Promote and Discard all, with a text that says what will happen and a button that repeats the verb. Publish and Rollback have confirmation screens instead, which carry a diff.
+
+**Types.** TypeScript in strict mode. The types of the Console documents are generated from `docs/spec/schemas` and committed; the API's request and response types are written by hand next to the client that calls it.
+
+**Build.** `composer build` runs `npm ci --ignore-scripts` and `vite build`. The output, hashed files and `.vite/manifest.json`, is written to `public/assets/app/` and committed. The Node version is pinned in `.nvmrc`.
+
+**Development.** `composer dev` starts the `dev` profile of section 12.7 with a Vite service in front of the SimpleSAMLphp container. The browser opens the Console through Vite, which serves the front end with hot module replacement and proxies everything else to SimpleSAMLphp on the same origin. The node's module configuration sets `dev_server`, so the shell references Vite's client and the entry module instead of the manifest. Page, scripts, API and the HMR connection share one origin, so the default CSP and the admin session hold unchanged.
 
 ## 11. Failure behaviour
 
@@ -2104,18 +2157,18 @@ Every object or slot left out is recorded with its reason in the build's `manife
 
 | Situation | What the Console does |
 | --- | --- |
-| Database unreachable | Every route answers with the "Database unreachable" page (section 4.7) |
+| Database unreachable | Every API route answers 503 and the interface shows the "Database unreachable" page (section 4.7) |
 | SQLite older than 3.24.0 | The "SQLite too old" page |
 | A schema newer than the code | The "Console older than the database" page; nothing is read or written |
 | Schema does not match the code | The pending migrations page |
 | A migration fails | Stops at that migration, says which one and why; migrations already applied stay applied. The loser of two concurrent runs gets a clear message (section 4.6). |
 | A save that is invalid | Shows every error at its field; writes nothing |
-| A save, Publication or Rollback that loses a race | The conflict error of section 4.8: the form or the confirmation screen is shown again with the current state; nothing is retried |
+| A save, Publication or Rollback that loses a race | The conflict error of section 4.8: the editor or the confirmation screen shows the current state; nothing is retried |
 | A Publication that something blocks | Shows the problems; writes nothing |
 | A Snapshot too large for `max_allowed_packet` | Blocks the Publication, naming the variable (section 4.9) |
 | A Rollback whose target fails its checksum or format version | Blocks the Rollback |
 | Writing the Audit trail row fails | The change it records fails with it, being in the same transaction |
-| A request without a valid request-forgery token | A plain HTTP 403 page and a warning in the log (section 3.8) |
+| A request without a valid request-forgery token | HTTP 403, "Request refused" in the interface, and a warning in the log (section 3.8) |
 | A stored document that the current schema rejects, as after a module update | Listed with its errors and editable; blocks Publication until fixed or disabled; the current Snapshot keeps being served |
 | A stored row whose `document` is not valid JSON or cannot be loaded otherwise | Listed with an "Unreadable" label and the load error, and counted as a Pending change while enabled (section 8.2). It has no form and no PHP view: opening it shows its raw bytes as they are, read-only. Disable, Delete and Discard are available; Discard rewrites the row from the current Snapshot, or disables it when the object is not in it. It blocks Publication until disabled, deleted or discarded, since skipping it would silently drop the object from the next Snapshot. |
 | A metadata source that throws when the Console reads it | That source is shown as unreadable on the External entities screen; the others are listed (section 9.1) |
@@ -2135,8 +2188,11 @@ The Console's link on core's Configuration tab never queries the database, so no
 | `tomasvotruba/cognitive-complexity` 1.x | Cognitive complexity per method, as a PHPStan extension |
 | PHP_CodeSniffer 4 with the SimpleSAMLphp ruleset of `simplesamlphp/simplesamlphp-test-framework` and `slevomat/coding-standard` 8.x | Coding style and method length |
 | PCOV | Coverage, for the coverage threshold and for mutation testing |
+| TypeScript `tsc` in strict mode | Type checking of the front end |
+| ESLint with `typescript-eslint` and the React plugins | Front-end lint and the rules of section 12.4 |
+| Vitest with Testing Library and jsdom, coverage through V8 | Component and client tests |
 
-There are no browser tests in v1: no Pest browser plugin, no Playwright and no Node. Mago is not used. Test files are not under static analysis.
+There are no end-to-end browser tests in v1: no Pest browser plugin and no Playwright. Component tests run in jsdom. Node runs only in development and CI. Mago is not used. PHP test files are not under static analysis.
 
 ### 12.2 Checks
 
@@ -2147,14 +2203,17 @@ There are no browser tests in v1: no Pest browser plugin, no Playwright and no N
 - **Round trip.** For every schema, document to PHP to document is the identity (section 10.11).
 - **Schema contract.** Every valid fixture passes its JSON Schema, and every invalid one fails for the reason the fixture names.
 - **Conditions.** For every schema, the `x-when` annotations and the `if`/`then` clauses agree on what is required.
+- **Validation parity.** Every valid and invalid fixture is validated by the browser's compiled validators and by `opis/json-schema`; both give the same verdict and, for schema errors, the same JSON pointers and texts.
 - **Fault injection.** A malformed database record, a corrupt Snapshot on disk, the database down during an SSO request, a `cron` fetch interrupted midway and a Secret reference that does not resolve. None causes a fatal error, and the remaining entities, authsources and file-based sources keep loading (section 11).
-- **Secret leakage.** A sensitive value never appears in a list, the Audit trail, a log or any response other than its own edit form and the response to Reveal.
-- **Request forgery walk.** Every POST route answers 403 without a valid token (section 10.6).
+- **Secret leakage.** A sensitive value never appears in a list, the Audit trail, a log or any API response other than the object of its own edit screen, an unsaved editor's and the response to Reveal.
+- **Request forgery walk.** Every API POST route answers 403 without a valid token, and 415 with a valid token and a body that is not JSON (section 10.6).
 - **After a Publication.** Without access to the database, core's `MetaDataStorageHandler` returns the published entity and `Auth\Source::getById()` instantiates the published managed authsource. The check stops at that seam: there is no SAML round trip in v1, and a fault visible only in a real SSO flow is an accepted gap.
 - **Publication race.** In each engine suite, two PDO connections in one process interleave two Publications deterministically, and the loser gets the conflict error of section 4.8.
 - **SimpleSAMLphp development branches.** A weekly run against the tip of the SimpleSAMLphp 2.5 branch and of `master` (section 13.3). It never blocks.
 
-**HTTP-level tests** cover the Console's routes and forms with a client that keeps cookies and submits forms. They boot the SimpleSAMLphp kernel in-process against SQLite, with no web server and no dependency on the local environment of section 12.7.
+**API-level tests** cover every API route with a client that keeps cookies and sends JSON, and assert status, body and headers, `Cache-Control: no-store` included. They also check that the page shell answers every screen path, references only files named by the manifest and carries no inline script or style. They boot the SimpleSAMLphp kernel in-process against SQLite, with no web server and no dependency on the local environment of section 12.7.
+
+**Component tests** cover the primitives of `components/ui/`, the form engine (presence, `x-groups` counts, `x-when`, list rows, the finder) and every screen against a stubbed API.
 
 ### 12.3 Thresholds
 
@@ -2168,12 +2227,15 @@ Every threshold blocks.
 | Method length | At most 30 lines (`SlevomatCodingStandard.Functions.FunctionLength`) |
 | Cognitive complexity | At most 8 per method |
 | PHP file size | At most 5000 characters per file in `src/` and `tests/` |
+| Front-end line coverage | At least 90 %, on `frontend/src/`, generated types excluded |
+| TypeScript | `tsc --noEmit` in strict mode, no errors; ESLint, no errors and no warnings |
+| Front-end file size | At most 5000 characters per file in `frontend/src/` |
 
 Line coverage is measured in one process that runs the persistence, migration and Publication tests on every engine whose DSN is set (section 12.6), so the code of every engine counts towards the 90 %, engine-only branches included, with no exclusion and no merging of reports. The threshold binds in CI, where every engine runs (section 13.2). Locally it is reached only with every engine that has its own implementation running, which means the `postgres` profile next to the default MariaDB (section 12.7).
 
-The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, Twig templates, the script and fixtures are exempt.
+The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, the page shell template, the stylesheet, generated types, the built output, lock files and fixtures are exempt.
 
-Coverage thresholds are enforced by Pest. No external coverage service is used.
+PHP coverage thresholds are enforced by Pest, front-end ones by Vitest. No external coverage service is used.
 
 ### 12.4 Architecture and code rules
 
@@ -2186,7 +2248,14 @@ The architecture checks are Pest `arch()` tests. They enforce:
 - classes `final` unless a reason exists;
 - no `dump`, `var_dump` or `die`.
 
-Code carries no descriptive comments or docblocks. A type annotation PHPStan needs and a one-line comment for a non-obvious reason are allowed. The sniffs of the SimpleSAMLphp ruleset that demand docblocks are excluded.
+Code carries no descriptive comments or docblocks. A type annotation PHPStan needs and a one-line comment for a non-obvious reason are allowed. The sniffs of the SimpleSAMLphp ruleset that demand docblocks are excluded. The same holds for TypeScript.
+
+ESLint enforces on the front end:
+
+- `<button>`, `<input>`, `<select>`, `<textarea>` and `<dialog>` only inside `frontend/src/components/ui/`;
+- no `style` prop and no `dangerouslySetInnerHTML` anywhere;
+- no import of a stylesheet from a module;
+- no import from `src/` or of PHP-side files; schemas only through the build's generated validators and types.
 
 ### 12.5 Fixtures
 
@@ -2199,7 +2268,7 @@ Code carries no descriptive comments or docblocks. A type annotation PHPStan nee
 | Suites | Engines |
 | --- | --- |
 | Persistence, migrations and Publication | SQLite, PostgreSQL, MariaDB and MySQL |
-| Everything else, HTTP-level tests included | SQLite only |
+| Everything else, API-level tests included | SQLite only |
 
 The DSN of each engine comes from an environment variable. The persistence, migration and Publication tests run once per engine whose variable is set, through a Pest dataset over those variables, so one run covers every engine available to it.
 
@@ -2223,6 +2292,7 @@ SQLite needs no container. MySQL is not in the local environment; it runs in Git
 - It uses a database of its own in the same MariaDB service, separate from the one the tests use.
 - It is a hosted IdP connected to its own SP, both configured with flat files. Users come from `exampleauth:UserPass`.
 - It starts with an empty Console. The first steps are the schema migration and an Import of those flat files, both from the web.
+- A Vite service, from a pinned Node image, serves the front end with hot module replacement and proxies the rest to SimpleSAMLphp on the same origin (section 10.17). `composer dev` starts the profile with it. The node's configuration sets `dev_server` and a host-relative `baseurlpath`.
 - A scheduler service, a minimal container (such as `curlimages/curl`), calls the node's core `cron` URL every minute from outside the node's container (section 2.7), so the node is never shown as silent or forgotten and a rotated secret can be seen to take effect.
 - There is no LDAP server, no SQL users table, no second SimpleSAMLphp and no second node. Two nodes serving different Snapshots cannot be seen locally; the Publication suites cover that behaviour.
 
@@ -2251,12 +2321,15 @@ The matrix is not the full product of PHP versions and engines. The SQL does not
 | Full suite | Every stable release from 8.4 that SimpleSAMLphp 2.5 supports | SQLite |
 | Lowest dependencies: `composer update --prefer-lowest`, full suite | 8.4 | SQLite |
 | `composer audit --locked` | 8.4 | None |
-| CodeQL on the workflows (section 14.5) | | None |
+| Front end, on the Node version of `.nvmrc`: `npm ci --ignore-scripts`, ESLint, `tsc`, Vitest with its coverage threshold, generated types up to date, `vite build` with no difference from the committed `public/assets/app/` | | None |
+| Package contents: `git archive` holds `public/assets/app/` with its manifest and `docs/spec/schemas/`, and none of `frontend/`, `package.json`, `package-lock.json` or `node_modules` | | None |
+| `npm audit --omit=dev` | | None |
+| CodeQL on the workflows and on `javascript-typescript` (section 14.5) | | None |
 
 `mariadb:11.8` runs next to the minimum because the error 1020 path of section 4.8 exists only from MariaDB 11.6.2.
 
 - CI does not reuse the `docker-compose` file. Databases are service containers; PHP is installed on the runner, with the extensions SimpleSAMLphp 2.5 requires, the three PDO drivers and PCOV.
-- `composer.lock` is committed (`export-ignore`) and every job except the lowest-dependencies one installs from it, so a pull request never breaks because of someone else's release.
+- `composer.lock` is committed (`export-ignore`) and every job except the lowest-dependencies one installs from it, so a pull request never breaks because of someone else's release. `package-lock.json` is committed (`export-ignore`) and installed with `npm ci`.
 - A single aggregating job depends on all the others. It is the only check the ruleset on `main` requires (section 14.6), so the matrix can change without touching the ruleset.
 
 ### 13.3 Weekly job
@@ -2277,6 +2350,7 @@ GitHub disables a scheduled workflow after 60 days without activity in the repos
 - No workflow uses a secret.
 - Actions are pinned by commit SHA and updated by Dependabot (section 14.5).
 - `actions/checkout` runs with `persist-credentials: false`.
+- npm never runs install scripts (`--ignore-scripts`).
 - `concurrency` cancels runs superseded by a newer push to the same branch or pull request.
 
 ## 14. Repository security policy
@@ -2312,9 +2386,9 @@ Only the latest released minor receives security fixes. There are no backports. 
 - Every confirmed vulnerability is published as a GitHub Security Advisory, so that it reaches Packagist and `composer audit`.
 - A CVE is requested through GitHub for medium severity or above. Below that, the advisory alone.
 - Reporters are credited. There are no bounties.
-- **Dependabot.** Alerts and security updates are on. Version updates cover `composer` and `github-actions`, weekly, as one grouped pull request per ecosystem. Security updates are immediate and not grouped. No Dependabot pull request is merged automatically, whether a patch or an action: each passes the full CI and is merged by the maintainer.
+- **Dependabot.** Alerts and security updates are on. Version updates cover `composer`, `npm` and `github-actions`, weekly, as one grouped pull request per ecosystem. An `npm` update that changes the built output fails the front-end job until `public/assets/app/` is rebuilt in the same pull request. Security updates are immediate and not grouped. No Dependabot pull request is merged automatically, whether a patch or an action: each passes the full CI and is merged by the maintainer.
 - **Secret scanning and push protection** are on. They are not a defence for this domain's secrets, such as LDAP bind passwords and SAML keys, which mostly match no provider pattern; fixtures follow section 12.5 instead.
-- **Static security analysis.** There is no dedicated PHP security analyser: CodeQL does not support PHP, and Psalm taint analysis and Semgrep are not used. PHPStan at `max` level (section 12) and a blocking `composer audit` on every pull request (section 13.2) stand in. CodeQL runs for the `actions` language only, to analyse the workflows.
+- **Static security analysis.** There is no dedicated PHP security analyser: CodeQL does not support PHP, and Psalm taint analysis and Semgrep are not used. PHPStan at `max` level (section 12) and a blocking `composer audit` on every pull request (section 13.2) stand in. CodeQL runs for the `actions` language, to analyse the workflows, and for `javascript-typescript`, on the front end.
 
 ### 14.6 Branch and release integrity
 
