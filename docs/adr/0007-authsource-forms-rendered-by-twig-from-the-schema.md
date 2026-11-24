@@ -16,7 +16,7 @@ The form shows only the root options that are set, meaning their key exists in t
 
 - Order is the declaration order of `properties`.
 - `x-groups` at the root lists `{title, properties}`; every root property belongs to exactly one group. A group states how many of its options are set out of those that currently apply.
-- The widget follows from the type. `x-widget` allows only `textarea`, `radio`, `suggest`, `key-slot` and `certificates`.
+- The widget follows from the type. `x-widget` allows only `textarea`, `radio`, `suggest`, `certificate`, `key-slot` and `certificates`.
 - `x-when` on a property names a sibling and the values for which the property applies. `if`/`then` keeps expressing what is required.
   - An option that a branch makes required appears on its own and cannot be unset.
   - An optional one that starts to apply is only offered as an add button.

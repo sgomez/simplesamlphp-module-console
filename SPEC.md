@@ -1081,7 +1081,7 @@ The annotations the Console adds:
 | `x-literal: true` | A string without an `enum` | The value refuses a Secret reference, because the Console compares it or core needs it before secrets are resolved (section 6.8) |
 | `x-authsource-reference: true` | A string | The value is the id of another authsource. Publication checks it without knowing the type (section 6.9), and the form renders it as a select built on the server. |
 | `x-groups` | The root | A list of `{title, properties}`. Every root option belongs to exactly one group. |
-| `x-widget` | Any property | `radio`, `textarea`, `suggest`, `key-slot` or `certificates`; otherwise the widget follows from the type. On a value that is not a string, `textarea` means the value is edited as JSON text. `suggest` on a string offers all its `examples` as suggestions. `key-slot` is carried by `keySlot` and `certificates` by `remoteCertificates` (section 5.5); the node needs neither, since it knows those shapes. |
+| `x-widget` | Any property | `radio`, `textarea`, `suggest`, `certificate`, `key-slot` or `certificates`; otherwise the widget follows from the type. On a value that is not a string, `textarea` means the value is edited as JSON text. `suggest` on a string offers all its `examples` as suggestions. `certificate` is carried by `certificate`, `key-slot` by `keySlot` and `certificates` by `remoteCertificates` (sections 5.5 and 6.7); the node needs neither, since it knows those shapes. |
 | `x-when` | A property | Names a sibling and the values of it for which the property applies. A property that does not apply is hidden and dropped on save. |
 
 `if`/`then`/`else` keeps expressing what is required; `x-when` expresses what applies. Every property a branch requires carries a compatible `x-when`. How the form uses these annotations is specified in section 10.10; see [ADR 0007](docs/adr/0007-authsource-forms-rendered-by-twig-from-the-schema.md).
@@ -1524,9 +1524,9 @@ Discarding restores an object from the current Snapshot:
 | To be withdrawn | The object returns to its published version, enabled |
 | Deleted | The object is created again from the Snapshot |
 | Unpublished | The object is disabled; it stays saved as Not live |
-| Unreadable | The row is rewritten from the Snapshot, or deleted when the object is not in it (section 11.4) |
+| Unreadable | The row is rewritten from the Snapshot; when the object is not in it, the row is disabled and stays saved as Not live with its bytes (section 11.4) |
 
-"Discard all" does the same for every Pending change, so it leaves no Pending changes; disabled objects stay saved. Nothing is deleted except an Unreadable row absent from the Snapshot. A discard is a save: it increments `version` and leaves one `discard` row in the Audit trail per object.
+"Discard all" does the same for every Pending change, so it leaves no Pending changes; disabled objects stay saved. A discard never deletes anything. A discard is a save: it increments `version` and leaves one `discard` row in the Audit trail per object.
 
 ### 8.4 Publication
 
@@ -1861,7 +1861,7 @@ States: first run, with nothing managed and nothing published, leading to "Add" 
 - Then, under "From authsources.php", the File authsources of the node serving the page, read-only, with id and type only. A File authsource whose id is also a managed authsource is marked as the one that shadows it, and the list says that the file wins (section 6.4).
 - The primary action is "Add authsource".
 
-**Unreadable rows.** A row whose `document` is not valid JSON, or that the edit side cannot load for another reason, is listed with the label "Unreadable" and the load error. Enabled, it is a Pending change; disabled, it is Not live or To be withdrawn (section 8.2). Opening it shows its stored bytes as they are, read-only, sensitive literals included, with no form and no PHP view; the page is served with `Cache-Control: no-store` (section 7.3). It offers Disable, Delete and Discard; Discard rewrites it from the current Snapshot, or deletes it when the object is not in that Snapshot. It blocks Publication until it is disabled, deleted or discarded.
+**Unreadable rows.** A row whose `document` is not valid JSON, or that the edit side cannot load for another reason, is listed with the label "Unreadable" and the load error. Enabled, it is a Pending change; disabled, it is Not live or To be withdrawn (section 8.2). Opening it shows its stored bytes as they are, read-only, sensitive literals included, with no form and no PHP view; the page is served with `Cache-Control: no-store` (section 7.3). It offers Disable, Delete and Discard; Discard rewrites it from the current Snapshot, or disables it when the object is not in that Snapshot. It blocks Publication until it is disabled, deleted or discarded.
 
 ### 10.9 The edit screen
 
@@ -1926,13 +1926,16 @@ The form is generated on the server from the JSON Schema of the set or type, wit
 | `authproc` | JSON text area |
 | `extra` | JSON text area, alone in a last group "Uncataloged options", rendered only once added |
 | `x-authsource-reference` | Select built on the server from the ids of the managed authsources and the File authsources of the node serving the page |
+| `x-widget: certificate` | The certificate control below |
 | `x-widget: key-slot` | The key slot control below |
 | `x-widget: certificates` | The certificate list below |
 | `x-sensitive` | Password field with a reveal control |
 
 A select whose values come from the same document, such as the database of a query in `sqlauth:SQL2`, is a plain text field checked on save.
 
-**Key slot control.** A key slot (section 7.4) shows the private key reference, its passphrase as a sensitive value, the certificate either as pasted PEM or as a file reference, and the key name. A valid pasted certificate shows its subject and its expiry date, flagged when it has expired or expires within `cert_expiry_warning_days`. A file the node serving the page cannot find or read, and a private key that does not match its certificate, are warnings of section 7.5.
+**Certificate control.** A certificate shows its source, pasted or file, and the PEM or the file reference. A valid pasted certificate shows its subject and its expiry date, flagged when it has expired or expires within `cert_expiry_warning_days`. A file the node serving the page cannot find or read is a warning of section 7.5. `https_certificate` of `saml20-idp-hosted` uses it on its own.
+
+**Key slot control.** A key slot (section 7.4) shows the private key reference, its passphrase as a sensitive value, its certificate through the certificate control, and the key name. A private key that does not match its certificate is a warning of section 7.5.
 
 **Certificate list.** The certificates of a remote entity (section 5.5) render as rows of PEM and use. Each valid certificate shows its subject and expiry date with the same flag as in a key slot.
 
@@ -2112,7 +2115,7 @@ Every object or slot left out is recorded with its reason in the build's `manife
 | Writing the Audit trail row fails | The change it records fails with it, being in the same transaction |
 | A request without a valid request-forgery token | A plain HTTP 403 page and a warning in the log (section 3.8) |
 | A stored document that the current schema rejects, as after a module update | Listed with its errors and editable; blocks Publication until fixed or disabled; the current Snapshot keeps being served |
-| A stored row whose `document` is not valid JSON or cannot be loaded otherwise | Listed with an "Unreadable" label and the load error, and counted as a Pending change while enabled (section 8.2). It has no form and no PHP view: opening it shows its raw bytes as they are, read-only. Disable, Delete and Discard are available; Discard rewrites the row from the current Snapshot, or deletes it when the object is not in it. It blocks Publication until disabled, deleted or discarded, since skipping it would silently drop the object from the next Snapshot. |
+| A stored row whose `document` is not valid JSON or cannot be loaded otherwise | Listed with an "Unreadable" label and the load error, and counted as a Pending change while enabled (section 8.2). It has no form and no PHP view: opening it shows its raw bytes as they are, read-only. Disable, Delete and Discard are available; Discard rewrites the row from the current Snapshot, or disables it when the object is not in it. It blocks Publication until disabled, deleted or discarded, since skipping it would silently drop the object from the next Snapshot. |
 | A metadata source that throws when the Console reads it | That source is shown as unreadable on the External entities screen; the others are listed (section 9.1) |
 | A building problem on the node serving the Console | Shown on the Nodes screen |
 | `console:Snapshot` missing from the node serving the Console | A warning on Overview and the entity lists, as the Override and Shadowed labels are then meaningless; nothing is blocked (section 9.1) |

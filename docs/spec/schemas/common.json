@@ -57,6 +57,7 @@
     "certificate": {
       "title": "Certificate",
       "type": "object",
+      "x-widget": "certificate",
       "additionalProperties": false,
       "required": ["source"],
       "properties": {
