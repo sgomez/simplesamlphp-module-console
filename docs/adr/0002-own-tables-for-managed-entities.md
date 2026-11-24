@@ -1,6 +1,6 @@
 # Own tables for managed entities
 
-The Console stores managed entities in tables of its own and never reads or writes the core PDO metadata handler tables outside the one-off import. The core tables are what the core `pdo` source serves live, so writing there would put every save into production without a Publication; their `entity_id` + `entity_data` shape has no room for an enabled flag, timestamps or history; and `metarefresh` can write into them, which would mix federated entities with managed ones and let a refresh overwrite a managed entity.
+The Console stores managed entities in tables of its own and never writes the core PDO metadata handler tables; it reads them only as an external source, for External entities and Import. The core tables are what the core `pdo` source serves live, so writing there would put every save into production without a Publication; their `entity_id` + `entity_data` shape has no room for an enabled flag, timestamps or history; and `metarefresh` can write into them, which would mix federated entities with managed ones and let a refresh overwrite a managed entity.
 
 ## Considered Options
 

@@ -1,6 +1,6 @@
 # Managed entity documents are open through an `extra` bag
 
-A managed entity is stored as a Console document described by one JSON Schema per set, translated on the node into the array core expects, as managed authsources are. Unlike an Authsource type, the entity schemas are not closed: options the schema does not catalog go in an `extra` bag of free-form JSON that the translator merges into the final array. Entity metadata carries options from other modules (`consent.*`, whatever `SAMLParser` emits) that cannot be cataloged, and a closed schema would make the one-off import fail on real entities.
+A managed entity is stored as a Console document described by one JSON Schema per set, translated on the node into the array core expects, as managed authsources are. Unlike an Authsource type, the entity schemas are not closed: options the schema does not catalog go in an `extra` bag of free-form JSON that the translator merges into the final array. Entity metadata carries options from other modules (`consent.*`, whatever `SAMLParser` emits) that cannot be cataloged, and a closed schema would make Import fail on real entities.
 
 ## Considered Options
 

@@ -139,7 +139,7 @@ The administrator adds `['type' => 'console:Snapshot']` to `metadata.sources` in
 
 The order of `metadata.sources` decides which source wins when the same entity ID exists in more than one for the same set; core has no other mechanism. The documentation recommends listing the Console's source first. The Console does not enforce it; it reports each collision as an Override or as Shadowed according to the `config.php` of the node serving the page (section 9).
 
-The core `pdo` source may stay in `metadata.sources`. The Console then warns on that node's status screen that SSO depends on the database.
+The core `pdo` source may stay in `metadata.sources`. The Console then warns on that node's Nodes screen that SSO depends on the database.
 
 ### 2.6 The `authsources.php` fragment
 
@@ -153,7 +153,7 @@ $config = class_exists(\SimpleSAML\Module\console\Authsources::class)
     : $config;
 ```
 
-Or as the file's `return`, wrapping the array of file authsources in the same call.
+Or as the file's `return`, wrapping the array of File authsources in the same call.
 
 `class_exists()` is true when the package is installed but the module is not enabled, so `merge()` checks that the module is enabled and otherwise returns the array untouched.
 
@@ -168,6 +168,8 @@ A running node learns of a Publication when the core `cron` module fires. A call
 Behind a load balancer the scheduler must reach each node directly, since a call that goes through the balancer updates only the node that receives it.
 
 A single-node deployment needs no `cron` for the Console: the node that serves a Publication request updates itself within that request, and a node with no local Snapshot fetches one on its first request.
+
+OPEN: without `cron`, a single node is highlighted as silent after 5 minutes and forgotten after `node_forget_after`, and a rotated secret never takes effect. Whether a single-node deployment needs `cron` after all, or those rules work differently without it, is not decided.
 
 ### 2.8 What the deployment must keep identical across nodes
 
@@ -201,7 +203,8 @@ The module has two sides that share no code path at run time other than the Snap
       │                                                  │
       └──Publication──▶ Snapshot table ──fetch──▶ local Snapshot on disk
                         pointer table     (cron, first request,
-                                           or the publishing node)
+                                           or the node serving a
+                                           Publication or Rollback)
 ```
 
 ### 3.2 Integration points with SimpleSAMLphp
@@ -220,9 +223,9 @@ The module uses PSR-14 listeners only. It ships no legacy `hooks/` files.
 
 **The `MetadataStore`** extends core's `MetaDataStorageSource`. It reads the `current` file once per request, loads the PHP file of the requested set from the build it names, and catches every error of its own: when the local Snapshot is missing or unreadable it returns no entities and logs a warning, so the other sources keep answering.
 
-**The fragment's method** takes the array of file authsources and returns it merged with the managed ones. It catches every `\Throwable`, leaks no variables into the scope of `authsources.php`, and merges with `+`, so a file authsource always wins over a managed authsource with the same id. An unreadable authsources section is ignored as a whole with a warning; inside a readable one, each entry is checked again (an array, a string at key `0`, a non-numeric id) and only invalid entries are dropped. It records that it ran, which is how a node detects a missing fragment.
+**The fragment's method** takes the array of File authsources and returns it merged with the managed ones. It catches every `\Throwable`, leaks no variables into the scope of `authsources.php`, and merges with `+`, so a File authsource always wins over a managed authsource with the same id. An unreadable `authsources.php` of the build is ignored as a whole with a warning; inside a readable file, each entry is checked again (an array, a string at key `0`, an id that is not an integer) and only invalid entries are dropped. It records that it ran, which is how a node detects a missing fragment.
 
-**The entry in core's admin interface** never queries the database, or catches its own errors, so a stale schema or an unreachable database never breaks core's admin page.
+**The entry in core's admin interface** never queries the database and catches its own errors, so a stale schema or an unreachable database never breaks core's admin page.
 
 The entry is a link, not a tab: the Console's own shell does not render core's tab bar, and `AdminMenuEvent` has no method to add an entry. The listener appends `['href' => ..., 'text' => 'Console']` to the template's `links`.
 
@@ -269,26 +272,26 @@ A node never reads the edit tables. It reads the pointer table and the Snapshot 
 
 A node whose code is older than the Snapshot's format version keeps the local copy it has, or serves nothing from the Console if it has none. It never falls back to an earlier Snapshot.
 
-On every `cron` check the node resolves the Secret references of the current Snapshot again and rewrites its local copy only when the result differs. A rotated secret therefore needs no Publication and takes effect within one `cron` cycle.
+On every `cron` check the node resolves the Secret references of the current Snapshot again and writes a new build only when the result differs. A rotated secret therefore needs no Publication and takes effect within one `cron` cycle.
 
 **On disk.** The Snapshot directory holds one directory per build, `<dir>/<n>-<b>/`, where `n` is the Snapshot number and `b` starts at 1 and grows with every rebuild of the same number (a rotated secret, a Rollback to a number still on disk). A file is never rewritten in place: with `opcache.validate_timestamps=0` PHP would keep serving the old one. A build holds:
 
 - `saml20-sp-remote.php`, `saml20-idp-remote.php`, `saml20-idp-hosted.php` and `authsources.php`, each a `return [...]` of arrays ready for core;
-- `manifest.json`, fixed for the build: Snapshot number, format version, checksum, build time, module version, and the objects left out with their reason.
+- `manifest.json`, fixed for the build: Snapshot number, format version, checksum, build time, module version, and the objects and slots left out with their reason.
 
 Next to the builds:
 
 - `<dir>/current`, a text file holding the name of the build being served, replaced by atomic rename and read once per request. It is not a symlink.
 - `<dir>/status.json`, rewritten on every check: time and outcome of the last check, the environment problems listed below, the "nothing published yet" mark and the time of the last failed fetch for the 60-second wait.
 
-Files are readable by the web server user only (`0600`), because secrets are resolved in them. The current and the previous build are kept; older ones are removed. The node's status screen reads `manifest.json` of the current build and `status.json`.
+Files are readable by the web server user only (`0600`), because secrets are resolved in them. The current and the previous build are kept; older ones are removed. The Nodes screen, served by this node, reads `manifest.json` of the current build and `status.json`.
 
-**Status.** After each check, each first-request fetch and each Publication it serves, the node writes its identifier, the number it serves, the time of the check and a "has problems" flag to the Node table. A failed write is logged and ignored. Nothing else about a node reaches the database.
+**Status.** After each check, each first-request fetch and each Publication or Rollback it serves, the node writes its identifier, the number it serves, the time of the check and a "has problems" flag to the Node table. A failed write is logged and ignored. Nothing else about a node reaches the database.
 
-What the problems are stays on the node's disk and is shown by that node only, on its status screen, in its `cron` summary and in core's sanity check:
+What the problems are stays on the node's disk and is shown by that node only: on the Nodes screen when that node serves it (section 10.16), in its `cron` summary and in core's sanity check:
 
-- objects left out of its copy, each with its reason;
-- managed authsources Shadowed by a file authsource of that node;
+- objects or slots left out of its build, each with its reason;
+- managed authsources Shadowed by a File authsource of that node;
 - a missing `authsources.php` fragment, when the current Snapshot holds managed authsources;
 - `console:Snapshot` missing from `metadata.sources`; the node still fetches and builds Snapshots, since managed authsources depend on them;
 - the core `pdo` source in `metadata.sources`.
@@ -329,8 +332,8 @@ The module adds no database abstraction layer, no Symfony CSRF component and no 
 
 - Every Console route calls `requireAdmin()`. There is no other permission check.
 - No GET request changes state. Every state-changing request is a POST carrying a request-forgery token kept in the SimpleSAMLphp session.
-- Core's kernel runs no listeners for a module, so both checks are explicit: one service calls `requireAdmin()` and validates the token, and every state-changing action goes through it. A request without a valid token gets a plain HTTP 403 page; nothing is written to the Audit trail and a warning goes to the SimpleSAMLphp log.
-- After `requireAdmin()` and before anything else, every Console route checks the state of the database and answers with a state page instead of an error when it cannot proceed (section 4.7).
+- Core's kernel runs no listeners for a module, so both checks are explicit: one service calls `requireAdmin()` and, after the database state check, validates the token, and every POST goes through it. A request without a valid token gets a plain HTTP 403 page; nothing is written to the Audit trail and a warning goes to the SimpleSAMLphp log.
+- After `requireAdmin()` and before anything else, every Console route checks the state of the database and answers with a state page instead of an error when it cannot proceed, Run migrations excepted (section 4.7).
 - Pages that carry a stored secret are served with `Cache-Control: no-store`.
 - Every page passes core's default Content Security Policy: no inline scripts, no inline styles, no `style` attributes, nothing loaded from another origin.
 
@@ -411,10 +414,10 @@ One row per managed entity, of any set.
 | `enabled` | Whether the entity travels in the next Snapshot |
 | `document` | The Console document, as JSON |
 | `version` | Optimistic-locking counter (section 4.8) |
-| `external_fingerprint` | For an Override, the fingerprint of the External entity it was last compared with (section 9); otherwise null. Updating it does not change `version`. |
+| `external_fingerprint` | For a managed entity created from, or found in collision with, an External entity, the fingerprint of the External entity it was last compared with (section 9); otherwise null. Updating it does not change `version`. |
 | `created_at`, `updated_at` | Timestamps |
 
-Deleting a managed entity deletes its row. There is no per-row publication state: the state of an object is computed against the current Snapshot (section 8).
+Deleting a managed entity deletes its row. There is no per-row Publication state: the state of an object is computed against the current Snapshot (section 8).
 
 #### `console_authsource`
 
@@ -478,7 +481,7 @@ One row per node that has checked recently.
 | `identifier` | The node's identifier (section 2.3) |
 | `served_number` | The Snapshot the node serves, or null when it serves none |
 | `checked_at` | Its last check |
-| `has_problems` | Whether the node has anything to report on its own status screen |
+| `has_problems` | Whether the node has anything to report on its own Nodes screen |
 
 The Console highlights a node whose `served_number` is not the current one, whose `checked_at` is older than 5 minutes, or whose flag is set. There are no named node states.
 
@@ -500,7 +503,7 @@ The Audit trail: one row per change of state made in the Console that took effec
 | `comment` | For `publish`, the Snapshot's comment, copied so that it survives the purge |
 | `schema_version` | For `migrate`, the schema version after the run |
 
-Two indexes serve the history of one object: (`entity_set`, `entity_id`) and (`authsource_id`). Because objects are matched by their natural key, an entity deleted and created again under the same entity ID and set continues one history.
+Two indexes serve the Audit trail of one object: (`entity_set`, `entity_id`) and (`authsource_id`). Because objects are matched by their natural key, an entity deleted and created again under the same entity ID and set continues one Audit trail.
 
 Rules:
 
@@ -509,6 +512,8 @@ Rules:
 - Not recorded: reads, logins, node activity, and operations that failed or were rejected, such as a save with errors, a Publication refused by validation or a request without a valid token.
 - The value of a sensitive option is never stored in this table.
 - The table is append-only by code: its repository exposes no update and no delete. There are no triggers and no database permissions behind that. v1 never purges it, and a row survives the deletion of its object and the purge of its Snapshot.
+
+OPEN: what `document` holds for a `delete` row and for a row about an Unreadable object, which cannot be masked, is not decided.
 
 ### 4.5 Stable contracts
 
@@ -550,7 +555,7 @@ A later migration may transform stored documents only mechanically. A document t
 
 The schema matches the code when the numbers in `console_schema_version` are exactly 1 to N, for the N the code knows.
 
-After `requireAdmin()` and before doing anything else, every Console route establishes which of these states the database is in. Only the first lets the request proceed; each of the others has a page of its own and is an ordinary state, not an exception.
+After `requireAdmin()` and before doing anything else, every Console route establishes which of these states the database is in. Only the first lets the request proceed, except Run migrations (`POST /migrate`), which proceeds in the two pending migrations states; each of the others has a page of its own and is an ordinary state, not an exception.
 
 | State | Page |
 | --- | --- |
@@ -562,6 +567,8 @@ After `requireAdmin()` and before doing anything else, every Console route estab
 
 The pending migrations page takes the whole content area, warns that a migration cannot be undone without restoring a backup, and carries the button that runs the migrations.
 
+OPEN: a database whose applied numbers run beyond what the code knows, as during a rolling upgrade, also lands on the pending migrations page, with nothing to apply. Whether it gets a state page of its own is not decided.
+
 None of these states affects SSO, which reads only the local Snapshot.
 
 ### 4.8 Concurrency
@@ -569,6 +576,8 @@ None of these states affects SSO, which reads only the local Snapshot.
 No advisory locks and no global edit counter are used. Races are settled by conditions on `UPDATE` statements and by primary keys.
 
 **Saving an object.** The edit form carries the `version` it was loaded with. The save is `UPDATE … SET version = version + 1 … WHERE version = ?`. Zero rows means the object changed or was deleted meanwhile, and the save is rejected. Every change that can become a Pending change increments `version`, enabling and disabling included. Creating an object that already exists fails on the primary key.
+
+OPEN: whether a create that clashes on the primary key of `console_entity` or `console_authsource` is the conflict error below or an "already exists" error at the identity field is not decided.
 
 **Publication.** One transaction:
 
@@ -583,7 +592,7 @@ No advisory locks and no global edit counter are used. Races are settled by cond
 
 | Shape | Where |
 | --- | --- |
-| Zero rows updated | MariaDB 10.11, MySQL, SQLite |
+| Zero rows updated | Any engine for a save or a Rollback; for the pointer update of a Publication, MariaDB 10.11, MySQL and SQLite only |
 | Primary-key clash on the Snapshot | Any engine |
 | SQLSTATE `40001` | PostgreSQL serialization failure; deadlock on MariaDB and MySQL |
 | SQLSTATE `40P01` | PostgreSQL deadlock |
@@ -660,6 +669,8 @@ What differs:
 - **No defaults on tri-state options.** `validate.authnrequest` and `validate.logout` are optional booleans without `default`: not set means "check a signature when one is present", `false` means "never check, even when signed".
 - **Precedence in the help text.** Many options fall back to the other side of the exchange. The help text of each option says which side wins, as the code does it: for `sign.logout` and `sign.authnrequest` the sender's value wins, the reverse of what the reference documentation states.
 
+OPEN: twelve `default`s remain in the entity schemas as hints. Whether the rule "no defaults" applies only to tri-state options or to every option is not decided, nor how the form offers the binding suggestions of section 5.5.
+
 ### 5.5 Shared shapes
 
 The entity schemas use the shapes of section 6.7 (`stringList`, `languageMap`, `languageListMap`, `signatureAlgorithm`, `authproc`, `keySlot`, `certificate`, `contacts`, `EntityAttributes`, `UIInfo`, `RegistrationInfo`) and these, also defined in [`common.json`](docs/spec/schemas/common.json):
@@ -701,7 +712,9 @@ A required service with no usable endpoint blocks the save (section 5.7). This a
 
 **Hosted endpoint** (`hostedEndpoint`). `SingleSignOnService` and `SingleLogoutService` of `saml20-idp-hosted` are not endpoint lists in core but one URL plus a list of bindings. The document holds `{Location?, Bindings}`: `Bindings` is a non-empty list of distinct bindings; `Location` is normally absent, and core then derives it from its base URL.
 
-**Certificates of a remote entity** (`remoteCertificates`). A list of pasted certificates, each `{pem, use}` with `use` one of `signing`, `encryption` or `both`. The Console holds them; a remote entity has no file references. The list is emitted as core's `keys`, in the same order: each row becomes `{type: "X509Certificate", signing, encryption, X509Certificate}` with the base64 body. As for key slots (section 6.7), a pasted certificate is rewritten as PEM with armour and 64-character lines on save.
+**Certificates of a remote entity** (`remoteCertificates`). A list of pasted certificates, each `{pem, use}` with `use` one of `signing`, `encryption` or `both`. The Console holds them; they are never file references. The list is emitted as core's `keys`, in the same order: each row becomes `{type: "X509Certificate", signing, encryption, X509Certificate}` with the base64 body. As for key slots (section 6.7), a pasted certificate is rewritten as PEM with armour and 64-character lines on save.
+
+OPEN: the glossary lists "remote entity" as a term to avoid for External entity, while this specification uses it for any entity of `saml20-sp-remote` or `saml20-idp-remote`. Which wording stands is not decided.
 
 **Key slots.** The `keySlot` of section 6.7. In every entity schema a slot that is set requires both `privatekey` and `certificate`.
 
@@ -944,13 +957,13 @@ The edit screen shows a managed entity either as a form or as the `$metadata['<e
 
 What is specific to entities:
 
-- A key the set does not catalog goes to `extra`, with a non-blocking warning and a suggestion when it is close to a cataloged option. That includes every option listed as left out in sections 5.11 to 5.13.
+- A key the set does not catalog goes to `extra`, with a non-blocking warning and a suggestion when it is close to a cataloged option. That includes every option listed as left out in sections 5.11 to 5.13, except `saml:Extensions`, which the literal-only reader cannot read (section 10.11).
 - A block whose entity ID differs from the entity being edited is rejected. An `entityid` key inside the array must match it too; `entityid`, `metadata-set` and `metadata-index` are then dropped.
 - `expire` is dropped and reported. `url`, which `SAMLParser` writes beside `OrganizationURL`, is dropped without a report.
 - An empty list or map counts as unset. `SAMLParser` writes several: `SingleLogoutService`, `ArtifactResolutionService`, `NameIDFormats`, `contacts`, empty members of `UIInfo`.
 - The inverse translator accepts each form core accepts for a cataloged option and returns the single form of the document: a string where core takes a string or a list becomes a list of one; a plain localized string becomes a language map with the language `en`; a filter given as a class name string becomes `{class}`; a Unix timestamp in `RegistrationInfo.instant` becomes a UTC date-time string.
 - In a remote set, `keys` becomes `certificates`. A `certData` becomes a certificate with `use: both`; a `certificate` file or `pdo://` location is read through core on the node serving the Console and stored pasted. A `keys` entry whose type is not `X509Certificate`, or that is neither for signing nor for encryption, is an error.
-- In `saml20-idp-hosted`, and in `signature_key` and `metadata_sign_key`, `certData` becomes a pasted certificate and a `certificate` location a file reference. `keys` and `new_keys` are rejected with an error that names the key and points to `certData` or `certificate`, as for `saml:SP` (section 6.16): a `keys` list can hold several certificates and never carries the private key.
+- In `saml20-idp-hosted`, and in `signature_key` and `metadata_sign_key`, `certData` becomes a pasted certificate and a `certificate` file location a file reference; a `pdo://` location is read through core on the node serving the Console and stored pasted. `keys` and `new_keys` are rejected with an error that names the key and points to `certData` or `certificate`, as for `saml:SP` (section 6.16): a `keys` list can hold several certificates and never carries the private key.
 - A private key at a `pdo://` location is an error the administrator fixes in the editor; Import skips such an entity.
 
 ### 5.15 Accepted gaps
@@ -1021,7 +1034,7 @@ What a node serves for an id depends on the node's own `authsources.php` and on 
 | Yes | Enabled | The File authsource | The managed one is Shadowed: a warning on the authsource list and on the Publication screen, and a problem on that node's status. Publication is not blocked. |
 | No | Disabled | Nothing | Editable; not in the Snapshot |
 | Yes | Disabled | The File authsource | Editable; not in the Snapshot |
-| No | Enabled, but left out of this node's build or dropped by `merge()` | Nothing, on this node only | The node's row is flagged; the reason is on that node's status screen |
+| No | Enabled, but left out of this node's build or dropped by `merge()` | Nothing, on this node only | The node's row is flagged; the reason is on the Nodes screen served by that node |
 | Yes | Enabled, but left out of this node's build or dropped by `merge()` | The File authsource | As above |
 | Any | Any, and the node has no local Snapshot or the build's `authsources.php` is unreadable | The File authsources only; a warning is logged | Nothing in the Console; the node's log |
 | Any | Any, and the fragment is missing or the module is not enabled on the node | The File authsources only | A problem on that node's status when the current Snapshot holds managed authsources |
@@ -1070,7 +1083,7 @@ The annotations the Console adds:
 | Annotation | On | Meaning |
 | --- | --- | --- |
 | `x-sensitive: true` | A string | A sensitive value (section 6.8) |
-| `x-key-reference` | `private-key` on a string, `certificate` on a certificate object | The value is a Key reference (section 7) |
+| `x-key-reference` | `private-key` on a string, `certificate` on a certificate object or on the list of a remote entity's certificates | The value is a Key reference (section 7) |
 | `x-literal: true` | A string without an `enum` | The value refuses a Secret reference, because the Console compares it or core needs it before secrets are resolved (section 6.8) |
 | `x-authsource-reference: true` | A string | The value is the id of another authsource. Publication checks it without knowing the type (section 6.9), and the form renders it as a select built on the server. |
 | `x-groups` | The root | A list of `{title, properties}`. Every root option belongs to exactly one group. |
@@ -1147,7 +1160,7 @@ Errors of all three are reported together, each by the JSON pointer of the value
 - an integer or a boolean cannot be a Secret reference, so it cannot vary per node;
 - inside the free-form configuration of a processing filter, any string may be one.
 
-The options marked `x-literal`, because the Console compares them: every `x-authsource-reference`; `preselect` of `multiauth:MultiAuth`; in `sqlauth:SQL2`, the `name` of each database and authentication query and the `database` and `only_for_auth` of each query; the `username` of `exampleauth:UserPass`; and the `entityID` of `saml:SP`.
+The options marked `x-literal`, because the Console compares them or core needs them before secrets are resolved: every `x-authsource-reference`; `preselect` of `multiauth:MultiAuth`; in `sqlauth:SQL2`, the `name` of each database and authentication query and the `database` and `only_for_auth` of each query; the `username` of `exampleauth:UserPass`; the `entityID` of `saml:SP`; and the `Location` of each `AssertionConsumerService` of `saml:SP`, through the shared `url` shape.
 
 **Sensitive values.** The options annotated `x-sensitive` are:
 
@@ -1176,7 +1189,7 @@ A Publication validates every enabled managed authsource again and adds the chec
 
 - Anything that would block a save, judged against the schemas and rules of the code that publishes. A module update that tightens a schema can therefore block Publication until the stored document is fixed or the authsource disabled; the current Snapshot keeps being served.
 - A type whose SimpleSAMLphp module is not installed and enabled on the publishing node.
-- An `x-authsource-reference` whose value is neither the id of an enabled managed authsource nor the id of a File authsource of the publishing node. In v1 the only such option is `source` in `multiauth:MultiAuth`; the `auth` of a managed `saml20-idp-hosted` is checked the same way (section 5). Deleting or disabling a managed authsource that is referenced can be saved, and it is the Publication that blocks.
+- An `x-authsource-reference` whose value is neither the id of an enabled managed authsource nor the id of a File authsource of the publishing node. In the authsource schemas the only such option is `source` in `multiauth:MultiAuth`; the `auth` of `saml20-idp-hosted` carries it too (section 5.8). Deleting or disabling a managed authsource that is referenced can be saved, and it is the Publication that blocks.
 - A processing filter whose `class` does not resolve on the publishing node.
 
 **Warnings, never blocking**
@@ -1246,6 +1259,8 @@ The schema catalogs 51 root options in seven groups. `entityID` is the only requ
 - No two rows of `attributes` share a `name` or a `friendlyName`.
 - In `AssertionConsumerService`, `Binding` is one of the three bindings core's `saml2-acs.php` handles: HTTP-POST, HTTP-Artifact and holder-of-key Web Browser SSO. `hoksso:ProtocolBinding` is optional and applies only when `Binding` is holder-of-key (`x-when`), as in what core generates from `acs.Bindings`. `ResponseLocation` is not accepted: SAML metadata forbids it on an assertion consumer service.
 - In `AssertionConsumerService`, no two endpoints share an `index` and at most one is `isDefault`.
+
+OPEN: whether `SingleLogoutServiceLocation` uses the shared `url` shape and refuses a Secret reference like the `Location` of an assertion consumer service, and whether `entityID` follows the 1024-byte rule of section 4.3, are not decided.
 
 **Left out.** `saml:Extensions` and `saml:logout:Extensions`, which are XML objects and not expressible in JSON; every `saml.SOAPClient.*` option; `NameIDFormat`, which the code does not read.
 
@@ -1420,7 +1435,7 @@ A `pdo://` location and a `%secret()%` reference are rejected on save: the first
 
 **Certificate of a key slot.** Either pasted PEM held by the Console, which is the recommended form and is emitted as `certData`, or a file reference in the same forms as a private key, emitted as `certificate`. On save a pasted certificate is rewritten as PEM with armour and 64-character lines.
 
-**Certificates of a remote entity.** Always pasted, each with its use: `signing`, `encryption` or `both`. A remote entity has no file references. The list is emitted as core's `keys` (section 5.5).
+**Certificates of a remote entity.** Always pasted, each with its use: `signing`, `encryption` or `both`. They are never file references; only the `signature_key` slot of a remote entity refers to files. The list is emitted as core's `keys` (section 5.5).
 
 **One form per slot.** A slot emits exactly one certificate form. Core reads `keys`, then `certData`, then `certificate`, and silently ignores the lower ones when a higher one is present; the Console never emits two.
 
@@ -1500,7 +1515,9 @@ There is no state column. The state of each object is computed by comparing what
 - "To be withdrawn" and "Deleted" are shown apart, although nodes see the same thing.
 - After a Rollback, Pending changes are computed against the Snapshot that became current.
 
-Every Console screen shows the number of Pending changes (section 10.3).
+Every Console screen except the state pages of section 10.5 shows the number of Pending changes (section 10.3).
+
+OPEN: whether an Unreadable row that is disabled is still a Pending change, or falls back to Not live or To be withdrawn with an "Unreadable" label, is not decided.
 
 ### 8.3 Discarding
 
@@ -1516,13 +1533,15 @@ Discarding restores an object from the current Snapshot:
 
 "Discard all" does the same for every Pending change; after a Rollback it brings what is saved back to what is served. A discard is a save: it increments `version` and leaves one `discard` row in the Audit trail per object.
 
+OPEN: "Discard all" leaves Unpublished objects in place, so after a Rollback to an earlier Snapshot what is saved still differs from what is served. Whether it deletes or disables them, or the claim above goes, is not decided.
+
 ### 8.4 Publication
 
 A Publication has a confirmation screen and a confirming request.
 
 **The confirmation screen** shows:
 
-- the Pending changes, grouped by state, each with a line diff of its PHP text against the current Snapshot, sensitive values as markers (section 7.3);
+- the Pending changes, grouped by state, each with a line diff of its PHP text against the current Snapshot, sensitive values as markers (section 7.3), except an Unreadable row, which shows its load error;
 - the problems that block, each naming its object;
 - the warnings: those of section 5.9 for the entities with Pending changes, and every warning of sections 5.8 and 6.9, collisions with External entities included (section 9.3);
 - an optional comment.
@@ -1593,7 +1612,7 @@ A read-only screen of its own, separate from the lists of managed entities.
 
 - Entities are grouped by source and set, paginated on the server, and searchable by entity ID and name.
 - An External entity that is already a managed entity of the same set is marked as such.
-- The detail view shows the entity as core receives it, as PHP written with `VarExporter::export` (section 3.7), with its sensitive options masked (section 9.1), and offers "Create managed copy" (section 9.5).
+- The detail view lists every copy of the entity held by the node's sources, in source order, and marks the one the node serves. Each copy is shown as core receives it, as PHP written with `VarExporter::export` (section 3.7), with its sensitive options masked (section 9.1), and offers "Create managed copy" (section 9.5).
 - Sources of type `flatfile` and `pdo` also offer Import (section 9.5).
 
 ### 9.3 Collisions: Override and Shadowed
@@ -1619,6 +1638,8 @@ Two behaviours of core are worth knowing when reading these labels:
 
 An Override stores the fingerprint of the External entity it collides with, in `external_fingerprint` (section 4.4): taken when it is created by a managed copy or an Import, or the first time the Console detects the collision when there was no copy.
 
+OPEN: storing the fingerprint the first time a collision is detected happens during a GET, against the rule that no GET changes state (section 3.8). Whether this is an exception or the fingerprint is stored only through a POST is not decided.
+
 **The fingerprint** is the SHA-256, in lowercase hex, of the External entity's array as core receives it, normalised:
 
 - the keys of every map are sorted; the order of lists is kept;
@@ -1631,6 +1652,8 @@ The fingerprint is edit-side state. Storing it does not change `version`, is not
 ### 9.5 Managed copy and Import
 
 **Managed copy.** The detail view of any External entity offers "Create managed copy". It opens the editor of the entity's set filled with the entity, unsaved, with the report of section 9.6, and warns that the copy stops following its source. Saving it is a `create` like any other.
+
+OPEN: the unsaved managed copy holds the External entity's sensitive values, which nothing has stored yet. Whether the editor carries them to the browser (and is served with `no-store`) or shows a marker and reads them from the source again on save is not decided.
 
 **Import** is the same operation applied to many External entities at once.
 
@@ -1648,11 +1671,11 @@ Each ticked entity goes through the inverse translator of its set (section 5.14)
 | `expire` | Dropped, and reported |
 | An option the set does not catalog | Moved to `extra`, and reported |
 | An endpoint whose binding core does not use for its service | Kept as it is |
-| Private key of a `saml20-idp-hosted` in a file | A Key reference to the same file |
+| Private key of a `saml20-idp-hosted`, or of the `signature_key` of a remote entity, in a file | A Key reference to the same file |
 | Private key at a `pdo://` location | Import skips the entity, saying the key must move to a file; a managed copy shows it as an error in the editor |
-| Certificate of a remote entity in a file or at a `pdo://` location | Read through core on the node serving the Console and stored pasted, and reported; if it cannot be read, Import skips the entity and a managed copy shows an error |
-| Certificate of a `saml20-idp-hosted` in a file | A file reference |
-| Certificate of a `saml20-idp-hosted` at a `pdo://` location | Stored pasted, and reported |
+| Certificate of a remote entity (`keys`, `certData`, `certificate`) in a file or at a `pdo://` location | Read through core on the node serving the Console and stored pasted, and reported; if it cannot be read, Import skips the entity and a managed copy shows an error |
+| Certificate of a `saml20-idp-hosted`, or of the `signature_key` of a remote entity, in a file | A file reference |
+| Certificate of a `saml20-idp-hosted`, or of the `signature_key` of a remote entity, at a `pdo://` location | Stored pasted, and reported |
 
 **The result screen** lists, per entity, whether it was imported or skipped with its reason, and the conversions applied. Per source, it lists the entity IDs the administrator may now remove from the original by hand. When a source comes before `console:Snapshot` in `metadata.sources`, it says prominently that the entities imported from it are Shadowed, and that publishing changes nothing nodes serve until the originals are removed.
 
@@ -1680,7 +1703,7 @@ There is no fetch from a URL and no export format. PHP is the interchange format
 
 **One object.** The editor opens filled and unsaved, carried by POST, with a report panel above it: what was converted, what was moved to `extra`, what was ignored. What needs the administrator shows as validation errors. Nothing is saved until the administrator saves.
 
-**Several entities**, from an `EntitiesDescriptor` or several `$metadata[...]` statements, give a selectable list. Entities already managed in the set cannot be selected; those colliding with an External entity are marked as future Overrides. One selected entity opens in the editor as above. Several are saved on their own as Pending changes, invalid ones skipped with their reason, followed by the result screen of section 9.5. Each is recorded as `create`: creating from pasted configuration is not Import.
+**Several entities**, from an `EntitiesDescriptor` or several `$metadata[...]` statements, give a selectable list. Entities already managed in the set cannot be selected; those colliding with an External entity are marked as future Overrides or Shadowed (section 9.3). One selected entity opens in the editor as above. Several are saved on their own as Pending changes, invalid ones skipped with their reason, followed by the result screen of section 9.5. Each is recorded as `create`: creating from pasted configuration is not Import.
 
 When pasted configuration holds what looks like a secret in clear, the Console suggests a Secret reference.
 
@@ -1706,6 +1729,8 @@ This section specifies what the administrator sees and the requests behind it. T
 - A state-changing request is a form POST. When it succeeds, the response redirects to the page that follows and that page shows the outcome as a message. When it is rejected, the form or the confirmation screen is rendered again with the errors.
 - Some POST requests render a page without changing state: switching between the form and the PHP view, Reveal, opening the editor from pasted configuration or "Replace from…", and the Import confirmation step. They save nothing and leave no row in the Audit trail.
 - The Console is English only. It has no translations, and option titles, help texts and error messages are written in the module.
+
+OPEN: POST `/entities/{set}/new/create`, POST `/external/import` and POST `/publish` render a result directly, with no GET route for it. Whether result screens are an exception to the redirect, or get GET routes, is not decided.
 
 ### 10.2 Page shell
 
@@ -1812,7 +1837,7 @@ A state page takes the whole content area. The sidebar is shown, but neither the
 
 - One token per SimpleSAMLphp session, made with `random_bytes()` and kept in that session. There is no Symfony CSRF component and no check of `Origin` or `Sec-Fetch-Site`.
 - Every form carries it as a hidden field. No GET request changes state.
-- One service of the module calls `requireAdmin()` and compares the submitted token with `hash_equals()`. Every state-changing action goes through it.
+- One service of the module calls `requireAdmin()` and, after the database state check, compares the submitted token with `hash_equals()`. Every POST goes through it.
 - A POST without a valid token gets HTTP 403 and a plain error page with a link back to the Console. The form is not rendered again with the submitted data. Nothing is written to the Audit trail; a warning goes to the SimpleSAMLphp log.
 - The script makes no requests of its own.
 - The protection is needed because the SimpleSAMLphp session cookie is `SameSite=None` by default, a setting that belongs to the deployment.
@@ -1834,7 +1859,7 @@ States: first run, with nothing managed and nothing published, leading to "Add" 
 
 **Entity list**, one per set.
 
-- One row per managed entity of the set: its name when the document has one, its entity ID, its state of section 8.2, and labels for disabled, Override, Shadowed, "external source changed", warnings (section 5.9), certificates that expire or have expired, and Unreadable.
+- One row per managed entity of the set: its name when the document has one, its entity ID, its state of section 8.2, and labels for disabled, Override, Shadowed, "external source changed", errors against the current schema (section 5.8), warnings (section 5.9), certificates that expire or have expired, and Unreadable.
 - Search by entity ID and name. Filters "Not live" (Unpublished, To be withdrawn and Not live, section 8.2) and "With warnings".
 - Search, filters and pagination run on the server; the page shows the total.
 - When `console:Snapshot` is missing from the `metadata.sources` of the node serving the page, the list carries the warning of section 10.7.
@@ -1842,7 +1867,7 @@ States: first run, with nothing managed and nothing published, leading to "Add" 
 
 **Authsource list.**
 
-- Managed authsources first, one row each: id, Authsource type, state and labels for disabled, Shadowed and Unreadable.
+- Managed authsources first, one row each: id, Authsource type, state and labels for disabled, Shadowed, errors against the current schema (section 6.9) and Unreadable.
 - Then, under "From authsources.php", the File authsources of the node serving the page, read-only, with id and type only. A File authsource whose id is also a managed authsource is marked as the one that shadows it, and the list says that the file wins (section 6.4).
 - The primary action is "Add authsource".
 
@@ -1856,11 +1881,11 @@ One edit screen serves managed entities of the three sets and managed authsource
 
 **Notices**, above the content, when they apply: the object is disabled; it is an Override, with a link to the comparison of section 10.13; its external source changed; it is Shadowed, by an External entity or by a File authsource; it has warnings.
 
-**Two views** of the same object: Settings, the form of section 10.10, and PHP, the editor of section 10.11. Switching is a POST that renders the other view from the submitted content without saving. Unreadable content in the PHP view blocks the switch. A new object opens in the PHP view with its required options; otherwise the editor opens in the view last used, remembered by the script in `localStorage`.
+**Two views** of the same object: Settings, the form of section 10.10, and PHP, the editor of section 10.11. Switching is a POST that renders the other view from the submitted content without saving. Text in the PHP view that cannot be read blocks the switch. A new object opens in the PHP view with its required options; otherwise the editor opens in the view last used, remembered by the script in `localStorage`.
 
 **Save bar.** Fixed at the bottom of the content, with Save and the object's state: unsaved edits on the page, saved but not published (one of the states of section 8.2), or up to date.
 
-**Secondary actions**, grouped apart from Save: Discard this change, offered when the object has a Pending change (section 8.3); Delete; Promote, on an object whose `next_key` is set (section 7.7); "Replace from…", on a managed entity (section 9.7). Delete, Discard and Promote ask for confirmation, saying what will happen. Promote says that the previous key leaves the configuration and that messages encrypted to the old certificate will no longer decrypt. Disabling or deleting an Override warns that nodes will serve the External entity again after the next Publication.
+**Secondary actions**, grouped apart from Save: Discard this change, offered when the object has a Pending change other than Unpublished (section 8.3); Delete; Promote, on an object whose `next_key` is set (section 7.7); "Replace from…", on a managed entity (section 9.7). Delete, Discard and Promote ask for confirmation, saying what will happen. Promote says that the previous key leaves the configuration and that messages encrypted to the old certificate will no longer decrypt. Disabling or deleting an Override warns that nodes will serve the External entity again after the next Publication.
 
 **Saving.**
 
@@ -1918,6 +1943,8 @@ A select whose values come from the same document, such as the database of a que
 
 **Key reference control.** A key slot (section 7.4) shows the private key reference, its passphrase as a sensitive value, the certificate either as pasted PEM or as a file reference, and the key name. A valid pasted certificate shows its subject and its expiry date, flagged when it has expired or expires within `cert_expiry_warning_days`. A file the node serving the page cannot find or read, and a private key that does not match its certificate, are warnings of section 7.5.
 
+OPEN: `keySlot` carries no annotation; only its `privatekey` and `certificate` do, and the remote `certificates` list carries `x-key-reference` too. What triggers this control, and how that list is rendered, is not decided, nor whether a Key reference is the file pointer of the glossary or the whole slot as used here.
+
 **Sensitive values.** A stored literal of an `x-sensitive` option is sent in a password field with a reveal control that works in the browser. An empty field means an empty value. A Secret reference is shown as plain text and is told apart from a literal by its look. A string field that accepts a Secret reference offers for completion the file names in the `secrets_dir` of the node serving the page, never their contents (section 7.2).
 
 **Messages.** Error texts are generic per JSON Schema keyword and written in the module. A `pattern` carries its own text in `$error`. Each cross-field rule words its own.
@@ -1930,12 +1957,12 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 
 - a reference panel listing the options of the schema, each with "Insert" at the cursor;
 - Copy and Download as `.php`, which give what is on screen;
-- Reveal, a POST that renders the view again with the stored sensitive values in place of their sentinels. Unreadable text blocks it.
+- Reveal, a POST that renders the view again with the stored sensitive values in place of their sentinels. Text that cannot be read blocks it.
 
 **Reading.** The text is parsed with `nikic/php-parser` and an allowlist walk of the AST; it is never executed.
 
 - Accepted: one block, with its wrapper or as a bare array, made of literals and of the `SAML2\Constants::*` constants of a fixed list, which are written back as literals.
-- Unreadable text, a syntax error or a value that is not a literal, is an error with its line and column. It blocks saving, Reveal and the switch to Settings.
+- Text that cannot be read, a syntax error or a value that is not a literal, is an error with its line and column. It blocks saving, Reveal and the switch to Settings.
 - A block whose entity ID, authsource id or type differs from the object's is rejected.
 - An uncataloged key goes to `extra` for an entity, with a warning and a suggestion when it is close to a cataloged option; for an authsource it is an error naming the key.
 - Validation errors of the document are tied to the line of the root option they come from.
@@ -1959,7 +1986,7 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 - "Start empty" for an entity opens the editor of the set with the required options only. For an authsource it first asks for the Authsource type, among the five, each with one line on what it is for.
 - Reading pasted configuration is a POST that opens the editor filled and unsaved, with a report panel above it listing what was converted, what was moved to `extra` and what was ignored. What needs the administrator shows as validation errors. Nothing is saved until the administrator saves.
 - XML that describes another kind of entity offers to switch to its set.
-- Several entities in the input give a selectable list. Entities already managed in the set cannot be selected; those colliding with an External entity are marked as future Overrides. One selected entity opens in the editor; several are saved on their own and followed by the result screen of section 9.5.
+- Several entities in the input give a selectable list. Entities already managed in the set cannot be selected; those colliding with an External entity are marked as future Overrides or Shadowed (section 9.3). One selected entity opens in the editor; several are saved on their own and followed by the result screen of section 9.5.
 - When pasted configuration holds what looks like a secret in clear, the report suggests a Secret reference.
 
 "Replace from…" on a managed entity takes metadata XML in the same kind of text area and opens the editor with the merged document, unsaved, with the same report (section 9.7).
@@ -1979,7 +2006,7 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 
 The confirmation screen of section 8.4.
 
-- Every Pending change as a row with its state (section 8.2), the kind of object and its identifier, grouped by state. Each row expands to the line diff of its PHP text against the current Snapshot (section 10.11), and offers "Discard this change".
+- Every Pending change as a row with its state (section 8.2), the kind of object and its identifier, grouped by state. Each row expands to the line diff of its PHP text against the current Snapshot (section 10.11), or to its load error when Unreadable, and offers "Discard this change" unless it is Unpublished.
 - The problems that block, first, each naming its object and linking to it.
 - The warnings, below, collapsed.
 - A panel with the number the new Snapshot will take, an optional comment and the Publish button. When Publication is not offered, the panel says why.
@@ -2003,7 +2030,7 @@ Two tabs.
 
 **Rollback confirmation.** The difference between the current Snapshot and the target as PHP text (section 10.11), the statement that what is saved in the Console is untouched, the warning of section 8.5 about modules that are not installed, and the button. A target that fails its checksum or format version check says so and offers no button. A lost race shows the confirmation again (section 4.8).
 
-**Audit trail.** The rows of section 4.4, newest first: when, identity, action and object. Filters by object, by action and by date. Each row opens to its difference with the previous row of the same object and to the full document after the change, sensitive values as markers. Rows for `publish` and `rollback` show the Snapshot numbers and the comment. The notice of section 10.6 appears here when the identity is the constant `admin`.
+**Audit trail.** The rows of section 4.4, newest first: when, identity, action and object. Filters by object, by action and by date. Each row opens to its difference with the previous row of the same object and to the full document after the change, sensitive values as markers. Rows for `publish` show the Snapshot numbers and the comment; rows for `rollback` the Snapshot numbers. The notice of section 10.6 appears here when the identity is the constant `admin`.
 
 ### 10.16 Nodes
 
@@ -2026,6 +2053,10 @@ The script is one static file, written by hand, with no dependencies and no buil
 - opens and closes the sidebar overlay, and copies values to the clipboard.
 
 There is no fallback without it. No browser test covers it in v1 (section 12).
+
+OPEN: the script does not list the confirmations of Delete, Discard, Promote and Discard all, "Insert" and "Download `.php`" of what is on screen, or the switch to the remembered view, which is a server POST. Whether these are client-side, and so added above, or server-side with routes of their own, is not decided.
+
+OPEN: opening an Unreadable row shows its stored bytes, sensitive literals included, outside the edit screens that `no-store` covers. Whether they are shown as they are, masked or hidden is not decided.
 
 ## 11. Failure behaviour
 
@@ -2073,7 +2104,7 @@ Per object:
 | `next_key` fails its check | Leaves out only that slot; serves the object with its current key |
 | The node's code cannot translate the document: an unknown Authsource type, an unknown option, a module version that differs from the Console's | Leaves the object out |
 
-Every object or slot left out is recorded with its reason in the build's `manifest.json`, logged, and sets the node's flag in the Node table. The Console highlights the node; the reason is shown only by that node, on its status screen, in its `cron` summary and in core's sanity check (section 3.5).
+Every object or slot left out is recorded with its reason in the build's `manifest.json`, logged, and sets the node's flag in the Node table. The Console highlights the node; the reason is shown only by that node, on the Nodes screen it serves, in its `cron` summary and in core's sanity check (section 3.5).
 
 ### 11.4 In the Console
 
@@ -2093,7 +2124,7 @@ Every object or slot left out is recorded with its reason in the build's `manife
 | A stored document that the current schema rejects, as after a module update | Listed with its errors and editable; blocks Publication until fixed or disabled; the current Snapshot keeps being served |
 | A stored row whose `document` is not valid JSON or cannot be loaded otherwise | Listed with an "Unreadable" label and the load error, and counted as a Pending change. It has no form and no PHP view: opening it shows its raw bytes, read-only. Disable, Delete and Discard are available; Discard rewrites the row from the current Snapshot, or deletes it when the object is not in it. It blocks Publication until disabled, deleted or discarded, since skipping it would silently drop the object from the next Snapshot. |
 | A metadata source that throws when the Console reads it | That source is shown as unreadable on the External entities screen; the others are listed (section 9.1) |
-| A building problem on the node serving the Console | Shown on that node's status screen |
+| A building problem on the node serving the Console | Shown on the Nodes screen |
 | `console:Snapshot` missing from the node serving the Console | A warning on Overview and the entity lists, as the Override and Shadowed labels are then meaningless; nothing is blocked (section 9.1) |
 
 The Console's link on core's Configuration tab never queries the database, so none of the states above breaks core's admin pages.
@@ -2142,6 +2173,8 @@ Every threshold blocks.
 | Method length | At most 30 lines (`SlevomatCodingStandard.Functions.FunctionLength`) |
 | Cognitive complexity | At most 8 per method |
 | PHP file size | At most 5000 characters per file in `src/` and `tests/` |
+
+OPEN: the coverage job runs on SQLite only, so the PostgreSQL and MariaDB/MySQL persistence classes never run in it. Whether it merges the coverage of the engine suites or those classes are excluded from the 90 % is not decided.
 
 The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, Twig templates, the script and fixtures are exempt.
 

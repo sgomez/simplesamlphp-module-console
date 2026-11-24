@@ -12,7 +12,7 @@ Several authsource options do not fit JSON as core expects them: the type at key
 
 ## Consequences
 
-- An authsource of an uncatalogued type, or one needing an uncatalogued option, stays a file authsource.
+- An authsource of an uncatalogued type, or one needing an uncatalogued option, stays a File authsource.
 - The Snapshot carries Console documents. Each node resolves Secret references first and translates afterwards, so every node runs the translators and must carry the same module version as the Console. A node that cannot translate a document drops that authsource.
 - Validation runs on save: the schema, plus cross-field rules in the type's class. A Publication revalidates everything against the current schemas, so a module update that tightens a schema can block Publication until the stored document is fixed or disabled; the current Snapshot keeps being served.
 - Schemas are JSON Schema 2020-12, validated with `opis/json-schema`; `justinrainbow/json-schema` silently skips 2020-12 keywords.

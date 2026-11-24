@@ -25,11 +25,11 @@ An authentication source declared by hand in `config/authsources.php`. The Conso
 _Avoid_: Static source, legacy source
 
 **Authsource type**:
-A kind of authentication source the Console knows how to edit. A managed authsource always has one; an authentication source of any other kind can only be a file authsource.
+A kind of authentication source the Console knows how to edit. A managed authsource always has one; an authentication source of any other kind can only be a File authsource.
 _Avoid_: Plugin, driver, provider
 
 **Shadowed**:
-Said of a managed authsource whose id is also a file authsource on a node, or of a managed entity that shares entity ID and set with an External entity whose source comes first on that node. The node serves the other one.
+Said of a managed authsource whose id is also a File authsource on a node, or of a managed entity that shares entity ID and set with an External entity whose source comes first on that node. The node serves the other one.
 _Avoid_: Conflicting, hidden
 
 **Override**:
@@ -49,7 +49,7 @@ The act of producing a new Snapshot from the Console's database and making it th
 _Avoid_: Sync, deploy, flush
 
 **Pending change**:
-A difference between what is saved in the Console and the current Snapshot: a managed entity or managed authsource that is new, modified, withdrawn or deleted and has not been through a Publication yet.
+A difference between what is saved in the Console and the current Snapshot: a managed entity or managed authsource that is new, modified, withdrawn, deleted or unreadable and has not been through a Publication yet.
 _Avoid_: Draft, unpublished edit, dirty record
 
 **Rollback**:
@@ -65,7 +65,7 @@ The pointer inside a managed entity or a managed authsource to a private key or 
 _Avoid_: Key path, cert file
 
 **Secret reference**:
-A placeholder stored in place of a sensitive value, which each node replaces with the real value from its own environment when it builds its Snapshot.
+A placeholder stored in place of a sensitive value, which each node replaces with the real value from its own environment when it builds its local copy of the Snapshot.
 _Avoid_: Vault key, env placeholder, secret path
 
 **Audit trail**:
