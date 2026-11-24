@@ -1,0 +1,90 @@
+{% extends "@console/shell.twig" %}
+{% set active = 'publish' %}
+{% set signs = {'Unpublished': '+', 'Modified': '~', 'Deleted': '×', 'Unreadable': '!'} %}
+{% set changeCount = 0 %}{% for group in groups %}{% set changeCount = changeCount + group.changes|length %}{% endfor %}
+
+{% block title %}Publish{% endblock %}
+
+{% block breadcrumb %}<a class="crumb" href="{{ consoleUrl }}">Console</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" class="crumb-current">Publish</span>{% endblock %}
+
+{% block header_pending %}
+{% if currentNumber %}<span class="status s-live" data-current-snapshot><span class="dot dot-full" aria-hidden="true"></span>Snapshot {{ currentNumber }}, published {{ currentCreatedAt }}</span>{% else %}<span class="status s-off" data-current-snapshot><span class="dot" aria-hidden="true"></span>No Snapshot published yet</span>{% endif %}
+{% endblock %}
+
+{% block page_class %}page-publish{% endblock %}
+
+{% block content %}
+<h1 class="h1">Publish</h1>
+
+{% if groups or problems %}
+<div class="split">
+  <div class="split-main">
+    {% if problems %}
+    <div class="callout callout-error" data-problems>
+      <svg class="ic ic-error" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.9 3.5h1.8v5H7.1v-5zm0 6.2h1.8v1.8H7.1v-1.8z"/></svg>
+      <div class="callout-body">
+        <span class="callout-title">{{ problems|length == 1 ? '1 problem blocks publishing' : problems|length ~ ' problems block publishing' }}</span>
+        <ul class="small">
+          {% for problem in problems %}
+          <li>{% if problem.entityId %}<a class="link" href="{{ problem.url }}">{{ problem.entityId }}</a>: {% endif %}{{ problem.message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if warnings %}
+    <details class="grp card" data-warnings>
+      <summary><span class="strong">{{ warnings|length == 1 ? '1 warning' : warnings|length ~ ' warnings' }}</span></summary>
+      <div class="grp-body">
+        {% for warning in warnings %}
+        <div class="msg-warning"><span>{% if warning.entityId %}<span class="mono">{{ warning.entityId }}</span>: {% endif %}{{ warning.message }}</span></div>
+        {% endfor %}
+      </div>
+    </details>
+    {% endif %}
+
+    {% if groups %}
+    <div class="section-head"><h2 class="h2">{{ changeCount == 1 ? '1 change' : changeCount ~ ' changes' }}</h2>{% if currentNumber %}<span class="small faint">against Snapshot {{ currentNumber }}</span>{% endif %}</div>
+    <div class="card card-list" data-pending>
+      {% for group in groups %}
+      {% for change in group.changes %}
+      {% set body %}
+        <span class="sign mono" aria-hidden="true">{{ signs[group.state] ?? '·' }}</span>
+        <span class="verb muted" data-change-state="{{ group.state }}">{{ group.state }}</span>
+        <span class="mono strong">{{ change.entityId }}</span>
+        <span class="small faint">Service provider</span>
+        {% if change.loadError %}<span class="small s-danger">{{ change.loadError }}</span>{% endif %}
+      {% endset %}
+      {% if change.url %}<a class="row change" href="{{ change.url }}">{{ body }}</a>{% else %}<div class="row change">{{ body }}</div>{% endif %}
+      {% endfor %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <aside class="card panel" aria-label="This Publication">
+    <h2 class="h2">This Publication</h2>
+    {% if canPublish %}
+    <form method="post" action="{{ publishUrl }}" class="stack">
+      <input type="hidden" name="_token" value="{{ csrfToken }}">
+      <input type="hidden" name="hash" value="{{ hash }}">
+      <dl class="facts"><dt class="muted">Becomes</dt><dd>Snapshot {{ nextNumber }}</dd></dl>
+      <label class="stack" for="comment"><span class="label">Comment <span class="faint">(optional)</span></span></label>
+      <textarea class="input" id="comment" name="comment" rows="3"></textarea>
+      <button type="submit" class="btn btn-primary btn-tall">Publish {{ changeCount == 1 ? '1 change' : changeCount ~ ' changes' }}</button>
+    </form>
+    {% else %}
+    <dl class="facts"><dt class="muted">Becomes</dt><dd>Snapshot {{ nextNumber }}</dd></dl>
+    <button type="button" class="btn btn-primary btn-tall" disabled>Publish {{ changeCount == 1 ? '1 change' : changeCount ~ ' changes' }}</button>
+    <p class="small why">{{ problems|length == 1 ? 'Fix 1 problem to publish.' : 'Fix ' ~ problems|length ~ ' problems to publish.' }}</p>
+    {% endif %}
+  </aside>
+</div>
+{% else %}
+<div class="card empty">
+  <h2 class="h2">Nothing to publish</h2>
+  {% if currentNumber %}<p class="muted">Everything saved is live in Snapshot {{ currentNumber }}.</p>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}Console{% endblock %} | Console</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('img/favicon.svg', 'console') }}">
+  <link rel="stylesheet" href="{{ asset('css/console.css', 'console') }}">
+  <script src="{{ asset('js/console.js', 'console') }}" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <div class="shell-side" id="nav">
+      <nav class="side-nav" aria-label="Console">
+        <div class="side-body">
+          <a class="brand" href="{{ consoleUrl }}"><span class="brand-name">Console</span></a>
+          {% block nav %}
+          <div class="nav-group">
+            <h2 class="nav-head">Entities</h2>
+            <a class="nav-item{% if active is defined and active == 'service-providers' %} active{% endif %}" data-nav="service-providers" href="{{ consoleUrl }}entities/saml20-sp-remote"{% if active is defined and active == 'service-providers' %} aria-current="page"{% endif %}>Service providers</a>
+          </div>
+          <div class="nav-group">
+            <h2 class="nav-head">Changes</h2>
+            <a class="nav-item{% if active is defined and active == 'publish' %} active{% endif %}" data-nav="publish" href="{{ consoleUrl }}publish"{% if active is defined and active == 'publish' %} aria-current="page"{% endif %}>Publish{% if pendingCount is defined and pendingCount > 0 %} <span class="nav-badge" data-pending-count aria-label="{{ pendingCount }} changes to publish">{{ pendingCount }}</span>{% endif %}</a>
+          </div>
+          {% endblock %}
+        </div>
+        <div class="side-foot">
+          <div class="card identity-card">
+            <div class="identity">
+              <span class="identity-name" data-identity>{{ identity }}</span>
+              <a class="identity-link" href="{{ adminUrl }}">SimpleSAMLphp</a>
+            </div>
+            <a class="logout" href="{{ logoutUrl }}" aria-label="Log out" title="Log out"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5H3.5v11H6M10.5 5l3 3-3 3M13.5 8H6.5"/></svg></a>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <div class="shell-main">
+      <header class="shell-head">
+        <button type="button" class="menu-btn btn btn-secondary btn-icon" data-sidebar-toggle aria-controls="nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"/></svg></button>
+        <nav class="crumbs" aria-label="Breadcrumb">{% block breadcrumb %}<span aria-current="page" class="crumb-current">Console</span>{% endblock %}</nav>
+        {% block header_pending %}{% if pendingCount is defined and pendingCount > 0 %}<a class="btn btn-global btn-sm" data-pending-button href="{{ consoleUrl }}publish"><span class="dot dot-half" aria-hidden="true"></span>Review {{ pendingCount }} change{{ pendingCount == 1 ? '' : 's' }}</a>{% endif %}{% endblock %}
+      </header>
+      <main class="page {% block page_class %}{% endblock %}">
+        {% if message is defined and message %}
+        <div class="callout callout-info" role="status" data-message><svg class="ic ic-info" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.9 3h1.8v1.8H7.1V4zm0 3h1.8v5H7.1V7z"/></svg><div class="callout-body"><span class="callout-title">{{ message }}</span></div></div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </main>
+      {% block after_page %}{% endblock %}
+    </div>
+  </div>
+</body>
+</html>

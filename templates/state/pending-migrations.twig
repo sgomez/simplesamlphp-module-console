@@ -1,0 +1,22 @@
+{% extends "@console/shell.twig" %}
+
+{% block title %}Pending migrations{% endblock %}
+
+{% block breadcrumb %}<a class="crumb" href="{{ consoleUrl }}">Console</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" class="crumb-current">Pending migrations</span>{% endblock %}
+
+{% block page_class %}page-narrow{% endblock %}
+
+{% block content %}
+<section class="card empty state-page" data-state="pending-migrations">
+  <h1 class="h1">Pending migrations</h1>
+  <p class="muted">A migration cannot be undone without restoring a backup. SSO is not affected: nodes keep serving their local Snapshot.</p>
+  {% if report %}
+  <div class="callout callout-error" role="alert" data-migration-error><svg class="ic ic-error" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.9 3.5h1.8v5H7.1v-5zm0 6.2h1.8v1.8H7.1v-1.8z"/></svg><div class="callout-body"><span class="callout-title">Migration {{ report.failedAt }} failed: {{ report.reason }}</span></div></div>
+  {% endif %}
+  <form method="post" action="{{ migrateUrl }}">
+    <input type="hidden" name="_token" value="{{ csrfToken }}">
+    <button type="submit" class="btn btn-primary">Run migrations</button>
+  </form>
+  <span class="small muted">{% for number in status.missing %}Migration {{ number }}{% if not loop.last %} · {% endif %}{% endfor %}</span>
+</section>
+{% endblock %}

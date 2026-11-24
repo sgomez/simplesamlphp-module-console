@@ -1,0 +1,2 @@
+CREATE DATABASE IF NOT EXISTS console_dev CHARACTER SET utf8mb4;
+GRANT ALL PRIVILEGES ON console_dev.* TO 'console'@'%';

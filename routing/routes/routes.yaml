@@ -1,0 +1,74 @@
+---
+
+console-home:
+  path: /
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\HomeController::main'
+  }
+  methods: [GET]
+
+console-migrate:
+  path: /migrate
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\MigrateController::run'
+  }
+  methods: [POST]
+
+console-entity-list:
+  path: /entities/{set}
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntityListController::list'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [GET]
+
+console-entity-new:
+  path: /entities/{set}/new
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntityEditController::add'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [GET]
+
+console-entity-edit:
+  path: /entities/{set}/edit
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntityEditController::edit'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [GET]
+
+console-entity-save:
+  path: /entities/{set}/save
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntitySaveController::save'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [POST]
+
+console-publish:
+  path: /publish
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\PublishController::review'
+  }
+  methods: [GET]
+
+console-publish-confirm:
+  path: /publish
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\PublishController::publish'
+  }
+  methods: [POST]
+
+console-entity-delete:
+  path: /entities/{set}/delete
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntityDeleteController::delete'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [POST]

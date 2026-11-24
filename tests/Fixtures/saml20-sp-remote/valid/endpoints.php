@@ -1,0 +1,37 @@
+<?php
+
+$metadata['https://sp.example.org/endpoints'] = [
+    'AssertionConsumerService' => [
+        [
+            'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+            'Location' => 'https://sp.example.org/acs/post',
+            'index' => 1,
+            'isDefault' => true,
+        ],
+        [
+            'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact',
+            'Location' => 'https://sp.example.org/acs/artifact',
+            'index' => 2,
+        ],
+        [
+            'Binding' => 'urn:oasis:names:tc:SAML:1.0:profiles:browser-post',
+            'Location' => 'https://sp.example.org/acs/saml1',
+            'index' => 3,
+        ],
+    ],
+    'SingleLogoutService' => [
+        [
+            'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+            'Location' => 'https://sp.example.org/slo',
+            'ResponseLocation' => 'https://sp.example.org/slo/response',
+        ],
+    ],
+    'DiscoveryResponse' => [
+        [
+            'Binding' => 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol',
+            'Location' => 'https://sp.example.org/discovery',
+            'index' => 0,
+            'isDefault' => true,
+        ],
+    ],
+];

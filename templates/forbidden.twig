@@ -1,0 +1,15 @@
+{% extends "@console/shell.twig" %}
+
+{% block title %}Request refused{% endblock %}
+
+{% block breadcrumb %}<a class="crumb" href="{{ consoleUrl }}">Console</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" class="crumb-current">{{ block('title') }}</span>{% endblock %}
+
+{% block page_class %}page-narrow{% endblock %}
+
+{% block content %}
+<section class="card empty state-page" data-state="forbidden">
+  <h1 class="h1">Request refused</h1>
+  <p class="muted">The request did not carry a valid request-forgery token, so nothing was changed.</p>
+  <a class="btn btn-secondary" href="{{ consoleUrl }}">Back to the Console</a>
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+---
+
+services:
+  _defaults:
+    autowire: true
+    public: false
+
+  SimpleSAML\Module\console\Infrastructure\Http\AdminAccess: ~
+  SimpleSAML\Module\console\Infrastructure\Http\CsrfToken: ~
+  SimpleSAML\Module\console\Infrastructure\Http\FlashMessage: ~
+  SimpleSAML\Module\console\Infrastructure\Http\RequestGate: ~
+  SimpleSAML\Module\console\Infrastructure\Http\StatePages: ~
+  SimpleSAML\Module\console\Infrastructure\Http\DatabaseGate: ~
+  SimpleSAML\Module\console\Infrastructure\Http\PageFactory: ~
+  SimpleSAML\Module\console\Infrastructure\Http\EntityEditView: ~
+  SimpleSAML\Module\console\Infrastructure\Http\EntityWarnings: ~
+  SimpleSAML\Module\console\Infrastructure\Persistence\Repositories: ~
+  SimpleSAML\Module\console\Infrastructure\Build\NodeBuild: ~
