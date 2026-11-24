@@ -336,9 +336,9 @@ The front end has a build step (section 10.17). Its npm dependencies are pinned 
 | `react`, `react-dom` | Components |
 | `react-router` | Client routing over the Console's paths |
 | `ajv`, and `ajv-formats` when the schemas use `format` | JSON Schema 2020-12 validation in the browser, compiled at build time |
-| `vite`, `@vitejs/plugin-react`, `typescript` | Build and type checking |
+| `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`, `@types/react-dom` | Build and type checking |
 | `eslint`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks` | Lint, including the rules of section 12.4 |
-| `vitest`, `@testing-library/react`, `jsdom` | Component tests |
+| `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/dom`, `jsdom` | Component tests and their coverage |
 | `json-schema-to-typescript` | Types generated from the schemas |
 
 Adding an npm package is a decision recorded in this table.
