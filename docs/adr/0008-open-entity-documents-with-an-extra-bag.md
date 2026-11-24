@@ -10,7 +10,7 @@ A managed entity is stored as a Console document described by one JSON Schema pe
 
 ## Consequences
 
-- Whatever is in `extra` is neither validated nor masked on read. The cataloged sensitive options are `sharedkey`, `privatekey_pass` and `new_privatekey_pass`.
+- Whatever is in `extra` is neither validated nor masked on read. The cataloged sensitive options are `sharedkey` and every `privatekey_pass`, whatever its prefix (`new_`, `signature.`, `metadata.sign.`).
 - `extra` may not contain a cataloged key, so it cannot bypass masking, Key references or the `authproc` rules. It accepts no Secret references, and `expire` is rejected in it.
 - The Console warns about every managed entity that uses `extra`.
-- The catalog covers the options listed in the SimpleSAMLphp 2.5 reference for each set; options owned by other modules are never cataloged.
+- The catalog covers every option core 2.5 reads from an entity of the set, documented or not, plus every option `SAMLParser` emits for it, so that an entity created from XML metadata does not start out with `extra`. Options the reference lists but no code reads are left out, and options owned by other modules are never cataloged.
