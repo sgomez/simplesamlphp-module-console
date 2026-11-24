@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Choice among authsources (multiauth:MultiAuth)",
+  "type": "object",
+  "additionalProperties": false,
+  "x-groups": [
+    {"title": "Sources", "properties": ["sources", "preselect"]}
+  ],
+  "required": ["sources"],
+  "properties": {
+    "sources": {
+      "title": "Sources",
+      "description": "Offered to the user in this order.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "title": "source",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source"],
+        "properties": {
+          "source": {
+            "title": "Authsource",
+            "type": "string",
+            "minLength": 1,
+            "x-authsource-reference": true
+          },
+          "text": {
+            "title": "Button text",
+            "description": "The id of the authsource when empty.",
+            "$ref": "../../common.json#/$defs/languageMap"
+          },
+          "help": {"title": "Help text", "$ref": "../../common.json#/$defs/languageMap"},
+          "css_class": {"title": "CSS class", "type": "string", "minLength": 1},
+          "AuthnContextClassRef": {
+            "title": "Authentication context classes",
+            "description": "One per line. The module reads it from every source when a service provider requests a context, so set it on all of them or on none.",
+            "$ref": "../../common.json#/$defs/stringList",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "preselect": {
+      "title": "Preselected source",
+      "description": "The id of one of the sources above.",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

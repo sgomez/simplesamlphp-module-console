@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shapes shared by the authsource and entity schemas",
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "languageMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)*$",
+        "$error": {"pattern": "A language is a code such as en, es or pt-BR."}
+      },
+      "additionalProperties": {"type": "string", "minLength": 1}
+    },
+    "languageListMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)*$",
+        "$error": {"pattern": "A language is a code such as en, es or pt-BR."}
+      },
+      "additionalProperties": {"$ref": "#/$defs/stringList", "minItems": 1}
+    },
+    "signatureAlgorithm": {
+      "type": "string",
+      "enum": [
+        "http://www.w3.org/2000/09/xmldsig#rsa-sha1",
+        "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+        "http://www.w3.org/2001/04/xmldsig-more#rsa-sha384",
+        "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"
+      ]
+    },
+    "authproc": {
+      "description": "Processing filters. Each row holds a priority and the filter's configuration; only the class is checked.",
+      "type": "array",
+      "x-widget": "textarea",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["priority", "filter"],
+        "properties": {
+          "priority": {"type": "integer"},
+          "filter": {
+            "type": "object",
+            "required": ["class"],
+            "properties": {
+              "class": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      },
+      "examples": [[{"priority": 50, "filter": {"class": "core:AttributeMap", "0": "oid2name"}}]]
+    },
+    "certificate": {
+      "title": "Certificate",
+      "type": "object",
+      "x-key-reference": "certificate",
+      "additionalProperties": false,
+      "required": ["source"],
+      "properties": {
+        "source": {
+          "title": "Where the certificate comes from",
+          "description": "Pasted: the Console holds it. File: every node provides it.",
+          "type": "string",
+          "enum": ["pasted", "file"],
+          "x-widget": "radio"
+        },
+        "pem": {
+          "title": "Certificate in PEM",
+          "type": "string",
+          "minLength": 1,
+          "x-widget": "textarea",
+          "x-when": {"source": ["pasted"]}
+        },
+        "file": {
+          "title": "Certificate file",
+          "description": "A name relative to the node's certdir, or an absolute path.",
+          "type": "string",
+          "minLength": 1,
+          "examples": ["sp.crt"],
+          "x-when": {"source": ["file"]}
+        }
+      },
+      "if": {"properties": {"source": {"const": "pasted"}}, "required": ["source"]},
+      "then": {"required": ["pem"]},
+      "else": {"required": ["file"]}
+    },
+    "keySlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "privatekey": {
+          "title": "Private key file",
+          "description": "A name relative to the node's certdir, or an absolute path. Every node provides the file; the Console never holds a private key.",
+          "type": "string",
+          "minLength": 1,
+          "x-key-reference": "private-key",
+          "examples": ["/run/secrets/sp.key"]
+        },
+        "privatekey_pass": {
+          "title": "Private key passphrase",
+          "type": "string",
+          "x-sensitive": true
+        },
+        "certificate": {"$ref": "#/$defs/certificate"},
+        "key_name": {
+          "title": "Key name",
+          "description": "Published as the KeyName of the certificate.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "contacts": {
+      "type": "array",
+      "items": {
+        "title": "contact",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contactType"],
+        "properties": {
+          "contactType": {
+            "title": "Type",
+            "type": "string",
+            "enum": ["technical", "support", "administrative", "billing", "other"]
+          },
+          "givenName": {"title": "Given name", "type": "string", "minLength": 1},
+          "surName": {"title": "Surname", "type": "string", "minLength": 1},
+          "company": {"title": "Company", "type": "string", "minLength": 1},
+          "emailAddress": {
+            "title": "Email addresses",
+            "description": "One per line.",
+            "$ref": "#/$defs/stringList",
+            "minItems": 1
+          },
+          "telephoneNumber": {
+            "title": "Telephone numbers",
+            "description": "One per line.",
+            "$ref": "#/$defs/stringList",
+            "minItems": 1
+          },
+          "attributes": {
+            "title": "XML attributes",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "title": "attribute",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "value"],
+              "properties": {
+                "name": {"title": "Name", "type": "string", "minLength": 1},
+                "value": {"title": "Value", "type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "EntityAttributes": {
+      "type": "array",
+      "items": {
+        "title": "entity attribute",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "values"],
+        "properties": {
+          "name": {
+            "title": "Name",
+            "description": "Optionally prefixed with its name format in braces.",
+            "type": "string",
+            "minLength": 1,
+            "examples": ["http://macedir.org/entity-category"]
+          },
+          "values": {
+            "title": "Values",
+            "description": "One per line.",
+            "$ref": "#/$defs/stringList",
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "UIInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "DisplayName": {"title": "Display name", "$ref": "#/$defs/languageMap"},
+        "Description": {"title": "Description", "$ref": "#/$defs/languageMap"},
+        "InformationURL": {"title": "Information URL", "$ref": "#/$defs/languageMap"},
+        "PrivacyStatementURL": {"title": "Privacy statement URL", "$ref": "#/$defs/languageMap"},
+        "Keywords": {"title": "Keywords", "$ref": "#/$defs/languageListMap"},
+        "Logo": {
+          "title": "Logos",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "title": "logo",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["url", "width", "height"],
+            "properties": {
+              "url": {"title": "URL", "type": "string", "minLength": 1},
+              "width": {"title": "Width", "type": "integer", "minimum": 1},
+              "height": {"title": "Height", "type": "integer", "minimum": 1},
+              "lang": {"title": "Language", "type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    "RegistrationInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority"],
+      "properties": {
+        "authority": {"title": "Registration authority", "type": "string", "minLength": 1},
+        "instant": {
+          "title": "Registration instant",
+          "type": "string",
+          "format": "date-time",
+          "examples": ["2026-11-24T10:15:00Z"]
+        },
+        "policies": {"title": "Registration policies", "$ref": "#/$defs/languageMap"}
+      }
+    }
+  }
+}

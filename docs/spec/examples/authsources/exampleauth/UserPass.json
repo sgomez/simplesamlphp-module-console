@@ -1,0 +1,33 @@
+{
+  "users": [
+    {
+      "username": "student",
+      "password": "studentpass",
+      "attributes": [
+        {
+          "name": "uid",
+          "values": [
+            "student"
+          ]
+        },
+        {
+          "name": "eduPersonAffiliation",
+          "values": [
+            "member",
+            "student"
+          ]
+        }
+      ]
+    },
+    {
+      "username": "guest",
+      "password": "guestpass"
+    }
+  ],
+  "core:loginpage_links": [
+    {
+      "href": "https://example.org/help",
+      "text": "Help"
+    }
+  ]
+}

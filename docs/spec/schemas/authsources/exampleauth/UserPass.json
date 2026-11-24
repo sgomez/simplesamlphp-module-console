@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Inline test users (exampleauth:UserPass)",
+  "description": "Not meant for production.",
+  "type": "object",
+  "additionalProperties": false,
+  "x-groups": [
+    {"title": "Users", "properties": ["users"]},
+    {"title": "Login page", "properties": ["core:loginpage_links", "remember.username.enabled", "remember.username.checked"]}
+  ],
+  "required": ["users"],
+  "properties": {
+    "users": {
+      "title": "Users",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "title": "user",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["username", "password"],
+        "properties": {
+          "username": {
+            "title": "Username",
+            "type": "string",
+            "pattern": "^[^:]+$",
+            "$error": {"pattern": "A username cannot be empty or contain a colon."}
+          },
+          "password": {"title": "Password", "type": "string", "x-sensitive": true},
+          "attributes": {
+            "title": "Attributes",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "title": "attribute",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "values"],
+              "properties": {
+                "name": {"title": "Name", "type": "string", "minLength": 1},
+                "values": {
+                  "title": "Values",
+                  "description": "One per line.",
+                  "type": "array",
+                  "items": {"type": "string"},
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "core:loginpage_links": {"$ref": "../core/UserPassBase.json#/$defs/loginpage_links"},
+    "remember.username.enabled": {"$ref": "../core/UserPassBase.json#/$defs/remember_username_enabled"},
+    "remember.username.checked": {"$ref": "../core/UserPassBase.json#/$defs/remember_username_checked"}
+  }
+}

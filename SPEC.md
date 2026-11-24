@@ -590,7 +590,401 @@ _Not written yet._
 
 ## 6. Managed authsources
 
-_Not written yet._
+### 6.1 What a managed authsource is
+
+A managed authsource is one row of `console_authsource` (section 4.4): an id, an Authsource type, an enabled flag and a Console document holding its options. The id, the type and the flag are not part of the document.
+
+**Id.**
+
+- It matches `[A-Za-z0-9_.-]+`, is at most 255 bytes long and is compared byte for byte.
+- `admin` is reserved for the file and is rejected, so a broken Snapshot can never lock the administrator out.
+- An id that PHP would turn into an integer array key is rejected: a decimal integer without leading zeros, with or without a minus sign.
+- It cannot be changed once the authsource exists. Renaming is duplicating and deleting.
+- Two managed authsources cannot share an id. A managed authsource may share its id with a File authsource; it is then Shadowed (section 6.4).
+
+**Type.** One of the five Authsource types of section 6.5, chosen when the authsource is created. It cannot be changed afterwards, because the document is only valid against the schema of its type.
+
+**Enabled flag.** A disabled managed authsource does not travel in the Snapshot. Enabling and disabling are Pending changes like any other and have no effect before the next Publication (section 8).
+
+An authentication source of any other type, or one that needs an option its schema does not catalog, stays a File authsource. See [ADR 0006](docs/adr/0006-closed-catalog-of-authsource-types.md).
+
+### 6.2 How a managed authsource reaches core
+
+SimpleSAMLphp 2.5 has no extension point for resolving authsource ids: every reader goes through `Configuration::getConfig('authsources.php')`. Managed authsources are merged into the result of that file by the fragment of section 2.6, which calls `\SimpleSAML\Module\console\Authsources::merge()`. See [ADR 0005](docs/adr/0005-managed-authsources-through-a-hand-added-fragment.md).
+
+`merge()` takes the array of File authsources and returns it with the managed ones added.
+
+- It returns the array untouched when the module `console` is not enabled on the node.
+- It reads `authsources.php` from the build the node is serving (section 3.5). That file is a `return` of an array keyed by id, each entry already translated into what core expects, with Secret references resolved.
+- It merges with `+`, so a File authsource always wins over a managed authsource with the same id.
+- It catches every `\Throwable` and leaks no variables into the scope of `authsources.php`.
+- When the node has no local Snapshot, or the file of the build is missing or unreadable, it returns the File authsources alone and logs a warning.
+- Inside a readable file it checks each entry again and drops, with a warning, only those that are invalid: an entry that is not an array, one without a string at key `0`, one whose id is an integer.
+- It records that it ran in the current request. That is how the node detects a missing fragment (section 3.5).
+
+Core caches the result of `authsources.php` for the current request only, so a new build is seen by the next request.
+
+### 6.3 File authsources in the Console
+
+The Console lists the File authsources of the node it runs on, read-only, under the managed ones.
+
+- It shows their id and their type and nothing else. Without a schema the Console cannot tell which of their options are sensitive, so it never shows their options.
+- It learns them from the array the fragment passes to `merge()`. On a node without the fragment, every authsource core returns is a File authsource.
+- An entry that is a PHP reference to another entry of the file is listed as a File authsource of its own.
+- A File authsource whose id is also a managed authsource is marked as the one that shadows it.
+- The Console sees only the `authsources.php` of its own node. Keeping File authsources identical across nodes is the deployment's job (section 2.8).
+
+A File authsource cannot be copied into the Console from this list. Its PHP can be pasted into "Add authsource" when its type is one of the five (section 6.16).
+
+### 6.4 Collision and precedence
+
+What a node serves for an id depends on the node's own `authsources.php` and on the build it is serving. The table is per node. "Managed authsource" means what the current Snapshot holds, not what is saved: a managed authsource that was never published counts as "None".
+
+| File authsource with that id on the node | Managed authsource | The node serves | What the administrator sees |
+| --- | --- | --- | --- |
+| Yes | None | The File authsource | Listed read-only, id and type |
+| No | Enabled | The managed authsource | Editable |
+| Yes | Enabled | The File authsource | The managed one is Shadowed: a warning on the authsource list and on the Publication screen, and a problem on that node's status. Publication is not blocked. |
+| No | Disabled | Nothing | Editable; not in the Snapshot |
+| Yes | Disabled | The File authsource | Editable; not in the Snapshot |
+| No | Enabled, but left out of this node's build or dropped by `merge()` | Nothing, on this node only | The node's row is flagged; the reason is on that node's status screen |
+| Yes | Enabled, but left out of this node's build or dropped by `merge()` | The File authsource | As above |
+| Any | Any, and the node has no local Snapshot or the build's `authsources.php` is unreadable | The File authsources only; a warning is logged | Nothing in the Console; the node's log |
+| Any | Any, and the fragment is missing or the module is not enabled on the node | The File authsources only | A problem on that node's status when the current Snapshot holds managed authsources |
+
+A managed authsource is left out of a node's build when a Secret reference in it does not resolve on that node, when its current key or certificate fails the node's check, or when the node's code cannot translate its document (sections 3.5 and 7).
+
+A Shadowed managed authsource still travels in the Snapshot. The Console judges Shadowed against the file of the node serving the page; every node settles the collision against its own file.
+
+### 6.5 The catalog
+
+v1 ships five Authsource types. The catalog is closed: there is no generic type, and neither a deployment nor another module can add to it.
+
+| Authsource type | SimpleSAMLphp module | Schema | Example document and array |
+| --- | --- | --- | --- |
+| `saml:SP` | `saml`, in core | [`saml/SP.json`](docs/spec/schemas/authsources/saml/SP.json) | [`SP.json`](docs/spec/examples/authsources/saml/SP.json), [`SP.php`](docs/spec/examples/authsources/saml/SP.php) |
+| `ldap:Ldap` | `ldap`, package `simplesamlphp/simplesamlphp-module-ldap`, 2.5 line | [`ldap/Ldap.json`](docs/spec/schemas/authsources/ldap/Ldap.json) | [`Ldap.json`](docs/spec/examples/authsources/ldap/Ldap.json), [`Ldap.php`](docs/spec/examples/authsources/ldap/Ldap.php) |
+| `sqlauth:SQL2` | `sqlauth`, package `simplesamlphp/simplesamlphp-module-sqlauth`, 1.4 line | [`sqlauth/SQL2.json`](docs/spec/schemas/authsources/sqlauth/SQL2.json) | [`SQL2.json`](docs/spec/examples/authsources/sqlauth/SQL2.json), [`SQL2.php`](docs/spec/examples/authsources/sqlauth/SQL2.php) |
+| `multiauth:MultiAuth` | `multiauth`, in core | [`multiauth/MultiAuth.json`](docs/spec/schemas/authsources/multiauth/MultiAuth.json) | [`MultiAuth.json`](docs/spec/examples/authsources/multiauth/MultiAuth.json), [`MultiAuth.php`](docs/spec/examples/authsources/multiauth/MultiAuth.php) |
+| `exampleauth:UserPass` | `exampleauth`, in core | [`exampleauth/UserPass.json`](docs/spec/schemas/authsources/exampleauth/UserPass.json) | [`UserPass.json`](docs/spec/examples/authsources/exampleauth/UserPass.json), [`UserPass.php`](docs/spec/examples/authsources/exampleauth/UserPass.php) |
+
+Schema paths are relative to `docs/spec/schemas/authsources/`, as `<module>/<Class>.json`. Two more files hold shapes that several schemas pull in with `$ref`:
+
+- [`core/UserPassBase.json`](docs/spec/schemas/authsources/core/UserPassBase.json): the options core's `UserPassBase` gives every username and password authsource. It is not an Authsource type.
+- [`common.json`](docs/spec/schemas/common.json), one level up: shapes shared with the entity schemas of section 5.
+
+The type strings are exact. `ldap:LDAP` is not a type, `sqlauth:SQL` is a deprecated wrapper the Console does not offer, and `userpass:Database` does not exist.
+
+Each example is one valid document next to the PHP array core receives for it, type at key `0` included.
+
+Each Authsource type has, besides its schema, a PHP class under a parallel name that holds its cross-field rules, its translator and its inverse translator (section 3.3).
+
+### 6.6 Schema conventions
+
+Every schema is JSON Schema 2020-12 and describes the Console document, not the array core expects.
+
+- **Closed.** The root and every nested object carry `additionalProperties: false`. An option the schema does not catalog is rejected on save. The one exception is the configuration of a processing filter (section 6.7).
+- **Names.** A root option keeps the name core gives it, dots and colons included (`sign.logout`, `core:loginpage_links`), unless section 6.11 to 6.15 says the type remodels it.
+- **Labels and help.** `title` and `description`. Help text states the fallback the SimpleSAMLphp code applies when the option is not set.
+- **`default` and `examples`.** Shown as a hint only. Validation never writes a `default` into a document, and a required option that has a default is still required. An option that is not set gets its value from the SimpleSAMLphp module on the node.
+- **Order.** The declaration order of `properties` is the order of the form and of the keys in the PHP text.
+- **`$ref`.** Only to files of the catalog, resolved in PHP before the form is built.
+- **Messages.** Every `pattern` carries its own message in `$error`.
+
+The annotations the Console adds:
+
+| Annotation | On | Meaning |
+| --- | --- | --- |
+| `x-sensitive: true` | A string | A sensitive value (section 6.8) |
+| `x-key-reference` | `private-key` on a string, `certificate` on a certificate object | The value is a Key reference (section 7) |
+| `x-authsource-reference: true` | A string | The value is the id of another authsource. Publication checks it without knowing the type (section 6.9), and the form renders it as a select built on the server. |
+| `x-groups` | The root | A list of `{title, properties}`. Every root option belongs to exactly one group. |
+| `x-widget` | Any property | `radio` or `textarea`; otherwise the widget follows from the type. On a value that is not a string, `textarea` means the value is edited as JSON text. |
+| `x-when` | A property | Names a sibling and the values of it for which the property applies. A property that does not apply is hidden and dropped on save. |
+
+`if`/`then`/`else` keeps expressing what is required; `x-when` expresses what applies. Every property a branch requires carries a compatible `x-when`. How the form uses these annotations is specified in section 10; see [ADR 0007](docs/adr/0007-authsource-forms-rendered-by-twig-from-the-schema.md).
+
+### 6.7 Shared shapes
+
+Defined in `common.json` unless stated otherwise.
+
+**List of strings** (`stringList`). An option core accepts as a string or as a list is always a list in the document.
+
+**Language map** (`languageMap`). A localized string is always an object of language code to text, with at least one entry. `languageListMap` maps a language code to a list of strings.
+
+**Processing filters** (`authproc`). A list of rows `{priority, filter}`:
+
+- `priority` is an integer and no two rows share it;
+- `filter` is an object with a mandatory string `class`; the rest of it is free-form and is neither validated nor masked;
+- a positional element of the filter's configuration is a member whose name is its index, as in `{"class": "core:AttributeMap", "0": "oid2name"}`.
+
+The translator turns the rows into core's map of priority to filter array.
+
+**Key slot** (`keySlot`) and **certificate** (`certificate`). A key slot groups one private key with its certificate:
+
+| Field | Meaning | Emitted as |
+| --- | --- | --- |
+| `privatekey` | Key reference to the private key file: a name relative to the node's `certdir`, an absolute path, or `%env(CONSOLE_NAME)%` resolving to one | `privatekey` |
+| `privatekey_pass` | Its passphrase; sensitive | `privatekey_pass` |
+| `certificate` with `source: pasted` | The certificate itself in `pem`, held by the Console | `certData`: the base64 body, without armour or line breaks |
+| `certificate` with `source: file` | A file reference in `file`, in the same forms as `privatekey` | `certificate` |
+| `key_name` | The name published with the certificate | `key_name` |
+
+A slot emits exactly one certificate form. In a next-key slot every emitted name takes the prefix `new_`. On save the Console rewrites a pasted certificate as PEM with armour and 64-character lines, so that the document is the same after a round trip through the PHP text. The rules for Key references, the next key and Promote are in section 7.
+
+OPEN: whether a key slot may hold a private key without a certificate or a certificate without a private key. The schema accepts either; core does too.
+
+**Contacts, `EntityAttributes`, `UIInfo` and `RegistrationInfo`.** Closed shapes, the same wherever they are cataloged:
+
+- a contact has a mandatory `contactType` (`technical`, `support`, `administrative`, `billing` or `other`), optional `givenName`, `surName` and `company`, lists `emailAddress` and `telephoneNumber`, and `attributes` as rows `{name, value}`;
+- `EntityAttributes` is a list of rows `{name, values}`;
+- `UIInfo` holds language maps `DisplayName`, `Description`, `InformationURL` and `PrivacyStatementURL`, a `Keywords` map of language to list, and `Logo` as a list of `{url, width, height, lang?}`;
+- `RegistrationInfo` holds `authority`, an optional `instant` and optional `policies` as a language map.
+
+Rows keyed by `name` are translated to core's maps; a repeated name is rejected on save.
+
+**`UserPassBase` options** (`core/UserPassBase.json`). `ldap:Ldap`, `sqlauth:SQL2` and `exampleauth:UserPass` each catalog three more root options, in a last group "Login page", emitted as they are:
+
+| Option | Shape |
+| --- | --- |
+| `core:loginpage_links` | List of `{href, text}` |
+| `remember.username.enabled` | Boolean |
+| `remember.username.checked` | Boolean |
+
+### 6.8 Validation on save
+
+A managed authsource is saved only when it is valid on its own. There are no invalid drafts.
+
+1. The id rules of section 6.1, when the authsource is created.
+2. The schema of the type, with `opis/json-schema` reporting every error (section 3.7).
+3. The cross-field rules of the type's class (sections 6.11 to 6.15) and the rules below that no schema expresses.
+
+Errors of all three are reported together, each by the JSON pointer of the value it concerns. The Console never instantiates the authsource class to validate.
+
+**Rules that apply to every type**
+
+- A processing filter whose `class` names core's `core:PHP` filter, in the short form or as the full class name, is rejected: that filter carries code.
+- Two processing filters with the same priority are rejected.
+- In a private key or certificate file reference, a `pdo://` location and a `%secret(name)%` reference are rejected. A pasted certificate that cannot be parsed is rejected.
+
+**Secret references.** A string value may be a Secret reference instead of a literal (section 7), under these rules:
+
+- only in a string that has no `enum`, and the reference fills the whole value;
+- `pattern` and `format` are not applied to it;
+- an integer or a boolean cannot be a Secret reference, so it cannot vary per node;
+- inside the free-form configuration of a processing filter, any string may be one.
+
+OPEN: which string options of a managed authsource refuse a Secret reference although they have no `enum`. Candidates are the values the Console itself compares: an `x-authsource-reference`, the `preselect` of `multiauth:MultiAuth`, the names that link the lists of `sqlauth:SQL2`, the `username` of `exampleauth:UserPass` and the `entityID` of `saml:SP`. No annotation marks such an option yet.
+
+**Sensitive values.** The options annotated `x-sensitive` are:
+
+| Authsource type | Sensitive options |
+| --- | --- |
+| `saml:SP` | `privatekey_pass` of `key` and of `next_key` |
+| `ldap:Ldap` | `search.password`, `priv.password` |
+| `sqlauth:SQL2` | `password` of each database |
+| `multiauth:MultiAuth` | none |
+| `exampleauth:UserPass` | `password` of each user |
+
+A stored literal of a sensitive option is sent only to the edit form of its own authsource; everywhere else it is a marker (sections 7 and 10). The configuration of a processing filter is free-form, so a literal secret inside it is shown unmasked; the Console recommends a Secret reference there. The `contacts` of `saml:SP` hold personal data and are not masked.
+
+**Warnings on save.** They never block.
+
+- Saving an `exampleauth:UserPass`: it is not meant for production.
+- A processing filter whose `class` does not resolve on the node serving the Console.
+- A Secret reference that does not resolve on the node serving the Console.
+- A key or certificate file missing on that node, a private key that does not match its certificate there, an expired certificate (section 7).
+
+### 6.9 Checks at Publication
+
+A Publication validates every enabled managed authsource again and adds the checks that span objects. Each block names the object.
+
+**Blocks**
+
+- Anything that would block a save, judged against the schemas and rules of the code that publishes. A module update that tightens a schema can therefore block Publication until the stored document is fixed or the authsource disabled; the current Snapshot keeps being served.
+- A type whose SimpleSAMLphp module is not installed and enabled on the publishing node.
+- An `x-authsource-reference` whose value is neither the id of an enabled managed authsource nor the id of a File authsource of the publishing node. In v1 the only such option is `source` in `multiauth:MultiAuth`; the `auth` of a managed `saml20-idp-hosted` is checked the same way (section 5). Deleting or disabling a managed authsource that is referenced can be saved, and it is the Publication that blocks.
+- A processing filter whose `class` does not resolve on the publishing node.
+
+**Warnings, never blocking**
+
+- A managed authsource Shadowed by a File authsource of the publishing node.
+- A reference satisfied only by a File authsource: that File authsource has to exist on every node.
+
+Nothing else is checked. In particular the Console does not check that the `idp` of a `saml:SP` exists as an entity, nor that `multiauth:MultiAuth` sources do not refer back to their own authsource.
+
+### 6.10 Translation on the node
+
+The Snapshot carries each enabled managed authsource as `{id, type, document}`, with Secret references unresolved (section 4.4). A node that builds its local copy takes each one through these steps, in this order:
+
+1. resolve every Secret reference;
+2. check every Key reference (section 7);
+3. translate the document with the class of its type;
+4. write the result, keyed by id, into the build's `authsources.php`.
+
+Translating at Publication is not possible: a Secret reference fills a whole value, and translation can move a value into an array key, as in `exampleauth:UserPass`.
+
+Every translator follows the same general rules; sections 6.11 to 6.15 list only what departs from them.
+
+- The type goes at key `0` of the array.
+- A root option that is not remodelled is emitted under its own name with its value as it is: a list as a PHP list, a language map as an array keyed by language.
+- An option that is not set is not emitted. The translator adds no defaults.
+- Options are emitted in schema order.
+
+A node whose code cannot translate a document, because its module version differs from the Console's, leaves that authsource out of its build and flags itself (section 3.5).
+
+The test suite checks, for every schema, that a valid fixture translates into an array the real authsource class accepts, and that document to PHP to document is the identity (section 12).
+
+### 6.11 `saml:SP`
+
+The schema catalogs 51 root options in seven groups. `entityID` is the only required one.
+
+| Group | Options |
+| --- | --- |
+| Identity and IdP selection | `entityID`, `idp`, `discoURL`, `RelayState`, `enable_unsolicited`, `RequestInitiation`, `proxymode.passAuthnContextClassRef` |
+| Authentication request | `ForceAuthn`, `IsPassive`, `ProtocolBinding`, `AssertionConsumerServiceIndex`, `AttributeConsumingServiceIndex`, `AuthnContextClassRef`, `AuthnContextComparison`, `NameIDPolicy`, `IDPList`, `ProxyCount`, `disable_scoping`, `ProviderName` |
+| Signing and encryption | `sign.authnrequest`, `sign.logout`, `redirect.sign`, `validate.logout`, `redirect.validate`, `signature.algorithm`, `WantAssertionsSigned`, `assertion.encryption`, `nameid.encryption`, `encryption.blacklisted-algorithms`, `saml20.hok.assertion` |
+| Keys | `key`, `next_key` |
+| Endpoints | `AssertionConsumerService`, `acs.Bindings`, `SingleLogoutServiceBinding`, `SingleLogoutServiceLocation` |
+| Published metadata | `name`, `description`, `attributes`, `attributes.required`, `attributes.NameFormat`, `attributes.index`, `attributes.isDefault`, `OrganizationName`, `OrganizationDisplayName`, `OrganizationURL`, `contacts`, `EntityAttributes`, `UIInfo`, `RegistrationInfo` |
+| Processing | `authproc` |
+
+**Remodelled options**
+
+| In the document | Core receives |
+| --- | --- |
+| `key`, a key slot | `privatekey`, `privatekey_pass`, `key_name`, and `certData` or `certificate` |
+| `next_key`, a key slot | The same names with the prefix `new_` |
+| `AuthnContextClassRef`, always a list | The list |
+| `name`, `description`, `OrganizationName`, `OrganizationDisplayName`, `OrganizationURL`, always language maps | The map |
+| `NameIDPolicy`, an object with optional `Format`, `AllowCreate` and `SPNameQualifier` | The array; an object with no fields becomes `[]`, which makes core omit the element |
+| `attributes`, rows `{name, friendlyName?}` | A row with a friendly name becomes `friendlyName => name`; one without is positional |
+| `contacts`, `EntityAttributes` | As in section 6.7 |
+| `AssertionConsumerService`, a list of `{Binding, Location, index?, isDefault?}` | The list |
+| `authproc` | As in section 6.7 |
+
+`privatekey`, `certificate`, `certData`, `keys`, `key_name` and their `new_` forms are never options of their own.
+
+**Rules.** The first two are in the schema, the rest in the class.
+
+- `entityID` is at most 1024 characters and is not core's placeholder `https://myapp.example.org/`.
+- `signature.algorithm` is one of the four RSA algorithms of the schema's enum.
+- `OrganizationName` without `OrganizationURL` is rejected; core throws on it.
+- No two rows of `attributes` share a `name` or a `friendlyName`.
+- In `AssertionConsumerService`, no two endpoints share an `index` and at most one is `isDefault`.
+
+**Left out.** `saml:Extensions` and `saml:logout:Extensions`, which are XML objects and not expressible in JSON; every `saml.SOAPClient.*` option; `NameIDFormat`, which the code does not read.
+
+OPEN: which `Binding` values an `AssertionConsumerService` endpoint of a `saml:SP` accepts, and whether the endpoint may carry `ResponseLocation` or `hoksso:ProtocolBinding`. The schema accepts any non-empty `Binding` and neither of the two fields.
+
+### 6.12 `ldap:Ldap`
+
+Root options: `connection_string`, `encryption`, `version`, `timeout`, `connector`, `debug`, `options`, `search`, `attributes`, `priv`, and the three `UserPassBase` options. `connection_string`, `search` and `attributes` are required.
+
+**Remodelled options**
+
+| In the document | Core receives |
+| --- | --- |
+| `search`, an object with `enable`, `base`, `dnpattern`, `attributes`, `filter`, `scope`, `username` and `password` | `search.enable`, `search.base`, `dnpattern`, `search.attributes`, `search.filter`, `search.scope`, `search.username`, `search.password` |
+| `priv`, an object with `username` and `password` | `priv.username`, `priv.password` |
+| `attributes` with `mode: none` | No `attributes` key: the user gets no attributes |
+| `attributes` with `mode: all` | `attributes => null`: every attribute of the entry |
+| `attributes` with `mode: list` | `attributes` with the names in `list` |
+| `binary` inside `attributes` | `attributes.binary` |
+| `connector`, one of the two class names the module ships | The class name |
+| `options`, an object with only `network_timeout` and `referrals` | The array |
+
+**Rules, all in the schema**
+
+- `connection_string` is one or more `ldap://` or `ldaps://` URIs separated by a space.
+- `search.enable` and `search.base` are always required; the module reads `search.base` even when the DN is built from a pattern.
+- With `search.enable` on, `search.attributes` is required; `dnpattern` does not apply. With it off, `dnpattern` is required and must contain `%username%`; `attributes`, `filter`, `scope`, `username` and `password` of `search` do not apply.
+- `list` is required when `mode` is `list` and applies only then; `binary` applies when `mode` is `all` or `list`.
+- `search.username` cannot be only spaces.
+
+**Left out.** `extension`, and any member of `options` other than the two listed.
+
+### 6.13 `sqlauth:SQL2`
+
+Root options: `databases`, `auth_queries`, `attr_queries`, and the three `UserPassBase` options. `databases` and `auth_queries` are required and hold at least one row.
+
+**Remodelled options**
+
+| In the document | Core receives |
+| --- | --- |
+| `databases`, an ordered list of `{name, dsn, username, password}` | A map of `name` to `{dsn, username, password}`, in the same order |
+| `auth_queries`, an ordered list of `{name, database, query, username_regex?, extract_userid_from?, password_verify_hash_column?}` | A map of `name` to the rest, in the same order; the module tries them in that order |
+| `attr_queries`, a list of `{database, query, only_for_auth?}` | The list |
+
+**Rules.** The first is in the schema, the rest in the class.
+
+- A `name` starts with a letter or an underscore and holds only letters, digits, underscores and hyphens.
+- No two databases share a name, and no two authentication queries do.
+- The `database` of every query is the name of one of the databases.
+- Every entry of `only_for_auth` is the name of one of the authentication queries.
+- A `dsn` that contains `password=`, in any letter case, is rejected. `dsn` is not a sensitive option; the password goes in `password`.
+
+In the form, `database` and `only_for_auth` are plain text fields checked on save, not selects.
+
+**Left out.** The PDO driver `options` of a database.
+
+### 6.14 `multiauth:MultiAuth`
+
+Root options: `sources`, required with at least one row, and `preselect`.
+
+**Remodelled options**
+
+| In the document | Core receives |
+| --- | --- |
+| `sources`, an ordered list of `{source, text?, help?, css_class?, AuthnContextClassRef?}` | A map of `source` to the rest, in the same order; a row with only `source` becomes `source => []` |
+| `text`, `help`, always language maps | The map |
+| `AuthnContextClassRef`, always a list | The list |
+
+`source` carries `x-authsource-reference`.
+
+**Rules,** both in the class.
+
+- No two rows share a `source`.
+- `preselect` is the `source` of one of the rows.
+
+### 6.15 `exampleauth:UserPass`
+
+Root options: `users`, required with at least one row, and the three `UserPassBase` options.
+
+**Remodelled options**
+
+| In the document | Core receives |
+| --- | --- |
+| `users`, a list of `{username, password, attributes?}` | A map whose keys are `username:password` |
+| `attributes` of a user, rows `{name, values}` | A map of name to list of values; a user without attributes gets `[]` |
+
+**Rules.** The first is in the schema, the second in the class.
+
+- A `username` is not empty and contains no colon. A `password` may contain one.
+- No two users share a `username`, and no two attributes of a user share a `name`.
+
+The password ends up inside an array key, which is why this type is translated after Secret references are resolved.
+
+### 6.16 PHP text
+
+The edit screen shows a managed authsource either as a form or as the PHP an administrator would write in `authsources.php`: `'id' => [...],` with the type at key `0`. The text is produced by the translator with Secret references unresolved and is never stored. Reading it back, and reading PHP pasted into "Add authsource", is the work of the inverse translator of the type. The editor, its sentinel for sensitive values and its errors are specified in section 10; see [ADR 0010](docs/adr/0010-php-view-through-inverse-translators.md).
+
+What is specific to authsources:
+
+- A key the type does not catalog is an error naming the key. It is never kept aside: authsource schemas have no `extra` bag. That includes every option listed as left out in sections 6.11 to 6.15.
+- A block whose id or whose type differs from the authsource being edited is rejected. In "Add authsource" the type is read from key `0`, and a type outside the five stops there.
+- The inverse translator accepts each form core accepts for a cataloged option and returns the single form of the document: a string where core takes a string or a list becomes a list of one; a plain localized string becomes a language map with the language `en`, which is how core reads it; `search.*` and `priv.*` keys are gathered into their objects; an absent `attributes` of `ldap:Ldap` becomes `mode: none` and a `null` one `mode: all`.
+- `certData` becomes a pasted certificate, and a `certificate` location a file reference.
+- In `exampleauth:UserPass` the password sits in the key, so the sentinel of a stored password is part of the key and renaming the user in the text means retyping the password.
+
+OPEN: how the inverse translator of `saml:SP` reads `keys` and `new_keys`, which core accepts in place of `certData` and `certificate` and the Console never emits.
+
+### 6.17 Accepted gaps
+
+- No client certificate for Artifact resolution or SOAP logout: `saml.SOAPClient.*` is not cataloged.
+- No PDO driver options for `sqlauth:SQL2`, so a custom CA towards the database needs a File authsource.
+- No `saml:Extensions` on the requests of a `saml:SP`.
+- The Console checks references and modules against the publishing node only. Keeping File authsources and modules identical across nodes is the deployment's job (section 2.8).
 
 ## 7. Keys and secrets
 

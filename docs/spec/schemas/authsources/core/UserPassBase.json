@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Options of every username and password authsource (not an Authsource type)",
+  "$defs": {
+    "loginpage_links": {
+      "title": "Links on the login page",
+      "type": "array",
+      "items": {
+        "title": "link",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["href", "text"],
+        "properties": {
+          "href": {"title": "Address", "type": "string", "minLength": 1, "examples": ["https://example.org/reset-password"]},
+          "text": {"title": "Text", "type": "string", "minLength": 1, "examples": ["Forgot your password?"]}
+        }
+      }
+    },
+    "remember_username_enabled": {
+      "title": "Offer to remember the username",
+      "type": "boolean",
+      "default": false
+    },
+    "remember_username_checked": {
+      "title": "Remember the username unless the user unticks it",
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

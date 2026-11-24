@@ -1,0 +1,16 @@
+{
+  "sources": [
+    {
+      "source": "staff-ldap",
+      "text": {
+        "en": "Staff",
+        "es": "Personal"
+      },
+      "css_class": "staff"
+    },
+    {
+      "source": "guests"
+    }
+  ],
+  "preselect": "staff-ldap"
+}

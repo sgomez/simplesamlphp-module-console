@@ -1,0 +1,29 @@
+{
+  "connection_string": "ldaps://ldap1.example.org ldaps://ldap2.example.org",
+  "timeout": 5,
+  "search": {
+    "enable": true,
+    "base": [
+      "ou=people,dc=example,dc=org"
+    ],
+    "attributes": [
+      "uid",
+      "mail"
+    ],
+    "username": "cn=reader,dc=example,dc=org",
+    "password": "example-password"
+  },
+  "attributes": {
+    "mode": "list",
+    "list": [
+      "uid",
+      "mail",
+      "cn",
+      "jpegPhoto"
+    ],
+    "binary": [
+      "jpegPhoto"
+    ]
+  },
+  "remember.username.enabled": true
+}

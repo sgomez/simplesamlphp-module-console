@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SQL database (sqlauth:SQL2)",
+  "type": "object",
+  "additionalProperties": false,
+  "x-groups": [
+    {"title": "Databases", "properties": ["databases"]},
+    {"title": "Authentication queries", "properties": ["auth_queries"]},
+    {"title": "Attribute queries", "properties": ["attr_queries"]},
+    {"title": "Login page", "properties": ["core:loginpage_links", "remember.username.enabled", "remember.username.checked"]}
+  ],
+  "required": ["databases", "auth_queries"],
+  "properties": {
+    "databases": {
+      "title": "Databases",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "title": "database",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "dsn", "username", "password"],
+        "properties": {
+          "name": {
+            "title": "Name",
+            "description": "The queries refer to the database by this name.",
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+            "$error": {"pattern": "A name starts with a letter or an underscore and holds only letters, digits, underscores and hyphens."}
+          },
+          "dsn": {
+            "title": "DSN",
+            "description": "Without credentials: they go in the two fields below.",
+            "type": "string",
+            "minLength": 1,
+            "examples": ["pgsql:host=db.example.org;dbname=users"]
+          },
+          "username": {"title": "Username", "type": "string"},
+          "password": {"title": "Password", "type": "string", "x-sensitive": true}
+        }
+      }
+    },
+    "auth_queries": {
+      "title": "Authentication queries",
+      "description": "Tried in order.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "title": "query",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "database", "query"],
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
+            "$error": {"pattern": "A name starts with a letter or an underscore and holds only letters, digits, underscores and hyphens."}
+          },
+          "database": {
+            "title": "Database",
+            "description": "The name of one of the databases above.",
+            "type": "string",
+            "minLength": 1
+          },
+          "query": {
+            "title": "Query",
+            "description": "Receives :username and, unless a hash column is set, :password.",
+            "type": "string",
+            "minLength": 1,
+            "x-widget": "textarea"
+          },
+          "username_regex": {
+            "title": "Username regex",
+            "description": "A PCRE with its delimiters. The query is skipped when the username does not match.",
+            "type": "string",
+            "minLength": 1,
+            "examples": ["/@example\\.org$/"]
+          },
+          "extract_userid_from": {
+            "title": "User id column",
+            "description": "Its value is passed to the attribute queries as :userid.",
+            "type": "string",
+            "minLength": 1
+          },
+          "password_verify_hash_column": {
+            "title": "Hash column",
+            "description": "Switches to password_verify() against this column, which is then left out of the attributes.",
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "attr_queries": {
+      "title": "Attribute queries",
+      "type": "array",
+      "items": {
+        "title": "query",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["database", "query"],
+        "properties": {
+          "database": {
+            "title": "Database",
+            "description": "The name of one of the databases above.",
+            "type": "string",
+            "minLength": 1
+          },
+          "query": {
+            "title": "Query",
+            "description": "Receives :username or :userid.",
+            "type": "string",
+            "minLength": 1,
+            "x-widget": "textarea"
+          },
+          "only_for_auth": {
+            "title": "Only after these authentication queries",
+            "description": "One name per line.",
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "core:loginpage_links": {"$ref": "../core/UserPassBase.json#/$defs/loginpage_links"},
+    "remember.username.enabled": {"$ref": "../core/UserPassBase.json#/$defs/remember_username_enabled"},
+    "remember.username.checked": {"$ref": "../core/UserPassBase.json#/$defs/remember_username_checked"}
+  }
+}
