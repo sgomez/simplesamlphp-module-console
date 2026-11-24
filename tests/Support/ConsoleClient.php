@@ -19,6 +19,8 @@ final class ConsoleClient
     /** @var array<string, mixed> */
     private array $moduleConfig = [];
 
+    private string $databaseFile = '';
+
 
     public function __construct()
     {
@@ -40,18 +42,16 @@ final class ConsoleClient
      */
     public function withDatabase(?array $applied): self
     {
-        $file = (string) getenv('CONSOLE_TEST_DIR') . '/db-' . bin2hex(random_bytes(6)) . '.sqlite';
-        $pdo = new \PDO('sqlite:' . $file);
-        if ($applied !== null) {
-            $pdo->exec(
-                'CREATE TABLE console_schema_version (version INTEGER NOT NULL PRIMARY KEY, applied_at CHAR(20))',
-            );
-            foreach ($applied as $number) {
-                $pdo->exec("INSERT INTO console_schema_version VALUES ($number, '2026-11-24T10:15:00Z')");
-            }
-        }
+        $file = ConsoleDatabase::create($applied);
+        $this->databaseFile = $file;
 
         return $this->withModuleConfig(['database' => ['dsn' => 'sqlite:' . $file]]);
+    }
+
+
+    public function database(): \PDO
+    {
+        return ConsoleDatabase::open($this->databaseFile);
     }
 
 
@@ -89,8 +89,34 @@ final class ConsoleClient
 
     public function get(string $path): Response
     {
+        return $this->send('GET', $path, []);
+    }
+
+
+    /**
+     * @param array<string, string> $data
+     */
+    public function post(string $path, array $data = []): Response
+    {
+        return $this->send('POST', $path, $data);
+    }
+
+
+    public static function tokenIn(string $html): string
+    {
+        preg_match('/name="_token" value="([0-9a-f]+)"/', $html, $matches);
+
+        return $matches[1] ?? '';
+    }
+
+
+    /**
+     * @param array<string, string> $data
+     */
+    private function send(string $method, string $path, array $data): Response
+    {
         $route = rtrim('/console' . $path, '/');
-        $request = Request::create('/module.php' . $route);
+        $request = Request::create('/module.php' . $route, $method, $data);
         $request->server->set('PATH_INFO', $route);
         $request->server->set('SCRIPT_FILENAME', '/var/www/simplesaml/public/module.php');
         $_SERVER = array_merge($_SERVER, $request->server->all());

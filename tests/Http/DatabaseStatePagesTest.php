@@ -5,6 +5,8 @@ declare(strict_types=1);
 use SimpleSAML\Configuration;
 use SimpleSAML\Module\console\Domain\DatabaseStatus;
 use SimpleSAML\Module\console\Infrastructure\Http\AdminAccess;
+use SimpleSAML\Module\console\Infrastructure\Http\CsrfToken;
+use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
 use SimpleSAML\Module\console\Infrastructure\Http\StatePages;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\Helpers;
@@ -35,7 +37,7 @@ it('shows the pending migrations page on a fresh install', function (): void {
         ->and($html)->toContain('SSO is not affected')
         ->and($html)->toContain('Migration 1')
         ->and($html)->toContain('Migration 9')
-        ->and($html)->not->toContain('<form');
+        ->and($html)->toContain('<form method="post"');
     Helpers::assertShellWithoutCounts($html);
 });
 
@@ -68,7 +70,12 @@ it('puts older code before missing migrations', function (): void {
 
 it('shows the SQLite too old page with the version found and the minimum', function (): void {
     (new ConsoleClient())->loginAsAdmin();
-    $pages = new StatePages(Configuration::getInstance(), new AdminAccess(Session::getSessionFromRequest()));
+    $pages = new StatePages(
+        Configuration::getInstance(),
+        new AdminAccess(Session::getSessionFromRequest()),
+        new CsrfToken(Session::getSessionFromRequest()),
+        new FlashMessage(Session::getSessionFromRequest()),
+    );
     $html = ConsoleClient::body($pages->render(DatabaseStatus::sqliteTooOld('3.22.0')));
 
     expect($html)->toContain('data-state="sqlite-too-old"')

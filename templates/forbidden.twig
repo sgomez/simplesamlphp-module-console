@@ -1,0 +1,11 @@
+{% extends "@console/shell.twig" %}
+
+{% block title %}Request refused{% endblock %}
+
+{% block content %}
+<section class="state-page" data-state="forbidden">
+  <h1>Request refused</h1>
+  <p>The request did not carry a valid request-forgery token, so nothing was changed.</p>
+  <p><a href="{{ consoleUrl }}">Back to the Console</a></p>
+</section>
+{% endblock %}

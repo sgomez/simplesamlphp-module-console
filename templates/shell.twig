@@ -34,6 +34,9 @@
         {% block header_extra %}{% endblock %}
       </header>
       <main class="content">
+        {% if message is defined and message %}
+        <p class="message" role="status" data-message>{{ message }}</p>
+        {% endif %}
         {% block content %}{% endblock %}
       </main>
     </div>

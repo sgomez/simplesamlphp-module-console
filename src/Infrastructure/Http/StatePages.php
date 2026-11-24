@@ -8,6 +8,8 @@ use SimpleSAML\Configuration;
 use SimpleSAML\Module;
 use SimpleSAML\Module\console\Domain\DatabaseState;
 use SimpleSAML\Module\console\Domain\DatabaseStatus;
+use SimpleSAML\Module\console\Domain\MigrationOutcome;
+use SimpleSAML\Module\console\Domain\MigrationReport;
 use SimpleSAML\Module\console\Domain\SqliteVersion;
 use SimpleSAML\XHTML\Template;
 
@@ -16,11 +18,13 @@ final class StatePages
     public function __construct(
         private readonly Configuration $config,
         private readonly AdminAccess $access,
+        private readonly CsrfToken $token,
+        private readonly FlashMessage $flash,
     ) {
     }
 
 
-    public function render(DatabaseStatus $status): Template
+    public function render(DatabaseStatus $status, ?MigrationReport $report = null): Template
     {
         $template = new Template($this->config, 'console:state/' . $this->page($status->state) . '.twig');
         $template->data = [
@@ -28,6 +32,10 @@ final class StatePages
             'adminUrl' => Module::getModuleURL('admin/'),
             'logoutUrl' => $this->access->logoutUrl(),
             'status' => $status,
+            'message' => $this->flash->take(),
+            'csrfToken' => $this->token->token(),
+            'migrateUrl' => Module::getModuleURL('console/migrate'),
+            'report' => $report?->outcome === MigrationOutcome::Failed ? $report : null,
             'sqliteMinimum' => SqliteVersion::MINIMUM,
         ];
 

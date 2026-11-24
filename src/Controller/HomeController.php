@@ -8,6 +8,7 @@ use SimpleSAML\Configuration;
 use SimpleSAML\Module;
 use SimpleSAML\Module\console\Infrastructure\Http\AdminAccess;
 use SimpleSAML\Module\console\Infrastructure\Http\DatabaseGate;
+use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
 use SimpleSAML\XHTML\Template;
 
 final class HomeController
@@ -16,6 +17,7 @@ final class HomeController
         private readonly Configuration $config,
         private readonly AdminAccess $access,
         private readonly DatabaseGate $gate,
+        private readonly FlashMessage $flash,
     ) {
     }
 
@@ -31,6 +33,7 @@ final class HomeController
         $template = new Template($this->config, 'console:home.twig');
         $template->data = [
             'identity' => $this->access->identity(),
+            'message' => $this->flash->take(),
             'adminUrl' => Module::getModuleURL('admin/'),
             'logoutUrl' => $this->access->logoutUrl(),
         ];

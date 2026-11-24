@@ -155,3 +155,31 @@ a {
     transform: none;
   }
 }
+
+.message,
+.error-box {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left-width: 0.25rem;
+  border-radius: 0.375rem;
+}
+
+.message {
+  border-left-color: var(--accent);
+}
+
+.error-box {
+  border-left-color: #c0392b;
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  border: 0;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}

@@ -6,5 +6,8 @@ services:
     public: false
 
   SimpleSAML\Module\console\Infrastructure\Http\AdminAccess: ~
+  SimpleSAML\Module\console\Infrastructure\Http\CsrfToken: ~
+  SimpleSAML\Module\console\Infrastructure\Http\FlashMessage: ~
+  SimpleSAML\Module\console\Infrastructure\Http\RequestGate: ~
   SimpleSAML\Module\console\Infrastructure\Http\StatePages: ~
   SimpleSAML\Module\console\Infrastructure\Http\DatabaseGate: ~
