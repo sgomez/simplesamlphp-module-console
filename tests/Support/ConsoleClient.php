@@ -137,9 +137,12 @@ final class ConsoleClient
         $_SERVER = array_merge($_SERVER, $request->server->all());
         $_SERVER['REQUEST_URI'] = '/simplesaml/module.php' . $route . '/';
         $handler = self::exceptionHandler();
-        $response = Module::process($request);
-        for ($i = 0; $i < 5 && self::exceptionHandler() !== $handler; $i++) {
-            restore_exception_handler();
+        try {
+            $response = Module::process($request);
+        } finally {
+            for ($i = 0; $i < 5 && self::exceptionHandler() !== $handler; $i++) {
+                restore_exception_handler();
+            }
         }
         SecurityHeaders::apply($response);
 
