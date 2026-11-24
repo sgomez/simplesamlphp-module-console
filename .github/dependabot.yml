@@ -6,11 +6,13 @@ updates:
       interval: weekly
     groups:
       composer:
-        patterns: ['*']
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
     groups:
       github-actions:
-        patterns: ['*']
+        patterns:
+          - "*"
