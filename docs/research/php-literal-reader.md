@@ -77,7 +77,7 @@ About 235 lines, no dependency beyond `ext-tokenizer`.
 
 ### Rejections (both readers, verified)
 
-35 inputs, all rejected by both with the same line and, in all but four cases, the same column. Samples:
+35 inputs, all rejected by both; 29 at the same line and column. The other six point at different places of the same construct: the php-parser reader at the start of the offending expression, the token reader at the first token it cannot take (`60 * 60`: 1:8 versus 1:11; interpolated heredoc: 1:8 versus 2:4). For an unclosed array on a three-line input, php-parser reported 4:2, which is inside the wrapper's own `];` and past the end of the pasted text; the token reader reported 3:1. Samples:
 
 | Input | php-parser reader | token reader |
 | --- | --- | --- |
