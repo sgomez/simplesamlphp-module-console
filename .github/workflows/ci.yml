@@ -116,6 +116,11 @@ jobs:
           coverage: pcov
           tools: composer
       - run: composer install --no-interaction --no-progress
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: vendor/pestphp/pest-plugin-mutate/.temp/pest-mutate-cache
+          key: pest-mutate-${{ hashFiles('composer.lock', 'src/**', 'tests/**') }}
+          restore-keys: pest-mutate-
       - run: composer mutate
 
   full-suite:

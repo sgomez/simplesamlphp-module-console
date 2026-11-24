@@ -6,8 +6,10 @@
          failOnWarning="true"
          failOnRisky="true">
     <testsuites>
-        <testsuite name="console">
+        <testsuite name="infrastructure">
             <directory>tests</directory>
+            <exclude>tests/Unit</exclude>
+            <exclude>tests/Application</exclude>
         </testsuite>
         <testsuite name="core">
             <directory>tests/Unit</directory>
