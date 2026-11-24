@@ -44,12 +44,12 @@ it('reports the errors of the entity ID, the schema and the rules together and s
     [$save, $repository] = EntityDb::saver();
 
     $text = "[\n'AssertionConsumerService' => [['Binding' => 'x y', 'Location' => 'ftp://a']],\n"
-        . "'attributes' => ['uid'],\n]";
+        . "'sharedkey' => 'k',\n]";
     $result = $save->create('', $text, 'alice');
 
     expect($result->outcome)->toBe(SaveOutcome::Invalid)
         ->and(array_map(static fn ($e): string => $e->pointer, $result->errors))
-        ->toBe(['/attributes', '/AssertionConsumerService/0/Binding', '/AssertionConsumerService/0/Location', ''])
+        ->toBe(['/sharedkey', '/AssertionConsumerService/0/Binding', '/AssertionConsumerService/0/Location', ''])
         ->and($repository->all('saml20-sp-remote'))->toBe([]);
 });
 

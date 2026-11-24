@@ -72,10 +72,19 @@ final class SpRemoteInverse
     {
         return match ($name) {
             'AssertionConsumerService', 'SingleLogoutService' => [InverseForms::endpoints($name, $value)],
-            'DiscoveryResponse', 'hide.from.discovery' => [$value],
+            'DiscoveryResponse', 'hide.from.discovery', 'attributes.NameFormat', 'simplesaml.attributes',
+            'nameid.encryption', 'SPNameQualifier', 'saml20.sign.response', 'saml20.sign.assertion',
+            'signature.algorithm', 'sign.logout', 'redirect.sign', 'validate.authnrequest', 'validate.logout',
+            'redirect.validate', 'skipEndpointValidationWhenSigned', 'assertion.encryption', 'sharedkey_algorithm',
+            'ForceAuthn', 'ProxyCount', 'assertion.lifetime', 'core:statistics-id', 'core:logout-timeout'
+                => [$value],
             'name', 'description', 'OrganizationName', 'OrganizationDisplayName', 'OrganizationURL'
                 => [InverseForms::language($value)],
-            'scope' => [InverseForms::stringList($value)],
+            'scope', 'attributesRegex', 'attributes.required', 'NameIDFormat', 'audience', 'IDPList'
+                => [InverseForms::stringList($value)],
+            'attributes' => [InverseRows::attributes($value)],
+            'attributeencodings' => [InverseRows::encodings($value)],
+            'authproc' => [InverseRows::authproc($value)],
             'UIInfo' => [InverseForms::uiInfo($value)],
             'contacts' => [InverseForms::contacts($value)],
             'EntityAttributes' => [InverseForms::entityAttributes($value)],

@@ -63,5 +63,65 @@
     "name": "a logo without size",
     "pointer": "/UIInfo/Logo/0",
     "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "UIInfo": {"Logo": [{"url": "https://sp.example.org/l.png"}]}}
+  },
+  {
+    "name": "an attribute row without name",
+    "pointer": "/attributes/0",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "attributes": [{"values": ["a"]}]}
+  },
+  {
+    "name": "an attribute row with no values listed",
+    "pointer": "/attributes/0/values",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "attributes": [{"name": "uid", "values": []}]}
+  },
+  {
+    "name": "an encoding that core does not know",
+    "pointer": "/attributeencodings/0/encoding",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "attributeencodings": [{"name": "a", "encoding": "hex"}]}
+  },
+  {
+    "name": "a name format that is empty",
+    "pointer": "/attributes.NameFormat",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "attributes.NameFormat": ""}
+  },
+  {
+    "name": "a name ID encryption that is not a boolean",
+    "pointer": "/nameid.encryption",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "nameid.encryption": "yes"}
+  },
+  {
+    "name": "a signature algorithm outside the list",
+    "pointer": "/signature.algorithm",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "signature.algorithm": "http://example.org/md5"}
+  },
+  {
+    "name": "a shared key algorithm outside the list",
+    "pointer": "/sharedkey_algorithm",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "sharedkey_algorithm": "http://example.org/rot13"}
+  },
+  {
+    "name": "a negative proxy count",
+    "pointer": "/ProxyCount",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "ProxyCount": -1}
+  },
+  {
+    "name": "an assertion lifetime of zero",
+    "pointer": "/assertion.lifetime",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "assertion.lifetime": 0}
+  },
+  {
+    "name": "a logout timeout that is not an integer",
+    "pointer": "/core:logout-timeout",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "core:logout-timeout": "5"}
+  },
+  {
+    "name": "a processing filter without class",
+    "pointer": "/authproc/0/filter",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "authproc": [{"priority": 10, "filter": {"x": 1}}]}
+  },
+  {
+    "name": "a processing filter priority that is not an integer",
+    "pointer": "/authproc/0/priority",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "authproc": [{"priority": "high", "filter": {"class": "core:A"}}]}
   }
 ]
