@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add authsource</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg); position: relative">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="authsources" mode="console" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="Authsources.dc.html">Authsources</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">Add</span>
+</nav>
+<a class="btn btn-global btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 7 changes</a>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 760px; padding: 32px 32px 64px; flex: 1 0 auto">
+<h1 class="h1">Add authsource</h1><nav class="seg" aria-label="Source" style="align-self: flex-start"><a href="#">Paste</a><a href="#">Upload</a><a class="on" href="#" aria-current="true">Start empty</a></nav><div class="card" style="overflow: hidden"><a class="row" href="FormMultiAuth.dc.html" style="flex-wrap: wrap; gap: 4px 24px"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="mono" style="font-weight: 600; font-size: 13.5px">saml:SP</span><span class="small muted">Log in through an external identity provider</span></div><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" style="flex: none; color: var(--text-3)"><path d="M6 3l5 5-5 5"></path></svg></a><a class="row" href="FormMultiAuth.dc.html" style="flex-wrap: wrap; gap: 4px 24px"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="mono" style="font-weight: 600; font-size: 13.5px">ldap:Ldap</span><span class="small muted">Check passwords against an LDAP directory</span></div><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" style="flex: none; color: var(--text-3)"><path d="M6 3l5 5-5 5"></path></svg></a><a class="row" href="FormMultiAuth.dc.html" style="flex-wrap: wrap; gap: 4px 24px"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="mono" style="font-weight: 600; font-size: 13.5px">sqlauth:SQL2</span><span class="small muted">Check passwords with a SQL query</span></div><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" style="flex: none; color: var(--text-3)"><path d="M6 3l5 5-5 5"></path></svg></a><a class="row" href="FormMultiAuth.dc.html" style="flex-wrap: wrap; gap: 4px 24px"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="mono" style="font-weight: 600; font-size: 13.5px">multiauth:MultiAuth</span><span class="small muted">Let people choose between several authsources</span></div><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" style="flex: none; color: var(--text-3)"><path d="M6 3l5 5-5 5"></path></svg></a><a class="row" href="FormMultiAuth.dc.html" style="flex-wrap: wrap; gap: 4px 24px"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="mono" style="font-weight: 600; font-size: 13.5px">exampleauth:UserPass</span><span class="small muted">Fixed test users. Not for production</span></div><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" style="flex: none; color: var(--text-3)"><path d="M6 3l5 5-5 5"></path></svg></a></div>
+</main>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light' };
+}
+}
+</script>
+</body>
+</html>

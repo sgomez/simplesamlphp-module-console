@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Published</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg); position: relative">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="publish" mode="console" theme="{{theme}}" pending="0" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">Publish</span>
+</nav>
+<span class="status s-live"><span class="dot dot-full" aria-hidden="true"></span>Live: Snapshot #42</span>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1040px; padding: 32px 32px 64px; flex: 1 0 auto">
+<h1 class="h1">Publish</h1><div class="callout callout-success"><svg class="ic ic-success" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg><div style="display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0"><span style="font-weight: 600">Snapshot #42 is published</span><span class="small">7 changes.</span></div><a class="btn btn-secondary btn-sm" href="HistorySnapshots.dc.html">History</a></div><div style="display: flex; align-items: center; gap: 10px"><h2 class="h2">Nodes</h2></div><div class="card" style="overflow: hidden"><div class="row" style="flex-wrap: wrap; gap: 4px 24px"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="mono" style="font-weight: 600; font-size: 13.5px">web-01 <span class="chip" style="margin-inline-start: 8px">This node</span></span></div><div style="flex: 0 1 auto; min-width: 0"><span class="status s-live"><span class="dot dot-full" aria-hidden="true"></span>Serves #42</span><span class="small muted" style="margin-inline-start: 16px">8 s ago</span></div></div><div class="row" style="flex-wrap: wrap; gap: 4px 24px"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="mono" style="font-weight: 600; font-size: 13.5px">web-02</span></div><div style="flex: 0 1 auto; min-width: 0"><span class="status s-live"><span class="dot dot-full" aria-hidden="true"></span>Serves #42</span><span class="small muted" style="margin-inline-start: 16px">3 s ago</span></div></div><div class="row" style="flex-wrap: wrap; gap: 4px 24px"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="mono" style="font-weight: 600; font-size: 13.5px">web-03</span></div><div style="flex: 0 1 auto; min-width: 0"><span class="status s-pending"><span class="dot dot-half" aria-hidden="true"></span>Still on #41</span><span class="small muted" style="margin-inline-start: 16px">checks every 60 s</span></div></div></div>
+</main>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light' };
+}
+}
+</script>
+</body>
+</html>

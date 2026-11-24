@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Import result</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg); position: relative">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="external" mode="console" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="External.dc.html">External entities</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">Import</span>
+</nav>
+<a class="btn btn-global btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 10 changes</a>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 860px; padding: 32px 32px 64px; flex: 1 0 auto">
+<h1 class="h1">Import</h1><div class="callout callout-success"><svg class="ic ic-success" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg><div style="display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0"><span style="font-weight: 600">3 imported, 1 skipped</span></div><a class="btn btn-secondary btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 10 changes</a></div><section class="card" style="overflow: hidden"><div style="display: flex; align-items: baseline; gap: 8px; padding: 12px 16px"><h2 class="h3">Imported</h2><span class="small muted">3</span></div><div class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline; flex-wrap: wrap"><span style="flex: 0 1 230px; overflow-wrap: anywhere" class=""><a class="link" href="FormServiceProvider.dc.html">E-journals</a></span><span class="small muted" style="flex: 1 1 160px">Override</span></div><div class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline; flex-wrap: wrap"><span style="flex: 0 1 230px; overflow-wrap: anywhere" class=""><a class="link" href="#">Lab booking</a></span><span class="small muted" style="flex: 1 1 160px">Override</span></div><div class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline; flex-wrap: wrap"><span style="flex: 0 1 230px; overflow-wrap: anywhere" class=""><a class="link" href="#">Video conferencing</a></span><span class="small muted" style="flex: 1 1 160px">Override</span></div></section><section class="card" style="overflow: hidden"><div style="display: flex; align-items: baseline; gap: 8px; padding: 12px 16px"><h2 class="h3">Skipped</h2><span class="small muted">1</span></div><div class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline; flex-wrap: wrap"><span style="flex: 0 1 230px; overflow-wrap: anywhere" class="">Campus card</span><span class="small muted" style="flex: 1 1 160px">Already managed</span></div></section><section class="card" style="overflow: hidden"><div style="display: flex; align-items: baseline; gap: 8px; padding: 12px 16px"><h2 class="h3">Converted</h2><span class="small muted">2</span></div><div class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline; flex-wrap: wrap"><span style="flex: 0 1 230px; overflow-wrap: anywhere" class="mono">expire</span><span class="small muted" style="flex: 1 1 160px">Dropped: managed entities do not expire</span></div><div class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline; flex-wrap: wrap"><span style="flex: 0 1 230px; overflow-wrap: anywhere" class="mono">certFingerprint</span><span class="small muted" style="flex: 1 1 160px">Kept as an extra option</span></div></section><section class="card" style="overflow: hidden"><div style="display: flex; align-items: baseline; gap: 8px; padding: 12px 16px"><h2 class="h3">You can now remove</h2><span class="small muted">0</span></div><div class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline; flex-wrap: wrap"><span style="flex: 0 1 230px; overflow-wrap: anywhere" class="mono">metadata/saml20-sp-remote.php</span><span class="small muted" style="flex: 1 1 160px">Nothing imported came from a file</span></div></section>
+</main>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light' };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Edit form</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg)">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="{{o.nav}}" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="{{o.parentHref}}">{{o.parent}}</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">{{o.title}}</span>
+</nav>
+<a class="btn btn-global btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 7 changes</a>
+</header>
+
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1240px; padding: 28px 32px 40px; flex: 1 0 auto">
+<div style="display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 24px">
+<div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 360px; min-width: 0">
+<div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px">
+<h1 class="h1">{{o.title}}</h1><span class="small muted">{{o.kind}}</span><span class="mono faint">{{o.type}}</span>
+</div>
+<sc-if value="{{o.hasId}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<span class="mono muted" style="overflow-wrap: anywhere">{{o.id}}</span>
+<button class="btn btn-quiet btn-sm" type="button" data-copy style="flex: none">Copy</button>
+</div>
+</sc-if>
+</div>
+<label style="display: flex; align-items: center; gap: 8px; min-height: 36px"><input class="switch" type="checkbox" checked="{{ true }}"><span>Enabled</span></label>
+<button class="btn btn-secondary" type="button" aria-haspopup="menu">More actions<svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2.5 4.5 6 8l3.5-3.5"></path></svg></button>
+</div>
+
+<sc-if value="{{o.hasErrors}}" hint-placeholder-val="{{ false }}">
+<div class="callout callout-error" role="alert">
+<svg class="ic ic-error" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.9 3.5h1.8v5H7.1v-5zm0 6.2h1.8v1.8H7.1v-1.8z"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span style="font-weight: 600">{{o.errorTitle}}</span>
+<sc-if value="{{isSettings}}" hint-placeholder-val="{{ true }}">
+<ul style="margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{o.errors}}" as="e" hint-placeholder-count="2"><li class="small"><a class="link" href="{{e.href}}" style="color: var(--danger-text)"><span class="mono">{{e.name}}</span></a> <span>{{e.msg}}</span></li></sc-for>
+</ul>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<div class="seg" role="group" aria-label="View" style="align-self: flex-start">
+<button type="button" class="{{segS}}" aria-pressed="{{isSettings}}" onClick="{{toSettings}}">Settings</button>
+<button type="button" class="{{segP}}" aria-pressed="{{isPhp}}" onClick="{{toPhp}}">PHP</button>
+</div>
+
+<sc-if value="{{isSettings}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px 32px">
+<form style="display: flex; flex-direction: column; gap: 12px; flex: 3 1 560px; min-width: 0">
+
+<label style="display: flex; align-items: center; gap: 8px; position: relative">
+<span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">Find an option by name or title</span>
+<input class="input" type="search" placeholder="Find an option" data-option-finder style="padding-inline-end: 40px">
+<span class="kbd" aria-hidden="true" style="position: absolute; inset-inline-end: 10px">/</span>
+</label>
+
+<sc-for list="{{o.groups}}" as="g" hint-placeholder-count="4">
+<details class="grp card" id="{{g.anchor}}" open="{{g.open}}">
+<summary>
+<span class="h3">{{g.title}}</span>
+<span class="small muted">{{g.countText}}</span>
+<sc-if value="{{g.hasErr}}" hint-placeholder-val="{{ false }}"><span class="status s-danger" style="margin-inline-start: auto"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.9 3.5h1.8v5H7.1v-5zm0 6.2h1.8v1.8H7.1v-1.8z"></path></svg>{{g.errText}}</span></sc-if>
+</summary>
+<div style="display: flex; flex-direction: column">
+<sc-for list="{{g.options}}" as="p" hint-placeholder-count="3">
+<div id="{{p.anchor}}" style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 20px; padding: 14px 16px; border-top: 1px solid var(--border)">
+<div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 190px; max-width: 240px; min-width: 0; padding-top: 7px">
+<span class="label">{{p.title}}</span>
+<span class="mono faint" style="overflow-wrap: anywhere">{{p.name}}</span>
+<sc-if value="{{p.required}}" hint-placeholder-val="{{ false }}"><span class="xs faint">Required</span></sc-if>
+<sc-if value="{{p.edited}}" hint-placeholder-val="{{ false }}"><span class="xs" style="font-weight: 600">Edited</span></sc-if>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; flex: 3 1 340px; min-width: 0">
+<sc-if value="{{p.isText}}" hint-placeholder-val="{{ true }}"><input class="{{p.inputCls}}" type="text" value="{{p.value}}" aria-label="{{p.title}}"></sc-if>
+<sc-if value="{{p.isSelect}}" hint-placeholder-val="{{ false }}"><select class="input" aria-label="{{p.title}}"><sc-for list="{{p.choices}}" as="ch" hint-placeholder-count="2"><option>{{ch}}</option></sc-for></select></sc-if>
+<sc-if value="{{p.isSwitch}}" hint-placeholder-val="{{ false }}"><label style="display: flex; align-items: center; gap: 10px; min-height: 36px; align-self: flex-start"><input class="switch" type="checkbox" checked="{{p.on}}"><span>{{p.onText}}</span></label></sc-if>
+<sc-if value="{{p.isList}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{p.items}}" as="it" hint-placeholder-count="2">
+<div style="display: flex; align-items: center; gap: 6px">
+<button class="btn btn-quiet btn-icon" type="button" aria-label="Move row" style="flex: none; cursor: grab"><svg aria-hidden="true" width="12" height="14" viewBox="0 0 12 14" fill="currentColor"><circle cx="3.5" cy="3" r="1.3"></circle><circle cx="8.5" cy="3" r="1.3"></circle><circle cx="3.5" cy="7" r="1.3"></circle><circle cx="8.5" cy="7" r="1.3"></circle><circle cx="3.5" cy="11" r="1.3"></circle><circle cx="8.5" cy="11" r="1.3"></circle></svg></button>
+<sc-if value="{{it.hasA}}" hint-placeholder-val="{{ false }}"><select class="input" aria-label="{{p.aLabel}}" style="flex: 0 1 150px"><option>{{it.a}}</option></select></sc-if>
+<input class="{{it.cls}}" type="text" value="{{it.b}}" aria-label="{{p.bLabel}}" style="flex: 1 1 160px">
+<button class="btn btn-quiet btn-icon" type="button" aria-label="Remove row" style="flex: none"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"></path></svg></button>
+</div>
+</sc-for>
+<button class="btn btn-secondary btn-sm" type="button" style="align-self: flex-start; margin-inline-start: 34px">{{p.addLabel}}</button>
+</div>
+</sc-if>
+<sc-if value="{{p.isSecretRef}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px">
+<input class="input mono" type="text" value="{{p.value}}" aria-label="{{p.title}}" style="flex: 1 1 220px">
+<span class="chip">Secret reference</span>
+</div>
+</sc-if>
+<sc-if value="{{p.isKeyRef}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px">
+<input class="input mono" type="text" value="{{p.value}}" aria-label="{{p.title}}" style="flex: 1 1 220px">
+<span class="status s-live"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg>Found on this node</span>
+</div>
+</sc-if>
+<sc-if value="{{p.isCert}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: flex-start; flex-wrap: wrap; gap: 10px 16px; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface)">
+<dl style="display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0; font-size: 13px; flex: 1 1 260px; min-width: 0">
+<dt class="muted">Subject</dt><dd class="mono" style="margin: 0; overflow-wrap: anywhere">{{p.certSubject}}</dd>
+<dt class="muted">Expires</dt><dd style="margin: 0">{{p.certExpires}}</dd>
+<dt class="muted">SHA-256</dt><dd class="mono" style="margin: 0; overflow-wrap: anywhere">{{p.certPrint}}</dd>
+</dl>
+<button class="btn btn-secondary btn-sm" type="button">Replace</button>
+</div>
+</sc-if>
+<sc-if value="{{p.hasErr}}" hint-placeholder-val="{{ false }}"><div class="msg-error"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="flex: none; margin-top: 2px"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.9 3.5h1.8v5H7.1v-5zm0 6.2h1.8v1.8H7.1v-1.8z"></path></svg><span>{{p.err}}</span></div></sc-if>
+<sc-if value="{{p.hasWarn}}" hint-placeholder-val="{{ false }}"><div class="msg-warning"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="flex: none; margin-top: 2px"><path d="M8 1.2 15.2 14H.8L8 1.2zm-.9 4.6v4h1.8v-4H7.1zm0 5.2v1.7h1.8V11H7.1z"></path></svg><span>{{p.warn}}</span></div></sc-if>
+<div class="help"><span>{{p.desc}}</span><sc-if value="{{p.hasDef}}" hint-placeholder-val="{{ false }}"><span> Default: <span class="mono">{{p.def}}</span></span></sc-if></div>
+</div>
+<sc-if value="{{p.canUnset}}" hint-placeholder-val="{{ true }}"><button class="btn btn-quiet btn-icon" type="button" aria-label="{{p.unsetLabel}}" title="Unset: remove this option" style="flex: none; margin-top: 4px"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"></path></svg></button></sc-if>
+<sc-if value="{{p.noUnset}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="flex: 0 0 28px"></span></sc-if>
+</div>
+</sc-for>
+<sc-if value="{{g.hasMore}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 12px 16px; border-top: 1px solid var(--border)">
+<span class="small muted" style="margin-inline-end: 4px">Add</span>
+<sc-for list="{{g.moreShown}}" as="m" hint-placeholder-count="4"><button class="opt-add" type="button" title="{{m.title}}"><span aria-hidden="true">+</span>{{m.name}}</button></sc-for>
+<sc-if value="{{g.hasRest}}" hint-placeholder-val="{{ false }}"><button class="btn btn-quiet btn-sm" type="button">{{g.restText}}</button></sc-if>
+</div>
+</sc-if>
+</div>
+</details>
+</sc-for>
+</form>
+
+<aside style="display: flex; flex-direction: column; gap: 20px; flex: 1 1 320px; max-width: 420px; min-width: 0">
+<sc-if value="{{o.showIndex}}" hint-placeholder-val="{{ true }}">
+<nav aria-label="Groups on this page" style="display: flex; flex-direction: column; gap: 2px">
+<h2 class="nav-head" style="padding: 0">On this page</h2>
+<sc-for list="{{o.groups}}" as="g" hint-placeholder-count="4">
+<a href="{{g.href}}" class="crumb" style="display: flex; align-items: baseline; gap: 8px; padding: 3px 0; font-size: 13px">
+<span>{{g.title}}</span>
+<sc-if value="{{g.hasErr}}" hint-placeholder-val="{{ false }}"><span class="xs" style="color: var(--danger-text); font-weight: 600">{{g.errText}}</span></sc-if>
+<span class="xs faint" style="margin-inline-start: auto; font-variant-numeric: tabular-nums">{{g.shortCount}}</span>
+</a>
+</sc-for>
+</nav>
+</sc-if>
+<section style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 8px">
+<h2 class="h3" style="flex: 1 1 auto">PHP</h2>
+<button class="btn btn-quiet btn-sm" type="button" onClick="{{toPhp}}">Edit</button>
+<button class="btn btn-quiet btn-sm" type="button" data-copy>Copy</button>
+</div>
+<pre class="code" tabindex="0" aria-label="PHP array nodes will load"><sc-for list="{{o.php}}" as="ln" hint-placeholder-count="6"><div><sc-for list="{{ln.toks}}" as="tk" hint-placeholder-count="1"><span class="{{tk.c}}">{{tk.t}}</span></sc-for></div></sc-for></pre>
+</section>
+</aside>
+</div>
+</sc-if>
+
+<sc-if value="{{isPhp}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px 32px">
+<div style="display: flex; flex-direction: column; gap: 12px; flex: 3 1 560px; min-width: 0">
+<sc-if value="{{o.hasMarks}}" hint-placeholder-val="{{ false }}">
+<ul class="card" style="list-style: none; margin: 0; padding: 0; overflow: hidden">
+<sc-for list="{{o.marks}}" as="m" hint-placeholder-count="3">
+<li class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline">
+<a class="link mono" href="#" style="flex: 0 0 60px">Line {{m.line}}</a>
+<span class="{{m.cls}}"><span style="font-weight: 600">{{m.label}}</span><span class="mono">{{m.name}}</span><span>{{m.msg}}</span></span>
+</li>
+</sc-for>
+</ul>
+</sc-if>
+<div class="card" style="overflow: hidden">
+<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 6px 8px 6px 16px; border-bottom: 1px solid var(--border)">
+<span class="small muted" style="flex: 1 1 auto">Literal values only. Comments are not kept.</span>
+<button class="btn btn-quiet btn-sm" type="button" data-copy>Copy</button>
+<button class="btn btn-quiet btn-sm" type="button">Download</button>
+</div>
+<div class="ed">
+<div class="ed-gutter" aria-hidden="true"><sc-for list="{{o.edLines}}" as="l" hint-placeholder-count="12"><div class="{{l.cls}}"><span>{{l.mark}}</span><span>{{l.n}}</span></div></sc-for></div>
+<div class="ed-body">
+<div class="ed-bg" aria-hidden="true"><sc-for list="{{o.edLines}}" as="l" hint-placeholder-count="12"><div class="{{l.bg}}"></div></sc-for></div>
+<textarea defaultValue="{{o.phpEdit}}" class="ed-text" rows="{{o.phpRows}}" spellcheck="false" wrap="off" aria-label="PHP"></textarea>
+</div>
+</div>
+</div>
+</div>
+<aside style="display: flex; flex-direction: column; gap: 8px; flex: 1 1 320px; max-width: 420px; min-width: 0">
+<h2 class="h3">Options</h2>
+<input class="input" type="search" placeholder="Search" aria-label="Search options">
+<div class="card" style="max-height: 620px; overflow-y: auto">
+<sc-for list="{{o.ref}}" as="r" hint-placeholder-count="10">
+<div class="row" style="padding: 6px 8px 6px 12px; gap: 8px">
+<div style="display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0">
+<span class="mono" style="overflow-wrap: anywhere">{{r.name}}</span>
+<span class="xs muted">{{r.title}}</span>
+</div>
+<sc-if value="{{r.set}}" hint-placeholder-val="{{ false }}"><span class="xs faint" style="padding-inline-end: 8px">Set</span></sc-if>
+<sc-if value="{{r.unset}}" hint-placeholder-val="{{ true }}"><button class="btn btn-quiet btn-sm" type="button">Insert</button></sc-if>
+</div>
+</sc-for>
+</div>
+</aside>
+</div>
+</sc-if>
+</main>
+
+<div style="position: sticky; bottom: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; padding: 12px 32px; background: var(--surface); border-top: 1px solid var(--border-strong); box-shadow: var(--shadow-2)">
+<div style="display: flex; flex-direction: column; flex: 1 1 280px; min-width: 0">
+<span class="{{o.saveCls}}"><span class="{{o.saveDot}}" aria-hidden="true"></span>{{o.saveText}}</span>
+</div>
+<sc-if value="{{o.dirty}}" hint-placeholder-val="{{ false }}"><button class="btn btn-quiet" type="button">Discard edits</button></sc-if>
+<button class="{{o.saveBtn}}" type="submit" disabled="{{o.saveDisabled}}">Save</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"object":{"editor":"enum","options":["samlsp","sp","multiauth"],"default":"samlsp"},"view":{"editor":"enum","options":["settings","php"],"default":"settings"},"$preview":{"width":1440,"height":2500}}'>
+class Component extends DCLogic {
+renderVals() {
+// --- helpers: a tiny stand-in for the JSON Schema form generator -------------
+const O = (kind, title, name, desc, def, x) => {
+const p = Object.assign({
+title: title, name: name, desc: desc, def: def || '', value: '', choices: [], items: [], on: false, onText: '',
+err: '', warn: '', edited: false, required: false, canUnset: true, addLabel: 'Add row', aLabel: 'Type', bLabel: 'Value',
+isText: false, isSelect: false, isSwitch: false, isList: false, isSecretRef: false, isKeyRef: false, isCert: false,
+certSubject: '', certExpires: '', certPrint: ''
+}, x || {});
+p[kind] = true;
+p.hasDef = !!p.def; p.hasErr = !!p.err; p.hasWarn = !!p.warn; p.noUnset = !p.canUnset;
+p.inputCls = 'input mono' + (p.err ? ' is-error' : '');
+p.anchor = 'o-' + name.replace(/[^A-Za-z0-9]/g, '-');
+p.unsetLabel = 'Unset ' + name;
+p.items = p.items.map((it) => ({ a: it[0], hasA: !!it[0], b: it[1], cls: 'input mono' + (it[2] ? ' is-error' : '') }));
+return p;
+};
+const G = (id, title, total, options, more) => {
+const errs = options.filter((p) => p.hasErr).length;
+const m = (more || []).map((n) => ({ name: n[0], title: n[1] }));
+return {
+anchor: 'g-' + id, href: '#g-' + id, title: title, options: options, open: options.length > 0,
+countText: options.length + ' of ' + total + ' set', shortCount: options.length + ' of ' + total,
+hasErr: errs > 0, errText: errs === 1 ? '1 error' : errs + ' errors',
+hasMore: m.length > 0, moreShown: m.slice(0, 5), hasRest: m.length > 5, restText: 'and ' + (m.length - 5) + ' more'
+};
+};
+const php = (src) => src.split('\n').map((line) => {
+const out = []; const re = /('(?:[^'\\]|\\.)*')|(\/\/.*$)|\b(true|false|null)\b/g; let i = 0; let m;
+while ((m = re.exec(line))) {
+if (m.index > i) out.push({ c: '', t: line.slice(i, m.index) });
+out.push({ c: m[1] ? 'tk-s' : m[2] ? 'tk-c' : 'tk-k', t: m[0] }); i = re.lastIndex;
+}
+if (i < line.length) out.push({ c: '', t: line.slice(i) });
+if (!out.length) out.push({ c: '', t: ' ' });
+return { toks: out };
+});
+const save = (state, text, sub) => ({
+saveText: text, saveSub: sub, dirty: state !== 'live',
+saveCls: 'status ' + (state === 'live' ? 's-live' : state === 'error' ? 's-danger' : 's-unsaved'),
+saveDot: 'dot' + (state === 'live' ? ' dot-full' : ''),
+saveBtn: 'btn btn-primary', saveDisabled: state === 'live'
+});
+
+// --- three sizes of object ----------------------------------------------------
+const objects = {
+multiauth: Object.assign({
+nav: 'authsources', parent: 'Authsources', parentHref: 'Authsources.dc.html', title: 'staff-or-guest', kind: 'Authsource', type: 'multiauth:MultiAuth',
+hasId: false, id: '', showIndex: false, hasErrors: false, errors: [], errorTitle: '',
+finderHint: '',
+groups: [
+G('sources', 'Sources', 2, [
+O('isList', 'Sources', 'sources', 'The authsources people choose between on the login page, in this order.', '', { required: true, canUnset: false, addLabel: 'Add source', bLabel: 'Authsource id', items: [['', 'university-ldap'], ['', 'guest-sql']] }),
+O('isSelect', 'Preselected source', 'preselect', 'The source already selected when the page opens.', 'none', { choices: ['university-ldap', 'guest-sql'] })
+])
+],
+phpSrc: ("'staff-or-guest' => [\n    'multiauth:MultiAuth',\n    'sources' => [\n        'university-ldap',\n        'guest-sql',\n    ],\n    'preselect' => 'university-ldap',\n],"),
+}, save('live', 'Published', 'Live in Snapshot #41. Nothing to save.')),
+
+sp: Object.assign({
+nav: 'sp', parent: 'Service providers', parentHref: 'ServiceProviders.dc.html', title: 'Moodle', kind: 'Service provider', type: 'saml20-sp-remote',
+hasId: true, id: 'https://moodle.example.edu/auth/saml2/sp/metadata.php', showIndex: true, hasErrors: false, errors: [], errorTitle: '',
+finderHint: 'Find an option by name or title, across all 38',
+groups: [
+G('identity', 'Identity', 5, [
+O('isText', 'Entity ID', 'entityid', 'The unique identifier the service sends in its requests.', '', { required: true, canUnset: false, value: 'https://moodle.example.edu/auth/saml2/sp/metadata.php' }),
+O('isList', 'Display name', 'name', 'Shown to people on the consent and logout pages.', 'the entity ID', { addLabel: 'Add language', aLabel: 'Language', bLabel: 'Text', items: [['en', 'Moodle'], ['es', 'Campus virtual']] })
+], [['description', 'Description'], ['OrganizationName', 'Organisation name'], ['OrganizationURL', 'Organisation URL']]),
+G('endpoints', 'Endpoints', 3, [
+O('isList', 'Assertion consumer service', 'AssertionConsumerService', 'Where the login response is sent.', '', { required: true, canUnset: false, addLabel: 'Add endpoint', aLabel: 'Binding', bLabel: 'Location', items: [['HTTP-POST', 'https://moodle.example.edu/auth/saml2/sp/saml2-acs.php']] }),
+O('isList', 'Single logout service', 'SingleLogoutService', 'Where logout requests and responses are sent.', 'no single logout', { addLabel: 'Add endpoint', aLabel: 'Binding', bLabel: 'Location', items: [['HTTP-Redirect', 'https://moodle.example.edu/auth/saml2/sp/saml2-logout.php']] })
+], [['ArtifactResolutionService', 'Artifact resolution service']]),
+G('attributes', 'Attributes and NameID', 6, [
+O('isSelect', 'NameID format', 'NameIDFormat', 'The format of the identifier sent for the person.', 'transient', { choices: ['persistent', 'transient', 'emailAddress', 'unspecified'] }),
+O('isList', 'Released attributes', 'attributes', 'Only these attributes are sent to the service.', 'all attributes', { edited: true, addLabel: 'Add attribute', bLabel: 'Attribute name', items: [['', 'uid'], ['', 'mail'], ['', 'displayName'], ['', 'eduPersonAffiliation']] }),
+O('isSelect', 'Attribute name format', 'attributes.NameFormat', 'How attribute names are written in the response.', 'basic', { choices: ['uri', 'basic', 'unspecified'] })
+], [['attributes.required', 'Required attributes'], ['userid.attribute', 'User ID attribute'], ['simplesaml.nameidattribute', 'NameID source attribute']]),
+G('signing', 'Signing and encryption', 11, [
+O('isCert', 'Signing certificate', 'certData', 'Used to check the signature on requests from the service.', '', { certSubject: 'CN=moodle.example.edu', certExpires: '6 Dec 2026, in 12 days', certPrint: '3F:9A:27:C1:5E:08:B4:D2 … 71:AC:0E:66', warn: 'Expires in 12 days.' }),
+O('isSwitch', 'Require signed requests', 'validate.authnrequest', 'Reject login requests that are not signed with the certificate above.', 'false', { on: true, onText: 'On' }),
+O('isSwitch', 'Encrypt assertions', 'assertion.encryption', 'Encrypt assertions sent to this service.', 'follows the Hosted IdP', { on: false, onText: 'Off' })
+], [['sign.logout', 'Sign logout messages'], ['signature.algorithm', 'Signature algorithm'], ['saml20.sign.response', 'Sign the response'], ['saml20.sign.assertion', 'Sign the assertion'], ['validate.logout', 'Require signed logout'], ['redirect.sign', 'Sign redirect messages'], ['redirect.validate', 'Validate redirect signatures'], ['sharedkey', 'Shared key']]),
+G('consent', 'Consent and privacy', 4, [], [['consent.disable', 'Skip consent'], ['privacypolicy', 'Privacy policy URL'], ['RegistrationInfo', 'Registration info'], ['EntityAttributes', 'Entity attributes']]),
+G('advanced', 'Advanced', 9, [], [['ForceAuthn', 'Force re-authentication'], ['audience', 'Extra audiences'], ['authproc', 'Authentication processing filters'], ['skipEndpointValidationWhenSigned', 'Skip endpoint validation'], ['IDPList', 'Allowed IdPs'], ['saml20.ecp', 'Enable ECP'], ['assertion.lifetime', 'Assertion lifetime'], ['session.lifetime', 'Session lifetime'], ['simplesaml.attributes', 'Send attributes']])
+],
+phpSrc: ("$metadata['https://moodle.example.edu/auth/saml2/sp/metadata.php'] = [\n    'name' => [\n        'en' => 'Moodle',\n        'es' => 'Campus virtual',\n    ],\n    'AssertionConsumerService' => [\n        [\n            'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',\n            'Location' => 'https://moodle.example.edu/auth/saml2/sp/saml2-acs.php',\n        ],\n    ],\n    'SingleLogoutService' => [\n        [\n            'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',\n            'Location' => 'https://moodle.example.edu/auth/saml2/sp/saml2-logout.php',\n        ],\n    ],\n    'NameIDFormat' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent',\n    'attributes' => ['uid', 'mail', 'displayName'],\n    'attributes.NameFormat' => 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri',\n    'certData' => 'MIIDXTCCAkWgAwIBAgIJAL3f…',\n    'validate.authnrequest' => true,\n    'assertion.encryption' => false,\n];"),
+}, save('unsaved', 'Unsaved edits to 1 option', 'Saving does not publish. It adds to the changes waiting for review.')),
+
+samlsp: Object.assign({
+nav: 'authsources', parent: 'Authsources', parentHref: 'Authsources.dc.html', title: 'default-sp', kind: 'Authsource', type: 'saml:SP',
+hasId: false, id: '', showIndex: true, hasErrors: true, errorTitle: 'Not saved: 2 errors',
+errors: [
+{ name: 'discoURL', href: '#o-discoURL', msg: 'is not a full URL.' },
+{ name: 'contacts', href: '#o-contacts', msg: 'has a contact with no way to reach them.' }
+],
+finderHint: 'Find an option by name or title, across all 64',
+groups: [
+G('basics', 'Basics', 5, [
+O('isText', 'Entity ID', 'entityID', 'The identifier this SP presents to identity providers.', 'the metadata URL of this authsource', { value: 'https://login.example.edu/sp' }),
+O('isText', 'Discovery service URL', 'discoURL', 'Where people choose their identity provider. Only applies while idp is not set.', 'the built-in discovery page', { value: 'disco.example.edu/ds', err: 'Enter the full URL, starting with https://' })
+], [['idp', 'Identity provider'], ['RelayState', 'Default return URL'], ['description', 'Description']]),
+G('endpoints', 'Endpoints and bindings', 7, [
+O('isList', 'Assertion consumer bindings', 'acs.Bindings', 'The bindings this SP accepts responses on, most preferred first.', 'HTTP-POST, HTTP-Artifact', { addLabel: 'Add binding', aLabel: 'Binding', bLabel: 'URN', items: [['HTTP-POST', 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']] })
+], [['ProtocolBinding', 'Requested response binding'], ['SingleLogoutServiceBinding', 'Logout bindings'], ['SingleLogoutServiceLocation', 'Logout location'], ['AssertionConsumerServiceURL', 'ACS URL in requests'], ['AssertionConsumerServiceIndex', 'ACS index in requests'], ['baseurlpath', 'Base URL path']]),
+G('requests', 'Login requests', 9, [
+O('isSwitch', 'Force re-authentication', 'ForceAuthn', 'Ask the IdP to make people log in again even with a session.', 'false', { on: false, onText: 'Off' }),
+O('isList', 'Requested authentication context', 'AuthnContextClassRef', 'The login methods this SP asks the IdP for.', 'no preference', { addLabel: 'Add context', bLabel: 'Context class', items: [['', 'https://refeds.org/profile/mfa']] })
+], [['IsPassive', 'Passive login'], ['AuthnContextComparison', 'Context comparison'], ['NameIDPolicy', 'NameID policy'], ['disable_scoping', 'Disable scoping'], ['ProviderName', 'Provider name'], ['Extensions', 'Request extensions'], ['saml.SOAPClient.certificate', 'SOAP client certificate']]),
+G('signing', 'Signing', 8, [
+O('isSwitch', 'Sign login requests', 'sign.authnrequest', 'Sign every request sent to an identity provider.', 'false', { on: true, onText: 'On' }),
+O('isSelect', 'Signature algorithm', 'signature.algorithm', 'The algorithm used for every signature this SP makes.', 'rsa-sha256', { choices: ['rsa-sha1', 'rsa-sha256', 'rsa-sha384', 'rsa-sha512'], warn: 'Many identity providers reject SHA-1.' }),
+O('isKeyRef', 'Private key', 'privatekey', 'File name in the cert directory of each node, or a full path.', '', { value: 'default-sp.pem' }),
+O('isSecretRef', 'Private key passphrase', 'privatekey_pass', 'Passphrase of the private key.', 'the key has no passphrase', { value: '%env(CONSOLE_SP_KEY_PASS)%' })
+], [['certificate', 'Certificate'], ['sign.logout', 'Sign logout messages'], ['redirect.sign', 'Sign redirect messages'], ['new_privatekey', 'Next private key (rollover)']]),
+G('encryption', 'Encryption', 6, [], [['assertion.encryption', 'Require encrypted assertions'], ['nameid.encryption', 'Encrypt NameID'], ['sharedkey', 'Shared key'], ['encryption.blacklisted-algorithms', 'Refused algorithms'], ['saml20.hok.assertion', 'Holder-of-key'], ['WantAssertionsSigned', 'Require signed assertions']]),
+G('attributes', 'Attributes', 5, [
+O('isList', 'Requested attributes', 'attributes', 'Listed in this SP’s metadata so identity providers know what to release.', 'none listed', { addLabel: 'Add attribute', bLabel: 'Attribute name', items: [['', 'eduPersonPrincipalName'], ['', 'mail'], ['', 'displayName']] })
+], [['attributes.required', 'Required attributes'], ['attributes.NameFormat', 'Attribute name format'], ['attributes.index', 'Attribute service index'], ['authproc', 'Authentication processing filters']]),
+G('metadata', 'Metadata shown to identity providers', 9, [
+O('isList', 'Display name', 'name', 'The name of this service in its metadata.', 'none', { addLabel: 'Add language', aLabel: 'Language', bLabel: 'Text', items: [['en', 'Example University login']] }),
+O('isList', 'Contacts', 'contacts', 'People an identity provider can reach about this service.', 'none', { addLabel: 'Add contact', aLabel: 'Contact type', bLabel: 'Email address', items: [['technical', 'iam@example.edu'], ['support', '', true]], err: 'The support contact has no email address.' })
+], [['OrganizationName', 'Organisation name'], ['OrganizationDisplayName', 'Organisation display name'], ['OrganizationURL', 'Organisation URL'], ['UIInfo', 'Login UI information'], ['RegistrationInfo', 'Registration info'], ['EntityAttributes', 'Entity attributes'], ['description', 'Service description']]),
+G('logout', 'Logout', 4, [], [['sign.logout', 'Sign logout messages'], ['validate.logout', 'Require signed logout'], ['ReturnTo', 'Return URL after logout'], ['SingleLogoutServiceResponse', 'Logout response location']]),
+G('proxy', 'Proxying and scoping', 6, [], [['IDPList', 'Allowed IdPs'], ['ProxyCount', 'Proxy count'], ['RequesterID', 'Requester IDs'], ['passAuthnContextClassRef', 'Pass context through'], ['proxymode.passAuthnContextClassRef', 'Proxy mode context'], ['saml:idp', 'Fixed IdP']]),
+G('advanced', 'Advanced', 5, [], [['enable_unsolicited', 'Accept unsolicited responses'], ['RelayState', 'Default RelayState'], ['metadata.sign.enable', 'Sign metadata'], ['metadata.sign.algorithm', 'Metadata signature algorithm'], ['core:loginpage_links', 'Login page links']])
+],
+marks: [
+{ line: 4, kind: 'err', name: 'discoURL', msg: 'Enter the full URL, starting with https://' },
+{ line: 13, kind: 'warn', name: 'signature.algorithm', msg: 'Many identity providers reject SHA-1.' },
+{ line: 20, kind: 'err', name: 'contacts', msg: 'The support contact has no email address.' }
+],
+phpEdit: "'default-sp' => [\n    'saml:SP',\n    'entityID' => 'https://login.example.edu/sp',\n    'discoURL' => 'disco.example.edu/ds',\n    'acs.Bindings' => [\n        'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',\n    ],\n    'ForceAuthn' => false,\n    'AuthnContextClassRef' => [\n        'https://refeds.org/profile/mfa',\n    ],\n    'sign.authnrequest' => true,\n    'signature.algorithm' => 'http://www.w3.org/2000/09/xmldsig#rsa-sha1',\n    'privatekey' => 'default-sp.pem',\n    'privatekey_pass' => '%env(CONSOLE_SP_KEY_PASS)%',\n    'attributes' => ['eduPersonPrincipalName', 'mail', 'displayName'],\n    'name' => ['en' => 'Example University login'],\n    'contacts' => [\n        ['contactType' => 'technical', 'emailAddress' => 'iam@example.edu'],\n        ['contactType' => 'support', 'emailAddress' => ''],\n    ],\n],",
+phpSrc: ("'default-sp' => [\n    'saml:SP',\n    'entityID' => 'https://login.example.edu/sp',\n    'acs.Bindings' => [\n        'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',\n    ],\n    'ForceAuthn' => false,\n    'AuthnContextClassRef' => [\n        'https://refeds.org/profile/mfa',\n    ],\n    'sign.authnrequest' => true,\n    'signature.algorithm' => 'http://www.w3.org/2000/09/xmldsig#rsa-sha1',\n    'privatekey' => 'default-sp.pem',\n    'privatekey_pass' => '%env(CONSOLE_SP_KEY_PASS)%',\n    'attributes' => ['eduPersonPrincipalName', 'mail', 'displayName'],\n    'name' => ['en' => 'Example University login'],\n    'contacts' => [\n        ['contactType' => 'technical', 'emailAddress' => 'iam@example.edu'],\n    ],\n],"),
+}, save('error', 'Unsaved edits', 'Your edits are still in the form. Nothing was changed.'))
+};
+const o = objects[this.props.object] ?? objects.samlsp;
+const view = (this.state || {}).view ?? this.props.view ?? 'settings';
+o.php = php(o.phpSrc);
+o.phpEdit = o.phpEdit || o.phpSrc;
+const byLine = {};
+o.marks = (o.marks || []).map((m) => { byLine[m.line] = m.kind; return Object.assign({}, m, {
+cls: m.kind === 'err' ? 'msg-error' : 'msg-warning', label: m.kind === 'err' ? 'Error' : 'Warning' }); });
+o.hasMarks = o.marks.length > 0;
+const lines = o.phpEdit.split('\n');
+o.phpRows = lines.length;
+o.edLines = lines.map((x, i) => { const k = byLine[i + 1] || ''; return {
+n: i + 1, cls: 'ed-ln' + (k ? ' ' + k : ''), bg: k, mark: k === 'err' ? '\u00d7' : k === 'warn' ? '!' : '' }; });
+o.ref = [];
+o.groups.forEach((g) => {
+g.options.forEach((p) => o.ref.push({ name: p.name, title: p.title, set: true, unset: false }));
+g.moreShown.forEach((m) => o.ref.push({ name: m.name, title: m.title, set: false, unset: true }));
+});
+return {
+theme: this.props.theme ?? 'light', o: o,
+isSettings: view !== 'php', isPhp: view === 'php',
+segS: view !== 'php' ? 'on' : '', segP: view === 'php' ? 'on' : '',
+toSettings: () => this.setState({ view: 'settings' }), toPhp: () => this.setState({ view: 'php' })
+};
+}
+}
+</script>
+</body>
+</html>

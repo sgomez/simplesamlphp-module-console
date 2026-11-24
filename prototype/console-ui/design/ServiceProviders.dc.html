@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Service providers</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg)">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="sp" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">Service providers</span>
+</nav>
+<a class="btn btn-global btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 7 changes</a>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1040px; padding: 32px 32px 64px">
+<div style="display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 24px">
+<div style="display: flex; flex-direction: column; gap: 4px; flex: 1 1 320px; min-width: 0">
+<div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px">
+<h1 class="h1">Service providers</h1><span class="mono faint">saml20-sp-remote</span>
+</div>
+</div>
+<a class="btn btn-primary" href="AddEntity.dc.html"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 2v10M2 7h10"></path></svg>Add service provider</a>
+</div>
+
+<div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px">
+<label style="display: flex; flex: 1 1 280px; max-width: 420px; position: relative"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">Search service providers</span>
+<input class="input" type="search" placeholder="Search by name or entity ID"></label>
+<nav class="seg" aria-label="Filter">
+<a class="on" href="#" aria-current="true">All <span class="faint" style="font-weight: 400">42</span></a>
+<a href="#">Not live <span class="faint">3</span></a>
+<a href="#">With warnings <span class="faint">1</span></a>
+</nav>
+</div>
+
+<div class="card" style="overflow: hidden">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="12">
+<a class="row" href="FormServiceProvider.dc.html" style="flex-wrap: wrap; gap: 4px 24px">
+<div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 340px; min-width: 0">
+<span style="font-weight: 600; color: {{r.nameColor}}; text-decoration: {{r.nameDeco}}">{{r.name}}</span>
+<span class="eid"><span class="eid-a">{{r.idA}}</span><span class="eid-b">{{r.idB}}</span></span>
+</div>
+<sc-if value="{{r.hasNote}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 1px; flex: 0 1 300px; min-width: 0">
+<span class="{{r.noteCls}}">
+<sc-if value="{{r.isWarn}}" hint-placeholder-val="{{ false }}"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="flex: none"><path d="M8 1.2 15.2 14H.8L8 1.2zm-.9 4.6v4h1.8v-4H7.1zm0 5.2v1.7h1.8V11H7.1z"></path></svg></sc-if>
+<sc-if value="{{r.isCycle}}" hint-placeholder-val="{{ false }}"><span class="{{r.dotCls}}" aria-hidden="true"></span></sc-if>
+<span>{{r.note}}</span></span>
+<sc-if value="{{r.hasMore}}" hint-placeholder-val="{{ false }}"><span class="xs faint" style="padding-inline-start: 18px">{{r.more}}</span></sc-if>
+</div>
+</sc-if>
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" style="flex: none; color: var(--text-3)"><path d="M6 3l5 5-5 5"></path></svg>
+</a>
+</sc-for>
+</div>
+
+<nav aria-label="Pagination" style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px">
+<span class="small muted" style="flex: 1 1 auto">1 to 12 of 42 service providers</span>
+<a class="btn btn-secondary btn-sm is-disabled" aria-disabled="true" href="#">Previous</a>
+<span class="small muted">Page 1 of 4</span>
+<a class="btn btn-secondary btn-sm" href="#">Next</a>
+</nav>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+renderVals() {
+// One line per row at most, and only when something is going on.
+// Priority: publish cycle first, then warnings, then facts. Anything else is "and N more", shown in the detail page.
+const row = (name, id, kind, note, more, off) => {
+const cut = Math.max(0, id.length - 16);
+return {
+name: name, idA: id.slice(0, cut), idB: id.slice(cut),
+nameColor: off ? 'var(--text-3)' : 'inherit', nameDeco: off ? 'line-through' : 'none',
+hasNote: !!note, note: note || '', more: more || '', hasMore: !!more,
+isWarn: kind === 'warn', isCycle: kind === 'half' || kind === 'new' || kind === 'minus',
+noteCls: 'status ' + (kind === 'warn' ? 's-warn' : 's-pending'),
+dotCls: 'dot' + (kind === 'half' ? ' dot-half' : kind === 'minus' ? ' dot-minus' : '')
+};
+};
+return {
+theme: this.props.theme ?? 'light',
+rows: [
+row('Course evaluations', 'https://evaluations.example.edu/saml/metadata'),
+row('HR self-service', 'https://hr.example.edu/sp'),
+row('Library catalogue', 'https://catalogue.library.example.edu/shibboleth', 'half', 'Modified, not live', '+1 more'),
+row('Moodle', 'https://moodle.example.edu/auth/saml2/sp/metadata.php', 'warn', 'Certificate expires in 12 days'),
+row('Old intranet', 'https://intranet-old.example.edu/simplesaml/module.php/saml/sp/metadata.php/default-sp', 'minus', 'Disabled, not published', '', true),
+row('Print service', 'https://print.example.edu/saml2/service-provider-metadata/campus'),
+row('Research wiki', 'https://wiki.research.example.edu/saml/metadata'),
+row('Room booking', 'https://rooms.example.edu/Shibboleth.sso/Metadata'),
+row('Student records', 'https://records.example.edu/sso/saml2/metadata'),
+row('Travel booking', 'https://sso.travelbooker.example.com/saml2/metadata/7f3a9c21', 'new', 'New, not published'),
+row('Video platform', 'https://video.example.edu/sp/metadata.xml'),
+row('Wi-Fi onboarding', 'https://onboard.net.example.edu/sp')
+]
+};
+}
+}
+</script>
+</body>
+</html>

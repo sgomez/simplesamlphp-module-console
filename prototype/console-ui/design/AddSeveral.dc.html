@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add, several entities found</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg); position: relative">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="sp" mode="console" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="ServiceProviders.dc.html">Service providers</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">Add</span>
+</nav>
+<a class="btn btn-global btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 7 changes</a>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 920px; padding: 32px 32px 64px; flex: 1 0 auto">
+<h1 class="h1">Add service providers</h1><span class="small muted">PHP array · 4 entities</span><div class="card" style="overflow: hidden"><div class="row" style="flex-wrap: wrap; gap: 4px 24px"><input class="check" type="checkbox" aria-label="Select HR self-service" disabled style="flex: none"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="" style="font-weight: 600">HR self-service</span><span class="eid"><span class="eid-a">https://h</span><span class="eid-b">r.example.edu/sp</span></span></div><div style="flex: 0 1 auto; min-width: 0"><span class="chip">Managed</span></div></div><div class="row" style="flex-wrap: wrap; gap: 4px 24px"><input class="check" type="checkbox" aria-label="Select Print service" disabled style="flex: none"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="" style="font-weight: 600">Print service</span><span class="eid"><span class="eid-a">https://print.example.edu/saml2/service-provider</span><span class="eid-b">-metadata/campus</span></span></div><div style="flex: 0 1 auto; min-width: 0"><span class="chip">Managed</span></div></div><div class="row" style="flex-wrap: wrap; gap: 4px 24px"><input class="check" type="checkbox" aria-label="Select Timetable" defaultChecked="{{ true }}" style="flex: none"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="" style="font-weight: 600">Timetable</span><span class="eid"><span class="eid-a">https://timetabl</span><span class="eid-b">e.example.edu/sp</span></span></div><div style="flex: 0 1 auto; min-width: 0"><span class="small muted">Becomes an Override</span></div></div><div class="row" style="flex-wrap: wrap; gap: 4px 24px"><input class="check" type="checkbox" aria-label="Select Parking permits" defaultChecked="{{ true }}" style="flex: none"><div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 300px; min-width: 0"><span class="" style="font-weight: 600">Parking permits</span><span class="eid"><span class="eid-a">https://parking.example.e</span><span class="eid-b">du/saml/metadata</span></span></div></div></div>
+</main>
+<div style="position: sticky; bottom: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; padding: 12px 32px; background: var(--surface); border-top: 1px solid var(--border-strong); box-shadow: var(--shadow-2)"><div style="flex: 1 1 200px; min-width: 0"><span style="font-weight: 600">2 selected</span></div><a class="btn btn-quiet" href="AddEntity.dc.html">Back</a><a class="btn btn-primary" href="ImportResult.dc.html">Create 2</a></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":640}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light' };
+}
+}
+</script>
+</body>
+</html>

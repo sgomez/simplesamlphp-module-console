@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Compare Override with its source</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg); position: relative">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="sp" mode="console" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="ServiceProviders.dc.html">Service providers</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="FormServiceProvider.dc.html">Library catalogue</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">Compare</span>
+</nav>
+<a class="btn btn-global btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 7 changes</a>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1180px; padding: 32px 32px 64px; flex: 1 0 auto">
+<div style="display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 24px"><div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 320px; min-width: 0"><div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px"><h1 class="h1">Library catalogue</h1></div><span class="mono muted" style="overflow-wrap: anywhere">https://catalogue.library.example.edu/shibboleth</span></div></div><div class="callout callout-info"><svg class="ic ic-info" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.9 3h1.8v1.8H7.1V4zm0 3h1.8v5H7.1V7z"></path></svg><div style="display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0"><span style="font-weight: 600">The source changed on 21 Nov 2026</span></div><a class="btn btn-primary btn-sm" href="FormServiceProvider.dc.html">Mark as reviewed</a></div><div class="card" style="overflow-x: auto"><table class="tbl"><thead><tr><th scope="col">Option</th><th scope="col">Managed</th><th scope="col">Source</th><th scope="col"></th></tr></thead><tbody><tr><td><span class="mono" style="overflow-wrap: anywhere">AssertionConsumerService</span></td><td><span class="mono" style="overflow-wrap: anywhere; font-weight: 600">https://catalogue.library.example.edu/Shibboleth.sso/SAML2/POST</span></td><td><span class="mono" style="overflow-wrap: anywhere; font-weight: 600">http://catalogue.library.example.edu/Shibboleth.sso/SAML2/POST</span></td><td>Differs</td></tr><tr><td><span class="mono" style="overflow-wrap: anywhere">attributes</span></td><td><span class="mono" style="overflow-wrap: anywhere; font-weight: 600">uid, mail</span></td><td><span class="mono" style="overflow-wrap: anywhere; font-weight: 600">uid, mail, eduPersonAffiliation</span></td><td><span style="font-weight: 600">Differs · new in source</span></td></tr><tr><td><span class="mono" style="overflow-wrap: anywhere">validate.authnrequest</span></td><td><span class="mono" style="overflow-wrap: anywhere; font-weight: 600">true</span></td><td><span class="faint">Not set</span></td><td>Differs</td></tr><tr><td><span class="mono" style="overflow-wrap: anywhere">NameIDFormat</span></td><td><span class="mono" style="overflow-wrap: anywhere">persistent</span></td><td><span class="mono" style="overflow-wrap: anywhere">persistent</span></td><td><span class="faint">Same</span></td></tr><tr><td><span class="mono" style="overflow-wrap: anywhere">certData</span></td><td><span class="mono" style="overflow-wrap: anywhere">MIIDQjCC… 9F:2A</span></td><td><span class="mono" style="overflow-wrap: anywhere">MIIDQjCC… 9F:2A</span></td><td><span class="faint">Same</span></td></tr><tr><td><span class="mono" style="overflow-wrap: anywhere">name</span></td><td><span class="mono" style="overflow-wrap: anywhere">en: Library catalogue</span></td><td><span class="mono" style="overflow-wrap: anywhere">en: Library catalogue</span></td><td><span class="faint">Same</span></td></tr></tbody></table></div>
+</main>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light' };
+}
+}
+</script>
+</body>
+</html>

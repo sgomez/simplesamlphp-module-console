@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Replace from, review</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg); position: relative">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="sp" mode="console" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="ServiceProviders.dc.html">Service providers</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="FormServiceProvider.dc.html">Moodle</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">Replace</span>
+</nav>
+<a class="btn btn-global btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 7 changes</a>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 920px; padding: 32px 32px 64px; flex: 1 0 auto">
+<div style="display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 24px"><div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 320px; min-width: 0"><div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px"><h1 class="h1">Replace Moodle</h1></div><span class="mono muted" style="overflow-wrap: anywhere">https://moodle.example.edu/auth/saml2/sp/metadata.php</span></div></div><span class="small muted">From SAML metadata</span><div class="callout callout-warning"><svg class="ic ic-warning" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.2 15.2 14H.8L8 1.2zm-.9 4.6v4h1.8v-4H7.1zm0 5.2v1.7h1.8V11H7.1z"></path></svg><div style="display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0"><span style="font-weight: 600">This removes 4 options</span></div></div><div class="diff"><div class="dl"><span class="ds"></span><span>  &#x27;name&#x27; =&gt; [</span></div><div class="dl"><span class="ds"></span><span>      &#x27;en&#x27; =&gt; &#x27;Moodle&#x27;,</span></div><div class="dl dl-del"><span class="ds">-</span><span>      &#x27;es&#x27; =&gt; &#x27;Campus virtual&#x27;,</span></div><div class="dl"><span class="ds"></span><span>  ],</span></div><div class="dl"><span class="ds"></span><span>  &#x27;AssertionConsumerService&#x27; =&gt; [ … ],</span></div><div class="dl dl-del"><span class="ds">-</span><span>  &#x27;SingleLogoutService&#x27; =&gt; [ … ],</span></div><div class="dl"><span class="ds"></span><span>  &#x27;NameIDFormat&#x27; =&gt; &#x27;urn:oasis:names:tc:SAML:2.0:nameid-format:persistent&#x27;,</span></div><div class="dl dl-del"><span class="ds">-</span><span>  &#x27;attributes&#x27; =&gt; [&#x27;uid&#x27;, &#x27;mail&#x27;, &#x27;displayName&#x27;],</span></div><div class="dl dl-del"><span class="ds">-</span><span>  &#x27;attributes.NameFormat&#x27; =&gt; &#x27;urn:oasis:names:tc:SAML:2.0:attrname-format:uri&#x27;,</span></div><div class="dl dl-del"><span class="ds">-</span><span>  &#x27;certData&#x27; =&gt; &#x27;MIIDXTCCAkWgAwIBAgIJAL3f…&#x27;,</span></div><div class="dl dl-add"><span class="ds">+</span><span>  &#x27;certData&#x27; =&gt; &#x27;MIIDdzCCAl+gAwIBAgIEbq9…&#x27;,</span></div><div class="dl"><span class="ds"></span><span>  &#x27;validate.authnrequest&#x27; =&gt; true,</span></div><div class="dl dl-del"><span class="ds">-</span><span>  &#x27;assertion.encryption&#x27; =&gt; false,</span></div></div>
+</main>
+<div style="position: sticky; bottom: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; padding: 12px 32px; background: var(--surface); border-top: 1px solid var(--border-strong); box-shadow: var(--shadow-2)"><div style="flex: 1 1 200px; min-width: 0"></div><a class="btn btn-quiet" href="FormServiceProvider.dc.html">Cancel</a><a class="btn btn-secondary" href="FormServiceProvider.dc.html">Edit first</a><a class="btn btn-primary" href="FormServiceProvider.dc.html">Save</a></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":860}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light' };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review pasted metadata</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg)">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="sp" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="ServiceProviders.dc.html">Service providers</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="AddEntity.dc.html">Add</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">Review</span>
+</nav>
+<a class="btn btn-global btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 7 changes</a>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1240px; padding: 32px 32px 40px; flex: 1 0 auto">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 class="h1">Travelbooker</h1>
+<span class="mono muted" style="overflow-wrap: anywhere">https://sso.travelbooker.example.com/saml2/metadata/7f3a9c21</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px 32px">
+<div style="display: flex; flex-direction: column; gap: 12px; flex: 1 1 380px; min-width: 0">
+<sc-for list="{{sections}}" as="s" hint-placeholder-count="3">
+<section class="card" style="overflow: hidden">
+<div style="display: flex; align-items: baseline; gap: 8px; padding: 12px 16px"><h2 class="h3">{{s.title}}</h2><span class="small muted">{{s.count}}</span></div>
+<sc-for list="{{s.rows}}" as="r" hint-placeholder-count="2">
+<div class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline; flex-wrap: wrap">
+<span class="mono" style="flex: 0 1 210px; overflow-wrap: anywhere">{{r.name}}</span>
+<span class="small muted" style="flex: 1 1 160px">{{r.note}}</span>
+</div>
+</sc-for>
+</section>
+</sc-for>
+</div>
+<section style="display: flex; flex-direction: column; gap: 8px; flex: 1 1 460px; min-width: 0">
+<h2 class="h3">PHP</h2>
+<pre class="code" tabindex="0" aria-label="Resulting PHP"><sc-for list="{{php}}" as="ln" hint-placeholder-count="8"><div>{{ln}}</div></sc-for></pre>
+</section>
+</div>
+</main>
+<div style="position: sticky; bottom: 0; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding: 12px 32px; background: var(--surface); border-top: 1px solid var(--border-strong); box-shadow: var(--shadow-2)">
+<a class="btn btn-quiet" href="AddEntity.dc.html" style="margin-inline-end: auto">Back</a>
+<a class="btn btn-secondary" href="FormServiceProvider.dc.html">Edit first</a>
+<a class="btn btn-primary" href="ServiceProviders.dc.html">Save</a>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+const S = (title, rows) => ({ title: title, count: String(rows.length), rows: rows.map((r) => ({ name: r[0], note: r[1] || '' })) });
+return {
+theme: this.props.theme ?? 'light',
+sections: [
+S('Understood', [['entityid'], ['AssertionConsumerService'], ['NameIDFormat'], ['certData'], ['validate.authnrequest'], ['OrganizationName']]),
+S('Converted', [['name', 'Taken from OrganizationName'], ['certData', 'Line breaks removed']]),
+S('Ignored', [['validUntil', 'Managed entities do not expire'], ['index="0"', 'Single endpoint']])
+],
+php: [
+"$metadata['https://sso.travelbooker.example.com/saml2/metadata/7f3a9c21'] = [",
+"    'name' => ['en' => 'Travelbooker'],",
+"    'AssertionConsumerService' => [",
+"        [",
+"            'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',",
+"            'Location' => 'https://sso.travelbooker.example.com/saml2/acs/7f3a9c21',",
+"        ],",
+"    ],",
+"    'NameIDFormat' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent',",
+"    'certData' => 'MIIDXTCCAkWgAwIBAgIJAL3f…',",
+"    'validate.authnrequest' => true,",
+"    'OrganizationName' => ['en' => 'Travelbooker'],",
+"];"
+]
+};
+}
+}
+</script>
+</body>
+</html>

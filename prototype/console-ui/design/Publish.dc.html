@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Publish</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg)">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="publish" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">Publish</span>
+</nav>
+<span class="status s-live"><span class="dot dot-full" aria-hidden="true"></span>Live: Snapshot #41</span>
+</header>
+<main style="display: flex; flex-direction: column; gap: 24px; width: 100%; max-width: 1180px; padding: 32px 32px 64px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 class="h1">Publish</h1>
+<p class="muted" style="margin: 0; max-width: 72ch">Saved changes go live together, as one Snapshot.</p>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px 32px">
+<div style="display: flex; flex-direction: column; gap: 16px; flex: 3 1 520px; min-width: 0">
+
+<div class="callout callout-success">
+<svg class="ic ic-success" aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3.2 3.2L13 4.8"></path></svg>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-weight: 600">Ready to publish</span>
+</div>
+</div>
+
+<details class="grp card">
+<summary><span style="font-weight: 600">2 warnings</span></summary>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 16px 16px 44px">
+<div class="msg-warning"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="flex: none; margin-top: 2px"><path d="M8 1.2 15.2 14H.8L8 1.2zm-.9 4.6v4h1.8v-4H7.1zm0 5.2v1.7h1.8V11H7.1z"></path></svg><span><a class="link" href="FormServiceProvider.dc.html" style="color: inherit">Moodle</a>: the signing certificate expires in 12 days.</span></div>
+<div class="msg-warning"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="flex: none; margin-top: 2px"><path d="M8 1.2 15.2 14H.8L8 1.2zm-.9 4.6v4h1.8v-4H7.1zm0 5.2v1.7h1.8V11H7.1z"></path></svg><span><a class="link" href="Form.dc.html" style="color: inherit">default-sp</a>: <span class="mono">signature.algorithm</span> uses SHA-1, which many IdPs reject.</span></div>
+</div>
+</details>
+
+<div style="display: flex; align-items: baseline; gap: 10px; margin-top: 8px">
+<h2 class="h2">7 changes</h2><span class="small faint">against Snapshot #41</span>
+</div>
+<div class="card" style="overflow: hidden">
+<sc-for list="{{changes}}" as="c" hint-placeholder-count="7">
+<details class="grp" open="{{c.open}}" style="border-top: 1px solid var(--border)">
+<summary style="border-radius: 0; flex-wrap: wrap; gap: 4px 10px; padding: 12px 16px">
+<span class="mono" aria-hidden="true" style="width: 20px; height: 20px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; background: var(--surface-2); border: 1px solid var(--border)">{{c.sign}}</span>
+<span style="flex: 0 0 82px; font-size: 13px" class="muted">{{c.verb}}</span>
+<span style="font-weight: 600">{{c.name}}</span>
+<span class="small faint">{{c.kind}}</span>
+<span class="small muted" style="margin-inline-start: auto">{{c.summary}}</span>
+</summary>
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 16px 16px 46px">
+<div class="diff">
+<sc-for list="{{c.lines}}" as="l" hint-placeholder-count="3"><div class="{{l.cls}}"><span class="ds">{{l.s}}</span><span>{{l.t}}</span></div></sc-for>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+<a class="btn btn-secondary btn-sm" href="FormServiceProvider.dc.html">Open</a>
+<button class="btn btn-quiet btn-sm" type="button">Discard this change</button>
+</div>
+</div>
+</details>
+</sc-for>
+</div>
+</div>
+
+<aside class="card" aria-label="This Publication" style="display: flex; flex-direction: column; gap: 16px; padding: 20px; flex: 1 1 300px; max-width: 380px; box-shadow: var(--shadow-1)">
+<h2 class="h2">This Publication</h2>
+<dl style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font-size: 13px">
+<dt class="muted">Becomes</dt><dd style="margin: 0; font-weight: 600">Snapshot #42</dd>
+<dt class="muted">Nodes</dt><dd style="margin: 0">3</dd>
+</dl>
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span class="label">Comment <span class="faint" style="font-weight: 400">(optional)</span></span>
+<textarea class="input" rows="3"></textarea>
+</label>
+<button class="btn btn-primary" type="button" style="height: 40px">Publish 7 changes</button>
+<div style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px">
+<button class="btn btn-danger btn-sm" type="button">Discard all 7 changes…</button>
+</div>
+</aside>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1400}}">
+class Component extends DCLogic {
+renderVals() {
+const L = (s, t) => ({ s: s === ' ' ? '' : s, t: t, cls: 'dl' + (s === '+' ? ' dl-add' : s === '-' ? ' dl-del' : s === '~' ? ' dl-sec' : '') });
+const ch = (sign, verb, name, kind, summary, lines, open) => ({ sign: sign, verb: verb, name: name, kind: kind, summary: summary, lines: lines, open: !!open });
+return {
+theme: this.props.theme ?? 'light',
+changes: [
+ch('~', 'Modified', 'Library catalogue', 'Service provider', '2 options', [
+L(' ', "'AssertionConsumerService' => ["),
+L(' ', "    ["),
+L(' ', "        'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',"),
+L('-', "        'Location' => 'http://catalogue.library.example.edu/Shibboleth.sso/SAML2/POST',"),
+L('+', "        'Location' => 'https://catalogue.library.example.edu/Shibboleth.sso/SAML2/POST',"),
+L(' ', "    ],"),
+L(' ', "],"),
+L('+', "'validate.authnrequest' => true,")
+], true),
+ch('~', 'Modified', 'default-sp', 'Authsource · saml:SP', '1 option, 1 secret', [
+L('-', "'signature.algorithm' => 'http://www.w3.org/2000/09/xmldsig#rsa-sha1',"),
+L('+', "'signature.algorithm' => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',"),
+L('~', "'privatekey_pass'  secret changed, value not shown")
+], true),
+ch('~', 'Modified', 'Moodle', 'Service provider', '1 option', [
+L(' ', "'attributes' => ['uid', 'mail', 'displayName',"),
+L('+', "    'eduPersonAffiliation',"),
+L(' ', "],")
+]),
+ch('+', 'Added', 'Travel booking', 'Service provider', 'New, 9 options', [
+L('+', "'entityid' => 'https://sso.travelbooker.example.com/saml2/metadata/7f3a9c21',"),
+L('+', "'name' => ['en' => 'Travel booking'],"),
+L('+', "… 7 more options")
+]),
+ch('+', 'Added', 'Partner hospital', 'Identity provider', 'New, 6 options', [
+L('+', "'entityid' => 'https://idp.hospital.example.org/idp/shibboleth',"),
+L('+', "… 5 more options")
+]),
+ch('−', 'Withdrawn', 'Old intranet', 'Service provider', 'Disabled', [
+L('-', "'entityid' => 'https://intranet-old.example.edu/simplesaml/module.php/saml/sp/metadata.php/default-sp',"),
+L('-', "… 11 more options, kept in the Console")
+]),
+ch('×', 'Deleted', 'legacy-radius', 'Authsource · sqlauth:SQL2', 'Removed everywhere', [
+L('-', "'legacy-radius' => ['sqlauth:SQL2', … 6 options],")
+])
+]
+};
+}
+}
+</script>
+</body>
+</html>

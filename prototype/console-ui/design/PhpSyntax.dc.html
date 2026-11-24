@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PHP view, could not read</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./console.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="ui {{theme}} shell" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--bg); position: relative">
+<div id="nav" class="shell-side" style="flex: 1 1 232px; max-width: 100%; background: var(--side); border-inline-end: 1px solid var(--border)">
+<dc-import name="Sidebar" active="authsources" mode="console" theme="{{theme}}" hint-size="232px,760px"></dc-import>
+</div>
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+<header style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; padding: 12px 32px; min-height: 56px; border-bottom: 1px solid var(--border)">
+<a class="menu-btn btn btn-secondary btn-icon" href="#nav" aria-label="Menu"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M2 4h12M2 8h12M2 12h12"></path></svg></a>
+<nav aria-label="Breadcrumb" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; flex: 1 1 auto; min-width: 0">
+<a class="crumb" href="Main.dc.html">Console</a><span aria-hidden="true" class="faint">/</span><a class="crumb" href="Authsources.dc.html">Authsources</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" style="font-weight: 600">default-sp</span>
+</nav>
+<a class="btn btn-global btn-sm" href="Publish.dc.html"><span class="dot dot-half" aria-hidden="true"></span>Review 7 changes</a>
+</header>
+<main style="display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 1240px; padding: 32px 32px 64px; flex: 1 0 auto">
+<div style="display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px 24px"><div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; flex: 1 1 360px; min-width: 0"><h1 class="h1">default-sp</h1><span class="small muted">Authsource</span><span class="mono faint">saml:SP</span></div><label style="display: flex; align-items: center; gap: 8px; min-height: 36px"><input class="switch" type="checkbox" defaultChecked="{{ true }}"><span>Enabled</span></label><button class="btn btn-secondary" type="button" aria-haspopup="menu">More actions</button></div><div class="callout callout-error"><svg class="ic ic-error" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.9 3.5h1.8v5H7.1v-5zm0 6.2h1.8v1.8H7.1v-1.8z"></path></svg><div style="display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0"><span style="font-weight: 600">Not saved: the text could not be read</span><span class="small">Nothing else is checked until this is fixed.</span></div></div><div style="display: flex; align-items: center; flex-wrap: wrap; gap: 12px"><div class="seg" role="group" aria-label="View"><button type="button" aria-pressed="false" disabled>Settings</button><button type="button" class="on" aria-pressed="true">PHP</button></div><span class="small muted">Settings opens once the text can be read</span></div><div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px 32px"><div style="display: flex; flex-direction: column; gap: 12px; flex: 3 1 560px; min-width: 0"><ul class="card" style="list-style: none; margin: 0; padding: 0; overflow: hidden"><li class="row" style="padding: 8px 16px; gap: 12px; align-items: baseline"><a class="link mono" href="#" style="flex: 0 0 60px">Line 9</a><span class="msg-error"><span style="font-weight: 600">Error</span><span>Column 5: a comma is missing at the end of line 8.</span></span></li></ul><div class="card" style="overflow: hidden"><div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 6px 8px 6px 16px; border-bottom: 1px solid var(--border)"><span class="small muted" style="flex: 1 1 auto">Literal values only. Comments are not kept.</span><button class="btn btn-quiet btn-sm" type="button" data-copy>Copy</button><button class="btn btn-quiet btn-sm" type="button">Download</button></div><div class="ed"><div class="ed-gutter" aria-hidden="true"><div class="ed-ln"><span></span><span>1</span></div><div class="ed-ln"><span></span><span>2</span></div><div class="ed-ln"><span></span><span>3</span></div><div class="ed-ln"><span></span><span>4</span></div><div class="ed-ln"><span></span><span>5</span></div><div class="ed-ln"><span></span><span>6</span></div><div class="ed-ln"><span></span><span>7</span></div><div class="ed-ln"><span></span><span>8</span></div><div class="ed-ln err"><span>×</span><span>9</span></div><div class="ed-ln"><span></span><span>10</span></div><div class="ed-ln"><span></span><span>11</span></div><div class="ed-ln"><span></span><span>12</span></div></div><div class="ed-body"><div class="ed-bg" aria-hidden="true"><div class=""></div><div class=""></div><div class=""></div><div class=""></div><div class=""></div><div class=""></div><div class=""></div><div class=""></div><div class="err"></div><div class=""></div><div class=""></div><div class=""></div></div><textarea class="ed-text" defaultValue="&#x27;default-sp&#x27; =&gt; [&#10;    &#x27;saml:SP&#x27;,&#10;    &#x27;entityID&#x27; =&gt; &#x27;https://login.example.edu/sp&#x27;,&#10;    &#x27;sign.authnrequest&#x27; =&gt; true,&#10;    &#x27;signature.algorithm&#x27; =&gt; &#x27;http://www.w3.org/2001/04/xmldsig-more#rsa-sha256&#x27;,&#10;    &#x27;privatekey&#x27; =&gt; &#x27;default-sp.pem&#x27;,&#10;    &#x27;attributes&#x27; =&gt; [&#x27;eduPersonPrincipalName&#x27;, &#x27;mail&#x27;, &#x27;displayName&#x27;],&#10;    &#x27;name&#x27; =&gt; [&#x27;en&#x27; =&gt; &#x27;Example University login&#x27;]&#10;    &#x27;contacts&#x27; =&gt; [&#10;        [&#x27;contactType&#x27; =&gt; &#x27;technical&#x27;, &#x27;emailAddress&#x27; =&gt; &#x27;iam@example.edu&#x27;],&#10;    ],&#10;]," rows="12" spellcheck="false" wrap="off" aria-label="PHP"></textarea></div></div></div></div><aside style="display: flex; flex-direction: column; gap: 8px; flex: 1 1 320px; max-width: 420px; min-width: 0"><h2 class="h3">Options</h2><input class="input" type="search" placeholder="Search" aria-label="Search options" value=""><div class="card" style="overflow: hidden"><div class="row" style="padding: 6px 8px 6px 12px; gap: 8px"><div style="display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0"><span class="mono">entityID</span><span class="xs muted">Entity ID</span></div><span class="xs faint" style="padding-inline-end: 8px">Line 13</span></div><div class="row" style="padding: 6px 8px 6px 12px; gap: 8px"><div style="display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0"><span class="mono">idp</span><span class="xs muted">Identity provider</span></div><button class="btn btn-quiet btn-sm" type="button">Insert</button></div><div class="row" style="padding: 6px 8px 6px 12px; gap: 8px"><div style="display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0"><span class="mono">discoURL</span><span class="xs muted">Discovery service URL</span></div><button class="btn btn-quiet btn-sm" type="button">Insert</button></div><div class="row" style="padding: 6px 8px 6px 12px; gap: 8px"><div style="display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0"><span class="mono">sign.logout</span><span class="xs muted">Sign logout messages</span></div><button class="btn btn-quiet btn-sm" type="button">Insert</button></div></div></aside></div>
+</main>
+<div style="position: sticky; bottom: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 16px; padding: 12px 32px; background: var(--surface); border-top: 1px solid var(--border-strong); box-shadow: var(--shadow-2)"><div style="flex: 1 1 200px; min-width: 0"><span class="status s-unsaved"><span class="dot" aria-hidden="true"></span>Unsaved edits</span></div><button class="btn btn-quiet" type="button">Discard edits</button><button class="btn btn-primary" type="submit">Save</button></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { theme: this.props.theme ?? 'light' };
+}
+}
+</script>
+</body>
+</html>
