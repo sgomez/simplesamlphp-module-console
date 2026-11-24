@@ -14,7 +14,11 @@ _Avoid_: Record, metadata row
 
 **External entity**:
 A SAML entity in one of the managed sets that reaches SimpleSAMLphp from a metadata source other than the Console, whether written by hand or produced by `metarefresh`. The Console shows it but never edits it.
-_Avoid_: Federated entity, remote entity, imported entity
+_Avoid_: Federated entity, imported entity
+
+**Remote entity**:
+An entity of `saml20-sp-remote` or `saml20-idp-remote`, whether managed or External: a partner SimpleSAMLphp talks to, as opposed to the IdP it hosts itself.
+_Avoid_: Partner, peer
 
 **Managed authsource**:
 An authentication source edited in the Console, as opposed to one declared by hand in `config/authsources.php`.
@@ -61,8 +65,12 @@ One running SimpleSAMLphp instance that serves SSO from its local copy of a Snap
 _Avoid_: Server, replica, instance
 
 **Key reference**:
-The pointer inside a managed entity or a managed authsource to a private key or a certificate. A private key is always a file that each node provides, never held by the Console; a certificate may instead be held by the Console itself.
+The pointer inside a managed entity or a managed authsource to a private key file or a certificate file that each node provides. A private key is always referenced this way, never held by the Console; a certificate pasted into the Console is held by it and is not a Key reference.
 _Avoid_: Key path, cert file
+
+**Key slot**:
+One private key together with its certificate, passphrase and key name, edited and checked as a unit; an object can have several, such as the current key and the next key.
+_Avoid_: Key reference, keypair
 
 **Secret reference**:
 A placeholder stored in place of a sensitive value, which each node replaces with the real value from its own environment when it builds its local copy of the Snapshot.
