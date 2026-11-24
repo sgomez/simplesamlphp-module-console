@@ -13,6 +13,7 @@ use SimpleSAML\Module\console\Domain\Entity\ValidationError;
 use SimpleSAML\Module\console\Infrastructure\Core\CoreCertificateFiles;
 use SimpleSAML\Module\console\Infrastructure\Http\AdminAccess;
 use SimpleSAML\Module\console\Infrastructure\Http\EntityEditView;
+use SimpleSAML\Module\console\Infrastructure\Http\EntityWarnings;
 use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
 use SimpleSAML\Module\console\Infrastructure\Http\RequestGate;
 use SimpleSAML\Module\console\Infrastructure\Persistence\Repositories;
@@ -34,6 +35,7 @@ final class EntitySaveController
         private readonly EntityEditView $view,
         private readonly Repositories $repositories,
         private readonly FlashMessage $flash,
+        private readonly EntityWarnings $warnings,
     ) {
     }
 
@@ -100,7 +102,7 @@ final class EntitySaveController
             (new SpRemote())->toText($entityId, $entity->document),
             [],
             409,
-            ['message' => self::CHANGED],
+            ['message' => self::CHANGED, 'warnings' => $this->warnings->of($entityId, $entity->document)],
         );
     }
 
