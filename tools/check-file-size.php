@@ -4,13 +4,24 @@ declare(strict_types=1);
 
 const LIMIT = 5000;
 
+// Directory => extensions checked in it. Generated front-end files live under a `generated` directory and are exempt.
+const CHECKED = [
+    'src' => ['php'],
+    'tests' => ['php'],
+    'frontend/src' => ['ts', 'tsx'],
+];
+
 $root = dirname(__DIR__);
 $failures = [];
 
-foreach (['src', 'tests'] as $dir) {
+foreach (CHECKED as $dir => $extensions) {
     $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $dir, FilesystemIterator::SKIP_DOTS));
     foreach ($files as $file) {
-        if (!$file instanceof SplFileInfo || $file->getExtension() !== 'php') {
+        if (
+            !$file instanceof SplFileInfo
+            || !in_array($file->getExtension(), $extensions, true)
+            || str_contains($file->getPathname(), '/generated/')
+        ) {
             continue;
         }
         $size = mb_strlen((string) file_get_contents($file->getPathname()));

@@ -66,6 +66,29 @@ services:
         condition: service_healthy
     volumes:
       - .:/var/simplesamlphp/modules/console:ro
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', '-o', '/dev/null', 'http://localhost/simplesaml/']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Open the Console at http://localhost:5173/simplesaml/module.php/console/ (SPEC.md section 10.17).
+  vite:
+    profiles: [dev]
+    image: node:24.22.2-bookworm-slim
+    working_dir: /app
+    command: ['sh', '-c', 'npm ci --ignore-scripts --no-audit --no-fund && exec npx vite']
+    environment:
+      CONSOLE_DEV_UPSTREAM: http://simplesamlphp
+    ports:
+      - '5173:5173'
+    depends_on:
+      simplesamlphp:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    tmpfs:
+      - /app/node_modules:exec
 
 volumes:
   mariadb-data:

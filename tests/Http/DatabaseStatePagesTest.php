@@ -15,7 +15,7 @@ use SimpleSAML\Session;
 it('serves the requested screen when the schema matches the code', function (): void {
     $html = (new ConsoleClient())->loginAsAdmin()->page();
 
-    expect($html)->toContain('data-identity')
+    expect($html)->toContain('console-token')
         ->and($html)->not->toContain('state-page');
 });
 

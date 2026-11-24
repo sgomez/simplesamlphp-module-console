@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use SimpleSAML\Module\console\Tests\Support\Api;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
-use SimpleSAML\Module\console\Tests\Support\EntityPages;
 use SimpleSAML\Module\console\Tests\Support\PublishFixtures as P;
 
 it('counts a deleted, published entity as a Pending change and removes it from the next Snapshot', function (): void {
@@ -29,5 +29,5 @@ it('does not count the deletion of an entity that was never published', function
 
     P::delete($client, 'https://a.example.org');
 
-    expect($client->page(EntityPages::LIST))->not->toContain('Review ');
+    expect(Api::get($client, '/session')['pendingCount'])->toBe(0);
 });

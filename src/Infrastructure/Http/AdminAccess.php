@@ -27,6 +27,12 @@ final class AdminAccess
     }
 
 
+    public function isAdmin(): bool
+    {
+        return $this->auth->isAdmin();
+    }
+
+
     public function identity(): string
     {
         return Identity::resolve(ModuleConfig::userIdAttribute(), $this->attributes());

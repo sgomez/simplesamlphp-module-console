@@ -30,6 +30,12 @@ final class ModuleConfig
     }
 
 
+    public static function devServer(): bool
+    {
+        return Configuration::getOptionalConfig(self::FILE)->getOptionalBoolean('dev_server', false);
+    }
+
+
     public static function version(): string
     {
         try {

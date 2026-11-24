@@ -57,6 +57,14 @@
             "@stan",
             "@cs",
             "@size"
+        ],
+        "build": [
+            "npm ci --ignore-scripts",
+            "npm run build"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "docker compose --profile dev up --build"
         ]
     }
 }

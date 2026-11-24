@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use SimpleSAML\Module\console\Tests\Support\Api;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\EntityPages;
 use SimpleSAML\Module\console\Tests\Support\PublishFixtures as P;
@@ -11,25 +12,24 @@ it('shows Review N changes in the header of every screen and the count beside Pu
     P::seed($client, 'https://a.example.org');
     P::seed($client, 'https://b.example.org');
 
-    $list = $client->page(EntityPages::LIST);
     $new = $client->page(EntityPages::NEW);
 
-    expect($list)->toContain('Review 2 changes')
+    expect(Api::get($client, '/session')['pendingCount'])->toBe(2)
         ->and($new)->toContain('Review 2 changes')
-        ->and($list)->toMatch('/data-nav="publish"[^>]*>Publish[^<]*<[^>]*>2</');
+        ->and($new)->toMatch('/data-nav="publish"[^>]*>Publish[^<]*<[^>]*>2</');
 });
 
 it('shows no Review button when there are no Pending changes', function (): void {
-    $html = (new ConsoleClient())->loginAsAdmin()->page(EntityPages::LIST);
+    $html = (new ConsoleClient())->loginAsAdmin()->page(EntityPages::NEW);
 
-    expect($html)->not->toContain('Review ');
+    expect($html)->toContain('data-identity')->and($html)->not->toContain('Review ');
 });
 
 it('shows the state of each entity in the list', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
     P::seed($client, 'https://a.example.org');
 
-    expect($client->page(EntityPages::LIST))->toContain('Unpublished');
+    expect(Api::get($client, EntityPages::LIST)['rows'][0]['state'])->toBe('Unpublished');
 });
 
 it('says there is nothing to publish, and offers no Publish button', function (): void {

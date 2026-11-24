@@ -1,0 +1,17 @@
+{
+  "src/console.css": {
+    "file": "assets/console-Be9bzmlj.css",
+    "name": "console",
+    "names": [
+      "console.css"
+    ],
+    "src": "src/console.css",
+    "isEntry": true
+  },
+  "src/main.tsx": {
+    "file": "assets/main-CINuEOYN.js",
+    "name": "main",
+    "src": "src/main.tsx",
+    "isEntry": true
+  }
+}
