@@ -58,4 +58,12 @@
     <button type="submit" class="button primary">Save</button>
   </div>
 </form>
+
+{% if not isNew %}
+<form method="post" action="{{ deleteUrl }}" class="secondary-actions">
+  <input type="hidden" name="_token" value="{{ csrfToken }}">
+  <input type="hidden" name="entityid" value="{{ entityId }}">
+  <button type="submit" class="button danger" data-confirm="Delete {{ entityId }}? This removes the service provider from the Console.">Delete</button>
+</form>
+{% endif %}
 {% endblock %}

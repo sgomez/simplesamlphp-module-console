@@ -22,7 +22,7 @@
 {% else %}
 <table class="entities">
   <thead>
-    <tr><th>Name</th><th>Entity ID</th><th>Labels</th></tr>
+    <tr><th>Name</th><th>Entity ID</th><th>Labels</th><th>Actions</th></tr>
   </thead>
   <tbody>
     {% for row in rows %}
@@ -32,6 +32,13 @@
       <td class="labels">
         {% for label in row.labels %}<span class="label" title="{{ label.title }}">{{ label.text }}</span> {% endfor %}
         {% if row.error %}<span class="load-error">{{ row.error }}</span>{% endif %}
+      </td>
+      <td class="actions">
+        <form method="post" action="{{ deleteUrl }}">
+          <input type="hidden" name="_token" value="{{ csrfToken }}">
+          <input type="hidden" name="entityid" value="{{ row.entityId }}">
+          <button type="submit" class="button danger" data-confirm="Delete {{ row.entityId }}? This removes the service provider from the Console.">Delete</button>
+        </form>
       </td>
     </tr>
     {% endfor %}
