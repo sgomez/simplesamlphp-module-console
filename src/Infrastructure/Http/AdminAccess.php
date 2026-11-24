@@ -39,9 +39,9 @@ final class AdminAccess
     }
 
 
-    public function logoutUrl(): string
+    public function logoutUrl(?string $returnTo = null): string
     {
-        return $this->auth->getAdminLogoutURL();
+        return $this->auth->getAdminLogoutURL($returnTo);
     }
 
 

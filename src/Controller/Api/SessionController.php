@@ -26,7 +26,7 @@ final class SessionController
         return $this->gate->guard($request) ?? new JsonResponse([
             'identity' => $this->access->identity(),
             'adminUrl' => Module::getModuleURL('admin/'),
-            'logoutUrl' => $this->access->logoutUrl(),
+            'logoutUrl' => $this->access->logoutUrl(Module::getModuleURL('console/')),
             'pendingCount' => $this->repositories->publication()->pendingCount(),
         ]);
     }

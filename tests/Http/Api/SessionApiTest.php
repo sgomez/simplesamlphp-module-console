@@ -29,3 +29,10 @@ it('counts the Pending changes', function (): void {
 
     expect(Api::get($client, '/session')['pendingCount'])->toBe(2);
 });
+
+it('returns from logout to the Console, not to the API', function (): void {
+    $logout = Api::get((new ConsoleClient())->loginAsAdmin(), '/session')['logoutUrl'];
+    parse_str((string) parse_url($logout, PHP_URL_QUERY), $query);
+
+    expect($query['ReturnTo'] ?? null)->toBe('http://localhost/simplesaml/module.php/console/');
+});

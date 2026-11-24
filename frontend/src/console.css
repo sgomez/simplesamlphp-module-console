@@ -242,7 +242,6 @@ a.row:focus-visible{outline-offset:-2px}
   .menu-btn{display:inline-flex}
   .shell-side.is-open{display:block;position:fixed;inset-block:0;inset-inline-start:0;width:280px;z-index:10;box-shadow:var(--shadow-2);overflow-y:auto}
 }
-@media (max-width:600px){.page,.shell-head{padding-inline:16px}}
 
 /* layout: the boards' inline styles as classes, with the boards' values */
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
@@ -290,7 +289,7 @@ a.row:focus-visible{outline-offset:-2px}
 .pager-total{flex:1 1 auto}
 .empty-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .empty-text{margin:0;max-width:48ch}
-@media (max-width:600px){.row-main{flex-basis:300px}.row-note{flex:0 1 auto}}
+@media (max-width:600px){.page,.shell-head{padding-inline:16px}.row-main{flex-basis:300px}.row-note{flex:0 1 auto}}
 
 /* component layout (DesignSystem) */
 .field{display:flex;flex-direction:column;gap:6px}
