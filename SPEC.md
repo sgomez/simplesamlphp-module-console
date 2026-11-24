@@ -1328,15 +1328,339 @@ OPEN: how the inverse translator of `saml:SP` reads `keys` and `new_keys`, which
 
 ## 7. Keys and secrets
 
-_Not written yet._
+### 7.1 Values
+
+A string value of a Console document is either a literal, stored in clear in the database, or a Secret reference, which each node resolves from its own environment. The Console has no encryption key of its own; see [ADR 0001](docs/adr/0001-no-application-level-encryption-of-secrets.md).
+
+A private key is never a value of a document. It is always a file that each node provides, and the document holds a Key reference to it. A certificate is either held by the Console as pasted PEM or referenced as a file.
+
+### 7.2 Secret references
+
+| Form | Resolves to |
+| --- | --- |
+| `%secret(name)%` | The contents of the file `name` in the node's `secrets_dir` (section 2.3). `name` contains no `/`. |
+| `%env(CONSOLE_NAME)%` | The value of the environment variable `CONSOLE_NAME`. The `CONSOLE_` prefix is mandatory; any other name is rejected on save. |
+
+- A Secret reference fills the whole value. There is no interpolation inside a longer string.
+- Where a Secret reference is accepted is set by the schemas: only in a string without an `enum` and without `x-literal`, and anywhere inside the configuration of a processing filter; never inside `extra`, in an integer or in a boolean (sections 5.7 and 6.8).
+- `%secret()%` is the recommended form for secrets. `%env()%` serves deployments without mounted secrets, and values that vary per environment without being sensitive.
+- In a private key or certificate file reference only `%env()%` is accepted, and it must resolve to a path (section 7.4).
+
+OPEN: whether trailing line breaks in a `%secret()%` file are stripped. A file written with `echo` ends with one, which a password must not carry.
+
+**Resolution.** Only a node resolves Secret references, when it builds its local copy of a Snapshot (section 3.5), never during an SSO request. The Console stores a Secret reference as it is, carries it unresolved in the Snapshot and the Audit trail, and shows it as plain text everywhere.
+
+- A reference that does not resolve on a node leaves the object that holds it out of that node's build. The rest of the Snapshot is served (section 11.3).
+- On every `cron` check the node resolves the references of the current Snapshot again and writes a new build only when the result differs. A rotated secret needs no Publication and takes effect within one `cron` cycle.
+
+**Editing aid.** The node serving the Console offers the file names in its `secrets_dir` for completion, never their contents. A reference that does not resolve on that node is a warning on save, never a block: the Console cannot check the other nodes.
+
+### 7.3 Sensitive values
+
+The options annotated `x-sensitive` are listed in sections 5.7 and 6.8. A literal stored in one of them is a sensitive value.
+
+- It is sent to the browser only by the edit screen of its own object: in the form, in a password field with a reveal control; in the PHP view, as a fixed sentinel that a Reveal round trip to the server replaces with the value (section 10). Those pages are served with `Cache-Control: no-store`.
+- In the form an empty field means an empty value. In the PHP view a sentinel left untouched keeps the stored value; a sentinel anywhere other than its own option is an error.
+- Everywhere else it is a marker: lists, Pending changes and the Publication and Rollback diffs, the Audit trail, logs, `cron` summaries and node status. In a diff and in the Audit trail the marker says only whether the value changed.
+- A Secret reference in a sensitive option is not a sensitive value and is shown as it is.
+
+Values outside the catalog of sensitive options are never masked: the configuration of a processing filter, `extra`, contacts. When the Console finds what looks like a secret in clear in pasted configuration, it suggests a Secret reference and does nothing else.
+
+Literal secrets are in clear in the edit tables and in every retained Snapshot, and resolved secrets are in clear in the node's build files, which are readable by the web server user only. Retention of Snapshots is bounded for this reason (section 4.10). The resulting risks are accepted in section 1.6.
+
+### 7.4 Key references
+
+**Where they are.**
+
+| Object | Key slots | Certificates |
+| --- | --- | --- |
+| `saml20-idp-hosted` | `key`, `next_key`, `metadata_sign_key` | `https_certificate` |
+| `saml20-sp-remote`, `saml20-idp-remote` | `signature_key` | `certificates`, a list of pasted certificates |
+| `saml:SP` | `key`, `next_key` | |
+
+A key slot (section 6.7) holds a private key reference, its passphrase, one certificate and a key name. It holds both the private key and the certificate, or neither.
+
+**Private key.** The `privatekey` of a slot is one of:
+
+- a name relative to the node's `certdir`;
+- an absolute path, such as `/run/secrets/idp.key`;
+- `%env(CONSOLE_NAME)%`, resolving to either of the above.
+
+A `pdo://` location and a `%secret()%` reference are rejected on save: the first would make SSO query the database, the second would put key material where core expects a path. The Console never uploads, generates or stores a private key. Its passphrase, `privatekey_pass`, is a sensitive value.
+
+**Certificate of a key slot.** Either pasted PEM held by the Console, which is the recommended form and is emitted as `certData`, or a file reference in the same forms as a private key, emitted as `certificate`. On save a pasted certificate is rewritten as PEM with armour and 64-character lines.
+
+**Certificates of a remote entity.** Always pasted, each with its use: `signing`, `encryption` or `both`. A remote entity has no file references. The list is emitted as core's `keys` (section 5.5).
+
+**One form per slot.** A slot emits exactly one certificate form. Core reads `keys`, then `certData`, then `certificate`, and silently ignores the lower ones when a higher one is present; the Console never emits two.
+
+### 7.5 Checks
+
+**On save**, on the node serving the Console:
+
+| Blocks | Warns |
+| --- | --- |
+| Pasted PEM that is not a valid certificate | A key or certificate file that is missing or unreadable |
+| A `pdo://` location in a file reference | A private key that does not match its certificate |
+| `%secret()%` in a file reference | A certificate that has expired or expires within `cert_expiry_warning_days` |
+
+**On a node**, when it builds its local copy, for every Key reference: the file exists and is readable, the private key opens with its passphrase, and it matches the certificate of its slot.
+
+- `next_key` fails: only that slot is left out of the build; the object is served with its current key.
+- Any other slot or certificate fails: the whole object is left out of that node's build.
+- Either way the node records the reason and sets its flag (section 11.3).
+
+An expired certificate is never a reason to leave an object out.
+
+### 7.6 Expiry
+
+The Console shows the expiry date of every pasted certificate and flags those that have expired or expire within `cert_expiry_warning_days`, 30 by default: on the entity list, on the edit screen and on the Overview. For a certificate file it shows only what the node serving the Console can read. There is no email or other notification.
+
+### 7.7 Key rollover
+
+`next_key` models core's rollover mechanism. Its fields are emitted with the prefix `new_`. While it is set, core keeps signing with the current key, tries the next key first when decrypting, and publishes both certificates in the metadata.
+
+A rollover goes like this:
+
+1. The new key and certificate are made outside the Console, and the private key file is deployed to every node.
+2. The administrator fills `next_key` and publishes. Partners pick up the new certificate from the metadata.
+3. When partners are ready, the administrator runs **Promote** on the object. It moves the next key into the current slot and empties `next_key`. Its confirmation warns that the previous key leaves the configuration and that messages encrypted to the old certificate will no longer decrypt.
+4. Promote is an edit like any other: it is a Pending change, takes effect at the next Publication, and is recorded in the Audit trail as `edit`.
+
+A remote entity has no next-key slot: its rollover is a second certificate in `certificates`, removed later.
+
+For reference only, a key pair for a slot can be made with:
+
+```sh
+openssl req -x509 -newkey rsa:3072 -sha256 -days 3650 -nodes \
+    -subj '/CN=idp.example.org' -keyout idp-next.key -out idp-next.crt
+```
 
 ## 8. Workflow
 
-_Not written yet._
+### 8.1 Saving
+
+A save writes the Console's edit tables and nothing else. Nodes keep serving the current Snapshot until a Publication.
+
+- An object is saved only when it is valid on its own (sections 5.7 and 6.8). There are no invalid drafts.
+- Every save carries the `version` the form was loaded with and is rejected when the object changed meanwhile (section 4.8).
+- Every save writes its row of the Audit trail in the same transaction (section 8.7).
+
+The operations on a managed entity or a managed authsource are create, edit, enable, disable, delete, discard and, on an object with a `next_key`, Promote. Each one is a save.
+
+- Deleting an object removes its row. Deleting or disabling a managed authsource that another object references can be saved; it is the Publication that blocks (sections 5.8 and 6.9).
+- Disabling or deleting an Override warns that nodes will serve the External entity again after the next Publication (section 9.3).
+
+### 8.2 Pending changes
+
+There is no state column. The state of each object is computed by comparing what is saved with the current Snapshot:
+
+| In the current Snapshot | Saved | State | Pending change |
+| --- | --- | --- | --- |
+| No | Enabled | Unpublished | Yes |
+| No | Disabled | Not live | No |
+| Yes | Enabled, same document | Up to date | No |
+| Yes | Enabled, different document | Modified | Yes |
+| Yes | Disabled | To be withdrawn | Yes |
+| Yes | Deleted | Deleted | Yes |
+
+- Before the first Publication every enabled object is Unpublished, imported ones included.
+- Editing or deleting an object that is disabled and absent from the Snapshot produces no Pending change.
+- "To be withdrawn" and "Deleted" are shown apart, although nodes see the same thing.
+- After a Rollback, Pending changes are computed against the Snapshot that became current.
+
+Every Console screen shows the number of Pending changes (section 10).
+
+### 8.3 Discarding
+
+Discarding restores an object from the current Snapshot:
+
+| State | Discard |
+| --- | --- |
+| Modified | The document returns to its published version |
+| To be withdrawn | The object returns to its published version, enabled |
+| Deleted | The object is created again from the Snapshot |
+| Unpublished | Not offered; the object can only be deleted |
+
+"Discard all" does the same for every Pending change; after a Rollback it brings what is saved back to what is served. A discard is a save: it increments `version` and leaves one `discard` row in the Audit trail per object.
+
+### 8.4 Publication
+
+A Publication has a confirmation screen and a confirming request.
+
+**The confirmation screen** shows:
+
+- the Pending changes, grouped by state, each with a line diff of its PHP text against the current Snapshot, sensitive values as markers (section 7.3);
+- the problems that block, each naming its object;
+- the warnings: those of section 5.9 for the entities with Pending changes, and every warning of sections 5.8 and 6.9, collisions with External entities included (section 9.3);
+- an optional comment.
+
+Warnings need no separate acknowledgement. Publication is not offered when there are no Pending changes or when anything blocks. The screen carries a hash of the Pending changes, made of their keys and `version` values.
+
+**What is checked.** Every enabled managed entity and managed authsource is validated again, not only those with Pending changes, against the schemas and rules of the code that publishes, followed by the checks across objects of sections 5.8 and 6.9 and, on MariaDB and MySQL, the size of the Snapshot (section 4.9). A document that no longer passes, for example after a module update tightened its schema, blocks until it is fixed or disabled.
+
+**The confirming request** runs the transaction of section 4.8: it compares the hash, revalidates, takes the next number, stores the Snapshot with its format version, checksum, comment, time and identity, makes it current, and writes the `publish` row of the Audit trail. It then purges Snapshots beyond retention (section 4.10).
+
+- A hash mismatch, a lost race or a new blocking problem shows the confirmation screen again with the current state. Nothing is written and nothing is recorded in the Audit trail.
+- After the commit, the node serving the request builds the new Snapshot within that request (section 3.5). The other nodes fetch it on their next `cron` check. The screen then shows each node's progress from the Node table (section 10).
+
+### 8.5 Rollback
+
+A Rollback makes another retained Snapshot the current one, earlier or later than the current, so a Rollback can itself be undone. It creates no Snapshot and gives no number.
+
+**The confirmation screen** shows the difference between the current Snapshot and the target, as PHP text with sensitive values as markers. It warns, without blocking, when the target holds a managed authsource whose type's module is not installed and enabled on the node serving the request.
+
+**Checks.** Only the target's checksum and format version. A checksum that does not match, or a format version above what the code knows, blocks the Rollback. The content is not validated again.
+
+**The confirming request** moves the pointer with the conditional update of section 4.8 and writes the `rollback` row of the Audit trail. A lost race shows the confirmation screen again. The node serving the request then builds the target within that request, always, even when it still holds a build of that number, because secrets may have rotated. The other nodes follow on their next `cron` check.
+
+**The edit tables are untouched.** Pending changes do not block a Rollback. What was saved stays saved and shows as Pending changes against the Snapshot that became current; a faulty change is then fixed and published under a new number, or dropped with "Discard all".
+
+### 8.6 Retention
+
+The database keeps `snapshot_retention` Snapshots, 10 by default, and a Rollback can target only those (section 4.10). The Audit trail keeps the `publish` row of every Snapshot, comment included, after the Snapshot itself is purged.
+
+### 8.7 Audit trail
+
+The table and its rules are in section 4.4. Each operation leaves these rows:
+
+| Operation | `action` | Rows |
+| --- | --- | --- |
+| Create, including saving pasted configuration (section 9.6) | `create` | One per object |
+| Edit, including Promote and a save from the PHP view | `edit` | One |
+| Enable, disable, delete | `enable`, `disable`, `delete` | One |
+| Discard, one object or all | `discard` | One per object |
+| Import from External entities (section 9.5) | `import` | One per entity created |
+| Mark an Override as reviewed (section 9.4) | `reviewed` | One |
+| Publication | `publish` | One, with the Snapshot numbers and the comment |
+| Rollback | `rollback` | One, with the Snapshot numbers |
+| Migration run | `migrate` | One, after the run |
+
+The identity of each row is the first value of the `useridattr` attribute of the `admin` session, or the constant `admin` (section 2.3). When the identity of the current session is the constant `admin`, the Audit trail screen says, without blocking, that changes are recorded without saying who made them.
+
+The difference shown for a row is computed on display, against the previous row of the same object. A document that the current translator cannot translate, such as one recorded before a module update, is shown as raw JSON.
 
 ## 9. External entities, Override and Import
 
-_Not written yet._
+### 9.1 Reading External entities
+
+An External entity is read live, at request time, from the `metadata.sources` of the node serving the Console: every entry other than `console:Snapshot`, for the three managed sets only. Nothing about External entities is copied into the database or indexed. Reading a large source on every request is an accepted cost.
+
+- Each source is read on its own. A source that throws is shown as unreadable, with its error, and the other sources are still listed.
+- Each External entity is labelled with its source: its type and its location. The Console does not tell a hand-written file from one written by `metarefresh`.
+- An expired External entity is shown, marked as expired.
+- The Console assumes every node has the same `metadata.sources` (section 2.8) and never compares them.
+
+OPEN: whether the sensitive options of an External entity (`sharedkey`, `privatekey_pass`) are shown in clear on its detail view or masked as on a managed entity.
+
+OPEN: what the Console reports when `console:Snapshot` is missing from `metadata.sources` on the node serving it. Managed entities are then served by none of the node's sources, and the Override and Shadowed labels of section 9.3 do not apply.
+
+### 9.2 The External entities screen
+
+A read-only screen of its own, separate from the lists of managed entities.
+
+- Entities are grouped by source and set, paginated on the server, and searchable by entity ID and name.
+- An External entity that is already a managed entity of the same set is marked as such.
+- The detail view shows the entity as core receives it, as PHP written with `VarExporter::export` (section 3.7), and offers "Create managed copy" (section 9.5).
+- Sources of type `flatfile` and `pdo` also offer Import (section 9.5).
+
+### 9.3 Collisions: Override and Shadowed
+
+A collision is a managed entity that shares entity ID and set with an External entity. Which one a node serves is decided by the order of `metadata.sources`: the first source holding the entity ID wins, for single lookups and for listings. The Console never decides it; it reports it, according to the `config.php` of the node serving the page:
+
+- **Override**: `console:Snapshot` comes before the External entity's source. Nodes serve the managed entity, and it no longer follows changes made in the source.
+- **Shadowed**: the source comes first. Nodes serve the External entity.
+
+Collisions never block a save or a Publication.
+
+- The list of managed entities marks the collisions of its own rows; the edit screen says which applies.
+- The Publication confirmation lists as warnings: new Overrides, Shadowed managed entities and Overrides whose source has changed (section 9.4).
+- Disabling or deleting an Override warns that nodes will serve the External entity again after the Publication.
+- When the External entity disappears from its source or expires, an Override keeps being served and the Console says so. Nothing is withdrawn automatically.
+
+Two behaviours of core are worth knowing when reading these labels:
+
+- A single lookup that finds an expired entity in the first source holding it throws instead of falling through. A Shadowed managed entity whose External entity has expired is therefore not served either.
+- A `saml20-idp-hosted` is chosen by `host` before it is fetched by entity ID, and a match on host and path outranks a match on host alone, which outranks `__DEFAULT__`, whatever the source order. A managed hosted IdP can lose to an External one with a different entity ID; the Console warns when they share a `host` (section 5.9).
+
+### 9.4 Following the source of an Override
+
+An Override stores the fingerprint of the External entity it collides with, in `external_fingerprint` (section 4.4): taken when it is created by a managed copy or an Import, or the first time the Console detects the collision when there was no copy.
+
+**The fingerprint** is the SHA-256, in lowercase hex, of the External entity's array as core receives it, normalised:
+
+- the keys of every map are sorted; the order of lists is kept;
+- these keys are left out at the top level, because they do not describe the entity: `expire`, `metarefresh:src`, `entityid`, `metadata-set` and `metadata-index`.
+
+**When it differs** from the current one, the Override is flagged "external source changed": on the entity list, on its edit screen, on the Overview and on the Publication confirmation. The flag leads to a comparison of the current External entity with the managed one, as PHP text with the keys above hidden, and to **Mark as reviewed**, which stores the current fingerprint and writes a `reviewed` row of the Audit trail.
+
+The fingerprint is edit-side state. Storing it does not change `version`, is not a Pending change and does not travel in the Snapshot. It is compared only when the administrator looks: on the entity list, the edit screen, the Overview and the Publication confirmation. There is no background check and no notification.
+
+### 9.5 Managed copy and Import
+
+**Managed copy.** The detail view of any External entity offers "Create managed copy". It opens the editor of the entity's set filled with the entity, unsaved, with the report of section 9.6, and warns that the copy stops following its source. Saving it is a `create` like any other.
+
+**Import** is the same operation applied to many External entities at once.
+
+- It is offered only for sources of type `flatfile` and `pdo`, as checkboxes on the External entities screen. Entities of `serialize`, `xml` and `mdq` sources are copied one at a time.
+- Nothing is ticked by default. Each source has a "select all" that covers the whole source, not only the visible page.
+- An External entity that is already managed in the same set cannot be ticked. Import never overwrites a managed entity.
+- A confirmation step precedes it. It can be repeated at any time.
+
+Each ticked entity goes through the inverse translator of its set (section 5.14) and the validation of a save (section 5.7), and is saved on its own as an enabled, Unpublished managed entity, with its fingerprint. One that fails is skipped with its reason. Import never runs a Publication. Each entity created leaves one `import` row in the Audit trail.
+
+**Conversions**, applied by Import and by a managed copy alike:
+
+| Found in the External entity | In the managed entity |
+| --- | --- |
+| `expire` | Dropped, and reported |
+| An option the set does not catalog | Moved to `extra`, and reported |
+| An endpoint whose binding core does not use for its service | Kept as it is |
+| Private key of a `saml20-idp-hosted` in a file | A Key reference to the same file |
+| Private key at a `pdo://` location | Import skips the entity, saying the key must move to a file; a managed copy shows it as an error in the editor |
+| Certificate of a remote entity in a file or at a `pdo://` location | Read through core on the node serving the Console and stored pasted, and reported; if it cannot be read, Import skips the entity and a managed copy shows an error |
+| Certificate of a `saml20-idp-hosted` in a file | A file reference |
+| Certificate of a `saml20-idp-hosted` at a `pdo://` location | Stored pasted, and reported |
+
+**The result screen** lists, per entity, whether it was imported or skipped with its reason, and the conversions applied. Per source, it lists the entity IDs the administrator may now remove from the original by hand. When a source comes before `console:Snapshot` in `metadata.sources`, it says prominently that the entities imported from it are Shadowed, and that publishing changes nothing nodes serve until the originals are removed.
+
+**Originals.** The Console deletes nothing: no file, no row of the core PDO tables. Until the administrator removes them, the originals remain External entities in collision with the warnings of section 9.3.
+
+File authsources cannot be imported (section 6.3).
+
+### 9.6 Creating from pasted configuration
+
+"Add" on the list of each entity set, and "Add authsource", start from one text area:
+
+- metadata XML or PHP for an entity, PHP for an authsource. The format is detected and the administrator can correct it;
+- "Start empty" beside it, and for entities a link to External entities;
+- "Choose file" reads a local file into the text area in the browser. The server never receives an upload;
+- the input is capped at 1 MiB; the error points to `metarefresh` for federation aggregates.
+
+There is no fetch from a URL and no export format. PHP is the interchange format between Consoles: Download `.php` in one, paste in the other. The enabled flag does not travel.
+
+**Entities.** XML is parsed with `SAMLParser`, PHP with the reader of section 3.7, and both go through the inverse translator of the set (section 5.14).
+
+- XML that describes another kind of entity offers to switch to its set. An entity descriptor with both roles yields the role of the set being added to.
+- Keys and certificates follow the conversions of section 9.5, except that nothing discards the object: an unreadable certificate file or a `pdo://` private key is an error the administrator fixes in the editor.
+
+**Authsources.** The type is read from key `0`. A type outside the five Authsource types stops there (section 6.16).
+
+**One object.** The editor opens filled and unsaved, carried by POST, with a report panel above it: what was converted, what was moved to `extra`, what was ignored. What needs the administrator shows as validation errors. Nothing is saved until the administrator saves.
+
+**Several entities**, from an `EntitiesDescriptor` or several `$metadata[...]` statements, give a selectable list. Entities already managed in the set cannot be selected; those colliding with an External entity are marked as future Overrides. One selected entity opens in the editor as above. Several are saved on their own as Pending changes, invalid ones skipped with their reason, followed by the result screen of section 9.5. Each is recorded as `create`: creating from pasted configuration is not Import.
+
+When pasted configuration holds what looks like a secret in clear, the Console suggests a Secret reference.
+
+### 9.7 Replace from…
+
+"Replace from…" on an existing managed entity takes metadata XML only.
+
+- The entity ID must match.
+- It merges: every option the XML yields for the set (endpoints, certificates, NameID formats, names and the like) is overwritten, and removed when the XML no longer carries it. Everything else, such as `authproc`, the attribute policy and `extra`, is untouched.
+- The result opens in the editor unsaved, with the report of section 9.6 and no diff screen of its own.
+
+Replacing from PHP is pasting over the text of the PHP view. Authsources have no "Replace from…".
 
 ## 10. Console UI
 
@@ -1344,7 +1668,73 @@ _Not written yet._
 
 ## 11. Failure behaviour
 
-_Not written yet._
+### 11.1 Rules
+
+- **A bad record never takes SSO down.** Nothing the Console stores, publishes or writes to disk causes a fatal error during an SSO request, and nothing stops the other managed objects, the other metadata sources or the File authsources from loading.
+- **The serving side catches everything.** The `MetadataStore` and `Authsources::merge()` catch every `\Throwable` of their own, log a warning and return what they can (section 3.2).
+- **A node degrades per object.** An object a node cannot build is left out of that node's build alone; the rest is served.
+- **A node never goes backwards.** When it cannot use the current Snapshot, it keeps the build it serves, or serves nothing from the Console when it has none. It never falls back to an earlier Snapshot.
+- **The edit side fails closed.** A change that cannot be completed writes nothing, Audit trail included, and the screen says why.
+
+### 11.2 During an SSO request
+
+| Situation | What the node does |
+| --- | --- |
+| Database unreachable, local build present | Serves its build, indefinitely |
+| No local build | Fetches the current Snapshot during this request, under a local lock (section 3.5) |
+| No local build, and the fetch fails | Serves nothing from the Console; other sources and File authsources still answer. Tries again after 60 seconds. An accepted risk (section 1.6). |
+| No local build, nothing published yet | Records it locally and asks the database no more; `cron` picks up the first Publication |
+| `current` file or a build file missing or unreadable | The `MetadataStore` returns no entities for that set and logs a warning; `merge()` returns the File authsources alone and logs a warning |
+| An entry of the build's `authsources.php` that is not an array, has no string at key `0` or has an integer id | Dropped with a warning; the other entries are merged |
+| The module is not enabled, or the fragment is missing from `authsources.php` | Only the File authsources are served; a problem on the node's status when the current Snapshot holds managed authsources |
+| A managed authsource Shadowed by a File authsource | The File authsource is served; a problem on the node's status |
+| The core `pdo` source in `metadata.sources`, with the database down | Core breaks every metadata operation, because that source's constructor throws. Outside the Console's control: a warning on the node's status and an accepted risk (section 1.6). |
+
+### 11.3 Building a local copy
+
+A node builds a local copy after a fetch, and again on a `cron` check when a resolved Secret reference has changed (section 3.5). Per Snapshot:
+
+| Situation | What the node does |
+| --- | --- |
+| The database cannot be read | Keeps its build; reports the failure in the `cron` summary and its local status |
+| The checksum does not match the stored bytes | Does not use the Snapshot; keeps its build, logs an error and sets its flag |
+| The format version is higher than the node's code knows | Same: keeps its build, or serves nothing from the Console if it has none |
+| Writing the build fails (disk full, permissions) | Keeps serving its build: `current` is switched only after the new build is complete |
+| Writing its row of the Node table fails | Logs it and carries on |
+
+Per object:
+
+| Situation | What the node does |
+| --- | --- |
+| A Secret reference does not resolve | Leaves the object out |
+| A key or certificate of a current slot fails its check (section 7.5) | Leaves the object out |
+| `next_key` fails its check | Leaves out only that slot; serves the object with its current key |
+| The node's code cannot translate the document: an unknown Authsource type, an unknown option, a module version that differs from the Console's | Leaves the object out |
+
+Every object or slot left out is recorded with its reason in the build's `manifest.json`, logged, and sets the node's flag in the Node table. The Console highlights the node; the reason is shown only by that node, on its status screen, in its `cron` summary and in core's sanity check (section 3.5).
+
+### 11.4 In the Console
+
+| Situation | What the Console does |
+| --- | --- |
+| Database unreachable | Every route answers with the "Database unreachable" page (section 4.7) |
+| SQLite older than 3.24.0 | The "SQLite too old" page |
+| Schema does not match the code | The pending migrations page |
+| A migration fails | Stops at that migration, says which one and why; migrations already applied stay applied. The loser of two concurrent runs gets a clear message (section 4.6). |
+| A save that is invalid | Shows every error at its field; writes nothing |
+| A save, Publication or Rollback that loses a race | The conflict error of section 4.8: the form or the confirmation screen is shown again with the current state; nothing is retried |
+| A Publication that something blocks | Shows the problems; writes nothing |
+| A Snapshot too large for `max_allowed_packet` | Blocks the Publication, naming the variable (section 4.9) |
+| A Rollback whose target fails its checksum or format version | Blocks the Rollback |
+| Writing the Audit trail row fails | The change it records fails with it, being in the same transaction |
+| A request without a valid request-forgery token | A plain HTTP 403 page and a warning in the log (section 3.8) |
+| A stored document that the current schema rejects, as after a module update | Listed with its errors and editable; blocks Publication until fixed or disabled; the current Snapshot keeps being served |
+| A metadata source that throws when the Console reads it | That source is shown as unreadable on the External entities screen; the others are listed (section 9.1) |
+| A building problem on the node serving the Console | Shown on that node's status screen |
+
+The Console's link on core's Configuration tab never queries the database, so none of the states above breaks core's admin pages.
+
+OPEN: what the Console does with a stored row whose `document` is not valid JSON, or that it cannot load for another reason: how the row is listed, whether it can be opened, disabled or deleted, and what a Publication says about it.
 
 ## 12. Test harness and local environment
 
