@@ -429,3 +429,36 @@ a {
   padding: 0.75rem 0;
   background: var(--bg);
 }
+
+.button.danger {
+  color: #fff;
+  background: #c0392b;
+  border-color: #c0392b;
+}
+
+dialog.confirm {
+  max-width: 28rem;
+  padding: 1.25rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+
+dialog.confirm::backdrop {
+  background: rgb(0 0 0 / 40%);
+}
+
+dialog.confirm form {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.secondary-actions {
+  margin-top: 1.5rem;
+}
+
+.entities .actions {
+  text-align: right;
+}

@@ -90,6 +90,18 @@ final class PdoEntityRepository implements EntityRepository
     }
 
 
+    public function delete(string $set, string $entityId, string $identity): void
+    {
+        $this->transaction(function () use ($set, $entityId, $identity): void {
+            $statement = $this->pdo->prepare(
+                'DELETE FROM ' . $this->table() . ' WHERE entity_set = ? AND entity_id = ?',
+            );
+            $statement->execute([$set, $entityId]);
+            $statement->rowCount() === 1 && $this->audit->recordEntity($identity, 'delete', $set, $entityId, null);
+        });
+    }
+
+
     private function transaction(\Closure $work): void
     {
         $this->pdo->beginTransaction();
