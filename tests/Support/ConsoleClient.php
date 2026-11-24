@@ -13,6 +13,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ConsoleClient
 {
+    private const int KNOWN_SCHEMA = 9;
+
+
+    /** @var array<string, mixed> */
+    private array $moduleConfig = [];
+
+
     public function __construct()
     {
         $_SERVER['REQUEST_URI'] = '/simplesaml/module.php/console/';
@@ -22,6 +29,35 @@ final class ConsoleClient
         Configuration::clearInternalState();
         (new \ReflectionProperty(Session::class, 'instance'))->setValue(null, null);
         Session::useTransientSession();
+        $this->withDatabase(range(1, self::KNOWN_SCHEMA));
+    }
+
+
+    /**
+     * A SQLite database holding the given migration numbers; null leaves it without a versions table.
+     *
+     * @param list<int>|null $applied
+     */
+    public function withDatabase(?array $applied): self
+    {
+        $file = (string) getenv('CONSOLE_TEST_DIR') . '/db-' . bin2hex(random_bytes(6)) . '.sqlite';
+        $pdo = new \PDO('sqlite:' . $file);
+        if ($applied !== null) {
+            $pdo->exec(
+                'CREATE TABLE console_schema_version (version INTEGER NOT NULL PRIMARY KEY, applied_at CHAR(20))',
+            );
+            foreach ($applied as $number) {
+                $pdo->exec("INSERT INTO console_schema_version VALUES ($number, '2026-11-24T10:15:00Z')");
+            }
+        }
+
+        return $this->withModuleConfig(['database' => ['dsn' => 'sqlite:' . $file]]);
+    }
+
+
+    public function withUnreachableDatabase(): self
+    {
+        return $this->withModuleConfig(['database' => ['dsn' => 'sqlite:/nonexistent-dir/console.sqlite']]);
     }
 
 
@@ -44,7 +80,8 @@ final class ConsoleClient
      */
     public function withModuleConfig(array $moduleConfig): self
     {
-        Configuration::setPreLoadedConfig(Configuration::loadFromArray($moduleConfig), 'module_console.php');
+        $this->moduleConfig = array_merge($this->moduleConfig, $moduleConfig);
+        Configuration::setPreLoadedConfig(Configuration::loadFromArray($this->moduleConfig), 'module_console.php');
 
         return $this;
     }

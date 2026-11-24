@@ -1,0 +1,10 @@
+{% extends "@console/shell.twig" %}
+
+{% block title %}SQLite too old{% endblock %}
+
+{% block content %}
+<section class="state-page" data-state="sqlite-too-old">
+  <h1>SQLite too old</h1>
+  <p>PHP's SQLite library is version <code>{{ status.sqliteVersion }}</code>; the Console needs <code>{{ sqliteMinimum }}</code> or later.</p>
+</section>
+{% endblock %}
