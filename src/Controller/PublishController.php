@@ -9,6 +9,7 @@ use SimpleSAML\Module\console\Application\Publication\PublicationProblem;
 use SimpleSAML\Module\console\Application\Publication\PublicationReview;
 use SimpleSAML\Module\console\Domain\Publication\EntityState;
 use SimpleSAML\Module\console\Domain\Publication\PendingChange;
+use SimpleSAML\Module\console\Infrastructure\Build\NodeBuild;
 use SimpleSAML\Module\console\Infrastructure\Http\AdminAccess;
 use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
 use SimpleSAML\Module\console\Infrastructure\Http\PageFactory;
@@ -26,6 +27,7 @@ final class PublishController
         private readonly PageFactory $pages,
         private readonly FlashMessage $flash,
         private readonly Repositories $repositories,
+        private readonly NodeBuild $build,
     ) {
     }
 
@@ -50,7 +52,7 @@ final class PublishController
             $this->access->identity(),
         );
         if ($outcome->number !== null) {
-            $this->flash->put('Snapshot ' . $outcome->number . ' published.');
+            $this->flash->put('Snapshot ' . $outcome->number . ' published.' . $this->build->after($outcome->number));
 
             return new RedirectResponse(Module::getModuleURL('console/publish'));
         }

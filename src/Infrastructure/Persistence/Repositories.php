@@ -8,6 +8,7 @@ use SimpleSAML\Module\console\Application\EntityRepository;
 use SimpleSAML\Module\console\Application\Publication\NoEntityWarnings;
 use SimpleSAML\Module\console\Application\Publication\Publication;
 use SimpleSAML\Module\console\Domain\Entity\SpRemote;
+use SimpleSAML\Module\console\Domain\Publication\StoredSnapshot;
 use SimpleSAML\Module\console\Infrastructure\Config\ModuleConfig;
 use SimpleSAML\Module\console\Infrastructure\Core\CoreCertificateFiles;
 use SimpleSAML\Module\console\Infrastructure\Core\CoreProcessingFilterClasses;
@@ -22,6 +23,14 @@ final class Repositories
         $settings = ModuleConfig::database();
 
         return new PdoEntityRepository((new ConnectionFactory())->open($settings), $settings->prefix);
+    }
+
+
+    public function snapshot(int $number): ?StoredSnapshot
+    {
+        $settings = ModuleConfig::database();
+
+        return (new SnapshotReader((new ConnectionFactory())->open($settings), $settings->prefix))->find($number);
     }
 
 

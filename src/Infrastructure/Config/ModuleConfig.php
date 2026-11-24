@@ -23,6 +23,23 @@ final class ModuleConfig
     }
 
 
+    public static function snapshotDir(): string
+    {
+        return Configuration::getOptionalConfig(self::FILE)
+            ->getOptionalString('snapshot_dir', '/var/lib/simplesamlphp/console');
+    }
+
+
+    public static function version(): string
+    {
+        try {
+            return \Composer\InstalledVersions::getPrettyVersion('sgomez/simplesamlphp-module-console') ?? 'unknown';
+        } catch (\Throwable) {
+            return 'unknown';
+        }
+    }
+
+
     public static function database(): DatabaseSettings
     {
         $module = Configuration::getOptionalConfig(self::FILE)->getOptionalConfigItem('database', null);

@@ -30,7 +30,14 @@ final class ConsoleClient
         Configuration::clearInternalState();
         (new \ReflectionProperty(Session::class, 'instance'))->setValue(null, null);
         Session::useTransientSession();
+        $this->moduleConfig = ['snapshot_dir' => BuildFixtures::dir()];
         $this->withMigratedDatabase();
+    }
+
+
+    public function snapshotDir(): string
+    {
+        return (string) $this->moduleConfig['snapshot_dir'];
     }
 
 
@@ -134,7 +141,7 @@ final class ConsoleClient
         for ($i = 0; $i < 5 && self::exceptionHandler() !== $handler; $i++) {
             restore_exception_handler();
         }
-        $this->applySecurityHeaders($response);
+        SecurityHeaders::apply($response);
 
         return $response;
     }
@@ -158,17 +165,5 @@ final class ConsoleClient
     public static function body(Response $response): string
     {
         return $response instanceof Template ? $response->getContents() : (string) $response->getContent();
-    }
-
-
-    private function applySecurityHeaders(Response $response): void
-    {
-        $headers = Configuration::getInstance()
-            ->getOptionalArray('headers.security', Configuration::DEFAULT_SECURITY_HEADERS);
-        foreach ($headers as $name => $value) {
-            if (!$response->headers->has($name)) {
-                $response->headers->set($name, $value);
-            }
-        }
     }
 }
