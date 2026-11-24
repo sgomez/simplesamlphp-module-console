@@ -280,6 +280,31 @@ a {
   border-radius: 0.25rem;
 }
 
+.label.warning {
+  color: #8a5a00;
+  background: #fff4d6;
+  border-color: #d9a21b;
+}
+
+.warnings {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  background: #fff9e8;
+  border: 1px solid var(--border);
+  border-left: 0.25rem solid #d9a21b;
+  border-radius: 0.375rem;
+}
+
+.warnings h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.warnings ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
 .load-error {
   color: #c0392b;
   font-size: 0.8rem;

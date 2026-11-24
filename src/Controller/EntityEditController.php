@@ -7,6 +7,7 @@ namespace SimpleSAML\Module\console\Controller;
 use SimpleSAML\Module;
 use SimpleSAML\Module\console\Domain\Entity\SpRemote;
 use SimpleSAML\Module\console\Infrastructure\Http\EntityEditView;
+use SimpleSAML\Module\console\Infrastructure\Http\EntityWarnings;
 use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
 use SimpleSAML\Module\console\Infrastructure\Http\PageFactory;
 use SimpleSAML\Module\console\Infrastructure\Http\RequestGate;
@@ -23,6 +24,7 @@ final class EntityEditController
         private readonly EntityEditView $view,
         private readonly Repositories $repositories,
         private readonly FlashMessage $flash,
+        private readonly EntityWarnings $warnings,
     ) {
     }
 
@@ -54,7 +56,7 @@ final class EntityEditController
             $entityId,
             $entity->version,
             (new SpRemote())->toText($entityId, $entity->document),
-            extra: ['name' => $entity->name()],
+            extra: ['name' => $entity->name(), 'warnings' => $this->warnings->of($entityId, $entity->document)],
         );
     }
 }

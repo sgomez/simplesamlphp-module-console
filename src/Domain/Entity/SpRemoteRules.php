@@ -23,7 +23,7 @@ final class SpRemoteRules
         }
         array_push($errors, ...$this->certificates((array) ($document['certificates'] ?? [])));
 
-        array_push($errors, ...$this->rows->check($document));
+        array_push($errors, ...$this->rows->check($document), ...(new NotYetRules())->check($document));
 
         return [...$errors, ...$this->extra->check((array) ($document['extra'] ?? []))];
     }
