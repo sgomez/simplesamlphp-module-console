@@ -6,7 +6,7 @@ namespace SimpleSAML\Module\console\Domain\Entity;
 
 final class SpRemoteRules
 {
-    public function __construct(private readonly ExtraRules $extra)
+    public function __construct(private readonly ExtraRules $extra, private readonly RowRules $rows = new RowRules())
     {
     }
 
@@ -22,6 +22,8 @@ final class SpRemoteRules
             array_push($errors, ...$this->endpoints($service, (array) ($document[$service] ?? [])));
         }
         array_push($errors, ...$this->certificates((array) ($document['certificates'] ?? [])));
+
+        array_push($errors, ...$this->rows->check($document));
 
         return [...$errors, ...$this->extra->check((array) ($document['extra'] ?? []))];
     }

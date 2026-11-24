@@ -63,3 +63,12 @@ console-publish-confirm:
     _controller: 'SimpleSAML\Module\console\Controller\PublishController::publish'
   }
   methods: [POST]
+
+console-entity-delete:
+  path: /entities/{set}/delete
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntityDeleteController::delete'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [POST]

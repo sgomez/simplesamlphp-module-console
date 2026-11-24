@@ -46,6 +46,7 @@ final class EntityListController
             'previousUrl' => $page->page > 1 ? $this->url($page, $page->page - 1) : null,
             'nextUrl' => $page->page < $page->pages ? $this->url($page, $page->page + 1) : null,
             'listUrl' => Module::getModuleURL('console/entities/' . $set),
+            'deleteUrl' => Module::getModuleURL('console/entities/' . $set . '/delete'),
             'newUrl' => Module::getModuleURL('console/entities/' . $set . '/new'),
         ]);
     }

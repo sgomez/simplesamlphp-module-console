@@ -54,4 +54,13 @@ final class EntityDb
         $repository = new PdoEntityRepository($client->database(), '');
         $repository->create(self::SET, $id, ['AssertionConsumerService' => [$endpoint]] + $extra, 'seed');
     }
+
+
+    public static function seedUnreadable(ConsoleClient $client): void
+    {
+        $client->database()->exec(
+            "INSERT INTO console_entity VALUES ('" . self::SET . "', 'https://bad.example.org', 1, '{oops', 1, NULL, "
+            . "'x', 'x')",
+        );
+    }
 }

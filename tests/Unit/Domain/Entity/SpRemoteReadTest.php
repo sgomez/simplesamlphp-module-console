@@ -31,16 +31,22 @@ it('rejects an entityid inside the block that differs from the entity', function
     expect(SpText::pointers($parsed))->toBe(['']);
 });
 
-it('rejects the options of the groups that are not available yet, at their line', function (): void {
+it('rejects the options not available yet, at their line', function (): void {
     $parsed = SpText::parse(
-        "'attributes' => ['uid'],\n'NameIDFormat' => ['x'],\n"
-        . "'signature_key' => ['privatekey' => 'k'],\n'authproc' => [],",
+        "'attributes' => ['uid'],\n'sharedkey' => 'k',\n'signature_key' => ['privatekey' => 'k'],\n'authproc' => [],",
     );
     $lines = array_map(static fn ($e): ?int => $e->line, $parsed->errors);
 
-    expect(SpText::pointers($parsed))->toBe(['/attributes', '/NameIDFormat', '/signature_key'])
+    expect(SpText::pointers($parsed))->toBe(['/sharedkey', '/signature_key'])
         ->and($parsed->errors[0]->message)->toContain('not available yet')
-        ->and($lines)->toBe([3, 4, 5]);
+        ->and($lines)->toBe([4, 5]);
+});
+
+it('ties an error of an option named with a colon to its line', function (): void {
+    $parsed = SpText::parse("\n'core:logout-timeout' => 'x',");
+
+    expect(SpText::pointers($parsed))->toBe(['/core:logout-timeout'])
+        ->and($parsed->errors[0]->line)->toBe(4);
 });
 
 it('moves an uncataloged option to extra with a notice and a suggestion', function (): void {

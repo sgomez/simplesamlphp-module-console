@@ -37,6 +37,9 @@ final class SpRemoteTranslator
         return match ($option) {
             'certificates' => ['keys', $this->keys((array) $value)],
             'contacts' => [$option, $this->contacts((array) $value)],
+            'attributes' => [$option, TranslatedRows::attributes((array) $value)],
+            'attributeencodings' => [$option, TranslatedRows::encodings((array) $value)],
+            'authproc' => [$option, TranslatedRows::authproc((array) $value)],
             'EntityAttributes' => [$option, $this->entityAttributes((array) $value)],
             'RegistrationInfo' => [$option, $this->registration((array) $value)],
             default => [$option, $value],

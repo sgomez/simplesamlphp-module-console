@@ -41,7 +41,7 @@ final class AuditTrail
         string $action,
         string $set,
         string $entityId,
-        string $document,
+        ?string $document,
     ): void {
         $statement = $this->pdo->prepare(
             'INSERT INTO ' . $this->prefix . 'console_audit '
