@@ -1,5 +1,7 @@
 # Own page shell instead of core's `base.twig`
 
+Superseded by [ADR 0012](0012-console-ui-as-a-spa.md): the shell only loads the single-page application. Not extending `base.twig`, the fixed language and direction, system fonts and the two links to core survive.
+
 Console pages are rendered by a shell template of the module that does not extend core's `base.twig`. It loads one module stylesheet and one module script, uses system font stacks, hard-codes `lang="en" dir="ltr"` and has no language selector. This departs from official SimpleSAMLphp modules, whose pages all extend `base.twig`; the Console follows their conventions for packaging, routing, controllers, the `Template` class, `asset()` and CSP compliance, but not for page chrome.
 
 ## Considered Options

@@ -21,7 +21,7 @@ The text is read with `nikic/php-parser` and an allowlist walk of the AST, never
 - A stored sensitive literal is shown as a fixed sentinel tied to its option; saving the sentinel keeps the stored value, and anywhere else it is an error. Reveal replaces the sentinels with the real values. Secret references are plain strings and always visible. Diffs show the marker.
 - The Console translates with Secret references unresolved, so its PHP is not byte for byte what a node serves; nodes still resolve first and translate afterwards.
 - Unreadable text (syntax error, non-literal value) blocks saving, Reveal and the switch to the form, with line and column. Rule errors are tied to the line of the root option they come from.
-- Switching views and Reveal are server round trips that save nothing; the script still knows no schema.
+- Switching views and Reveal are API requests that save nothing ([ADR 0012](0012-console-ui-as-a-spa.md)). PHP is never parsed in the browser.
 - A document the current translator cannot translate, such as an old Audit trail entry after a module update, is shown as raw JSON.
 - An External entity is already a core array and is rendered with `VarExporter::export` directly.
 - No side-by-side layout and no syntax colouring in v1.

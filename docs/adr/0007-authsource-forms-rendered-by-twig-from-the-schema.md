@@ -1,5 +1,7 @@
 # Edit forms rendered by Twig from the schema, showing only the options that are set
 
+Superseded by [ADR 0012](0012-console-ui-as-a-spa.md): the form is rendered by the single-page application. The semantics of set and not set and the presentation driven by the schema survive, in SPEC section 10.10.
+
 The edit form of a managed authsource or a managed entity is generated on the server from its JSON Schema: PHP resolves `$ref`, turns the submitted strings into a document guided by the schema, and builds a tree that Twig renders. A throwaway prototype over `ldap:Ldap`, `sqlauth:SQL2` and `exampleauth:UserPass` showed that nested objects, lists inside lists, conditional options and errors shown in place need no client-side bundle. JavaScript is required, but it is one static, hand-written file with no dependencies and no build step; it validates nothing and knows no schema, acting only on `data-` attributes. Core's default `Content-Security-Policy` (`script-src 'self'; style-src 'self'`) rules out inline scripts and styles.
 
 The form shows only the root options that are set, meaning their key exists in the document. A first prototype that printed all 64 options of `saml:SP` was rejected as more work than editing the PHP file. The server still builds the whole tree; an option that is not set is sent as an inert `<template>` that the script activates when the administrator adds it, from a button under its group or from the option finder.
