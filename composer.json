@@ -1,0 +1,61 @@
+{
+    "name": "sgomez/simplesamlphp-module-console",
+    "description": "Administration console for SimpleSAMLphp metadata and authsources",
+    "type": "simplesamlphp-module",
+    "license": "EUPL-1.2",
+    "homepage": "https://github.com/sgomez/simplesamlphp-module-console",
+    "config": {
+        "preferred-install": {
+            "simplesamlphp/simplesamlphp": "source",
+            "*": "dist"
+        },
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true,
+            "simplesamlphp/composer-module-installer": true,
+            "simplesamlphp/composer-xmlseclibs-installer": true,
+            "simplesamlphp/composer-xmlprovider-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true,
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "SimpleSAML\\Module\\console\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SimpleSAML\\Module\\console\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": "^8.4",
+        "opis/json-schema": "^2.6",
+        "simplesamlphp/composer-module-installer": "^1.3",
+        "simplesamlphp/simplesamlphp": "~2.5.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^5.0",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.0",
+        "simplesamlphp/simplesamlphp-test-framework": "^1.9",
+        "slevomat/coding-standard": "^8.0",
+        "squizlabs/php_codesniffer": "^4.0",
+        "tomasvotruba/cognitive-complexity": "^1.0"
+    },
+    "scripts": {
+        "test": "pest --no-coverage",
+        "coverage": "pest --coverage --min=90",
+        "mutate": "pest --mutate --min=85 --path=src/Domain",
+        "stan": "phpstan analyse --memory-limit=1G --no-progress",
+        "cs": "phpcs",
+        "size": "php tools/check-file-size.php",
+        "static": [
+            "@stan",
+            "@cs",
+            "@size"
+        ]
+    }
+}
