@@ -7,6 +7,7 @@ namespace SimpleSAML\Module\console\Controller;
 use SimpleSAML\Configuration;
 use SimpleSAML\Module;
 use SimpleSAML\Module\console\Infrastructure\Http\AdminAccess;
+use SimpleSAML\Module\console\Infrastructure\Http\DatabaseGate;
 use SimpleSAML\XHTML\Template;
 
 final class HomeController
@@ -14,6 +15,7 @@ final class HomeController
     public function __construct(
         private readonly Configuration $config,
         private readonly AdminAccess $access,
+        private readonly DatabaseGate $gate,
     ) {
     }
 
@@ -21,6 +23,10 @@ final class HomeController
     public function main(): Template
     {
         $this->access->requireAdmin();
+        $statePage = $this->gate->blockingPage();
+        if ($statePage !== null) {
+            return $statePage;
+        }
 
         $template = new Template($this->config, 'console:home.twig');
         $template->data = [
