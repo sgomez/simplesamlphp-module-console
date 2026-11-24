@@ -49,7 +49,7 @@ The act of producing a new Snapshot from the Console's database and making it th
 _Avoid_: Sync, deploy, flush
 
 **Pending change**:
-A difference between what is saved in the Console and the current Snapshot: a managed entity or managed authsource that is new, modified, withdrawn, deleted or unreadable and has not been through a Publication yet.
+A difference between what is saved in the Console and the current Snapshot: a managed entity or managed authsource that is new, modified, withdrawn, deleted, or enabled and unreadable, and has not been through a Publication yet.
 _Avoid_: Draft, unpublished edit, dirty record
 
 **Rollback**:
