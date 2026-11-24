@@ -1710,7 +1710,9 @@ Replacing from PHP is pasting over the text of the PHP view. Authsources have no
 
 ## 10. Console UI
 
-This section specifies what the administrator sees and the requests behind it. The branches [`prototype/console-ui`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/console-ui/prototype/console-ui) (a design export of every screen, light and dark, with `console.css`) and [`prototype/authsource-form`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/authsource-form/prototype/authsource-form) (a form rendered by Twig over three authsource schemas) illustrate it and are not normative. Where they disagree with this section, this section applies.
+This section specifies what the administrator sees and the requests behind it. The branches [`prototype/console-ui`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/console-ui/prototype/console-ui) (a design export of every screen, light and dark, with `console.css`) and [`prototype/authsource-form`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/authsource-form/prototype/authsource-form) (a form rendered by Twig over three authsource schemas) illustrate it. The visual design of `prototype/console-ui` is normative: the tokens and component classes of its `console.css`, and the layout and look of its boards, light and dark. The implementation does not depart from it unless the maintainer decides so, and such a decision is recorded here. The boards' Google Fonts and inline styles are artefacts of the design tool and are not adopted. The content of a screen (its fields, texts and actions) follows this section.
+
+**Fundamental rule: a clean interface.** The UI shows data, labels and actions, and nothing that explains what is obvious from them. A sentence appears only when the administrator cannot act correctly without it: an error, a warning about the configuration, or a confirmation of an action that cannot be undone. No sentence restates what a control does, what just happened when the page already shows it, or how the Console works internally. When in doubt, leave it out.
 
 ### 10.1 Rendering
 
@@ -1961,7 +1963,7 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 - An uncataloged key goes to `extra` for an entity, with a warning and a suggestion when it is close to a cataloged option; for an authsource it is an error naming the key.
 - Validation errors of the document are tied to the line of the root option they come from.
 
-**Normalisation.** On every save the text comes back with its keys in schema order and its comments dropped. A notice says so; it can be dismissed.
+**Normalisation.** On every save the text comes back with its keys in schema order and its comments dropped, without a notice.
 
 **Sensitive values.** The view opens with a fixed sentinel in place of each stored sensitive literal. Saving the sentinel unchanged keeps the stored value. The sentinel stands only for a stored value: in an unsaved object (a managed copy, "Add" from pasted configuration) sensitive literals appear as they are, and after "Replace from…" a sentinel stands for each stored value the merge leaves unchanged. The sentinel is tied to its option and is an error anywhere else. In `exampleauth:UserPass` the password is part of the key, so renaming a user in the text means typing the password again. A Secret reference is a plain string and always visible.
 

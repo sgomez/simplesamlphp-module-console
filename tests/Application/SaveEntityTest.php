@@ -25,18 +25,16 @@ it('creates an entity with the entity ID of the identity field and a bare array'
 
     $result = $save->create('https://sp.example.org', '[' . BODY . ']', 'alice');
 
-    expect($result->outcome)->toBe(SaveOutcome::Saved)
-        ->and($result->normalised)->toBeTrue();
+    expect($result->outcome)->toBe(SaveOutcome::Saved);
 });
 
-it('says the text was not changed when it already is in schema order', function (): void {
+it('saves the returned text again as the next version', function (): void {
     [$save] = EntityDb::saver();
     $first = $save->create('https://sp.example.org', '[' . BODY . ']', 'alice');
 
     $second = $save->edit('https://sp.example.org', 1, (string) $first->text, 'alice');
 
     expect($second->outcome)->toBe(SaveOutcome::Saved)
-        ->and($second->normalised)->toBeFalse()
         ->and($second->version)->toBe(2);
 });
 

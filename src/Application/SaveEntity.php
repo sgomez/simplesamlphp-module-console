@@ -37,7 +37,7 @@ final class SaveEntity
             return SaveResult::alreadyExists($entityId);
         }
 
-        return $this->saved($entityId, 1, $text, $parsed);
+        return $this->saved($entityId, 1, $parsed);
     }
 
 
@@ -53,15 +53,14 @@ final class SaveEntity
             return SaveResult::conflict();
         }
 
-        return $this->saved($entityId, $newVersion, $text, $parsed);
+        return $this->saved($entityId, $newVersion, $parsed);
     }
 
 
-    private function saved(string $entityId, int $version, string $submitted, ParsedEntity $parsed): SaveResult
+    private function saved(string $entityId, int $version, ParsedEntity $parsed): SaveResult
     {
         $text = $this->set->toText($entityId, $parsed->document ?? []);
-        $unchanged = trim(str_replace("\r\n", "\n", $submitted)) === $text;
 
-        return SaveResult::saved($entityId, $version, $text, !$unchanged, $parsed->notices);
+        return SaveResult::saved($entityId, $version, $text, $parsed->notices);
     }
 }

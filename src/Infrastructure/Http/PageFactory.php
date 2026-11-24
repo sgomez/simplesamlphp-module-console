@@ -32,7 +32,6 @@ final class PageFactory
             'adminUrl' => Module::getModuleURL('admin/'),
             'logoutUrl' => $this->access->logoutUrl(),
             'message' => $this->flash->take(),
-            'notice' => $this->flash->takeNotice(),
             'csrfToken' => $this->token->token(),
             'consoleUrl' => Module::getModuleURL('console/'),
             'pendingCount' => $this->pendingCount(),

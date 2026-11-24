@@ -61,11 +61,6 @@
     if (toggle) {
       document.body.classList.toggle('sidebar-open');
     }
-    var dismiss = event.target.closest('[data-dismiss]');
-    var notice = dismiss ? dismiss.closest('[data-notice]') : null;
-    if (notice) {
-      notice.classList.add('hidden');
-    }
   });
 
   document.addEventListener('keydown', function (event) {

@@ -14,7 +14,7 @@ The text is read with `nikic/php-parser` and an allowlist walk of the AST, never
 ## Consequences
 
 - Each schema has two translators, and the test suite checks that document to PHP to document is the identity.
-- The text comes back normalised on every save: keys in schema order, comments dropped. A dismissible notice says so.
+- The text comes back normalised on every save: keys in schema order, comments dropped, with no notice.
 - Accepted input is one block, with its wrapper or as a bare array, made of literals plus `SAML2\Constants::*` from a fixed list, which are written back as literals.
 - A block whose entity ID, authsource id or type differs from the object's is rejected.
 - An uncataloged key goes to `extra` for an entity, with a non-blocking warning and a suggestion when it is close to a cataloged option; for an authsource it is an error.

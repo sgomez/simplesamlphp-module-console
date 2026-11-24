@@ -26,8 +26,6 @@ final class EntitySaveController
     private const string CHANGED = 'This service provider changed meanwhile. Your edits were not saved; '
         . 'this is how it stands now.';
 
-    private const string NORMALISED = 'The text was rewritten in schema order and its comments were dropped.';
-
 
     public function __construct(
         private readonly RequestGate $gate,
@@ -68,7 +66,6 @@ final class EntitySaveController
     {
         $messages = array_map(static fn ($notice): string => $notice->message, $result->notices);
         $this->flash->put(implode(' ', ['Saved.', ...$messages]));
-        $result->normalised && $this->flash->putNotice(self::NORMALISED);
 
         return new RedirectResponse($this->editUrl((string) $result->entityId));
     }

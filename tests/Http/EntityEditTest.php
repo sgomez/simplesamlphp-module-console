@@ -38,27 +38,13 @@ it('saves an edit, bumps the version and records an edit row', function (): void
         ->and($audit)->toBe([['action' => 'edit', 'identity' => 'admin']]);
 });
 
-it('hands the text back in schema order with a dismissible notice, once', function (): void {
+it('hands the text back in schema order', function (): void {
     [$client, $html] = EntityPages::existing();
 
     EntityPages::submitEdit($client, $html, "[\n'name' => 'Renamed',\n" . SpText::ACS . "\n]");
-    $first = $client->page(EntityPages::EDIT);
-    $second = $client->page(EntityPages::EDIT);
+    $page = $client->page(EntityPages::EDIT);
 
-    expect($first)->toContain('data-notice="normalised"')
-        ->and($first)->toContain('data-dismiss')
-        ->and(strpos($first, 'AssertionConsumerService'))->toBeLessThan((int) strpos($first, '&#039;name&#039; =&gt;'))
-        ->and($second)->not->toContain('data-notice="normalised"');
-});
-
-it('shows no notice when the text was already normalised', function (): void {
-    [$client, $html] = EntityPages::existing();
-    $editor = (string) preg_replace('/^.*<textarea[^>]*>(.*?)<\/textarea>.*$/s', '$1', $html);
-    $text = html_entity_decode($editor, ENT_QUOTES);
-
-    EntityPages::submitEdit($client, $html, $text);
-
-    expect($client->page(EntityPages::EDIT))->not->toContain('data-notice="normalised"');
+    expect(strpos($page, 'AssertionConsumerService'))->toBeLessThan((int) strpos($page, '&#039;name&#039; =&gt;'));
 });
 
 it('shows the errors of an edit, stores nothing and keeps the version', function (): void {

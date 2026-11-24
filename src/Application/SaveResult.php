@@ -15,7 +15,6 @@ final readonly class SaveResult
         public ?string $entityId = null,
         public ?int $version = null,
         public ?string $text = null,
-        public bool $normalised = false,
         public array $errors = [],
         public array $notices = [],
     ) {
@@ -25,9 +24,9 @@ final readonly class SaveResult
     /**
      * @param list<\SimpleSAML\Module\console\Domain\Entity\Notice> $notices
      */
-    public static function saved(string $entityId, int $version, string $text, bool $normalised, array $notices): self
+    public static function saved(string $entityId, int $version, string $text, array $notices): self
     {
-        return new self(SaveOutcome::Saved, $entityId, $version, $text, $normalised, [], $notices);
+        return new self(SaveOutcome::Saved, $entityId, $version, $text, [], $notices);
     }
 
 
