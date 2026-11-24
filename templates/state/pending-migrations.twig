@@ -13,5 +13,12 @@
   </ul>
   <p>A migration cannot be undone without restoring a backup.</p>
   <p>SSO is not affected: nodes keep serving their local Snapshot.</p>
+  {% if report %}
+  <p class="error-box" role="alert" data-migration-error>Migration {{ report.failedAt }} failed: {{ report.reason }}</p>
+  {% endif %}
+  <form method="post" action="{{ migrateUrl }}">
+    <input type="hidden" name="_token" value="{{ csrfToken }}">
+    <button type="submit" class="button">Run migrations</button>
+  </form>
 </section>
 {% endblock %}
