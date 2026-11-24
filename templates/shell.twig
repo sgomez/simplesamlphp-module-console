@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}Console{% endblock %} | Console</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('img/favicon.svg', 'console') }}">
+  <link rel="stylesheet" href="{{ asset('css/console.css', 'console') }}">
+  <script src="{{ asset('js/console.js', 'console') }}" defer></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">Console</div>
+      <nav class="sidebar-nav" aria-label="Console">
+        {% block nav %}{% endblock %}
+      </nav>
+      <div class="sidebar-foot">
+        <div class="identity">
+          <span class="identity-label">Signed in as</span>
+          <span class="identity-value" data-identity>{{ identity }}</span>
+        </div>
+        <a class="sidebar-link" href="{{ adminUrl }}">SimpleSAMLphp</a>
+        <a class="sidebar-link" href="{{ logoutUrl }}">Log out</a>
+      </div>
+    </aside>
+    <div class="main">
+      <header class="header">
+        <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-controls="sidebar" aria-label="Toggle navigation">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <nav class="breadcrumb" aria-label="Breadcrumb">{% block breadcrumb %}Console{% endblock %}</nav>
+        {% block header_extra %}{% endblock %}
+      </header>
+      <main class="content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+</body>
+</html>

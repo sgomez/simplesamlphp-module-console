@@ -1,0 +1,66 @@
+name: Weekly
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_EXTENSIONS: ctype, curl, dom, filter, hash, iconv, intl, json, libxml, mbstring, openssl, pcre, pdo_mysql, pdo_pgsql, pdo_sqlite, session, simplexml, spl, xml, zlib
+
+jobs:
+  newest-dependencies:
+    name: Newest dependencies, SimpleSAMLphp ${{ matrix.simplesamlphp }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        simplesamlphp: ['dev-simplesamlphp-2.5', 'dev-master']
+    env:
+      CONSOLE_TEST_DB_USER: console
+      CONSOLE_TEST_DB_PASSWORD: console
+      CONSOLE_TEST_DSN_SQLITE: 'sqlite::memory:'
+      CONSOLE_TEST_DSN_POSTGRES: 'pgsql:host=127.0.0.1;port=5432;dbname=console'
+      CONSOLE_TEST_DSN_MYSQL: 'mysql:host=127.0.0.1;port=3306;dbname=console;charset=utf8mb4'
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: console
+          POSTGRES_PASSWORD: console
+          POSTGRES_DB: console
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U console"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_USER: console
+          MYSQL_PASSWORD: console
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: console
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer
+      - run: composer require --no-update 'simplesamlphp/simplesamlphp:${{ matrix.simplesamlphp }}'
+      - run: composer update --no-interaction --no-progress
+      - run: composer test

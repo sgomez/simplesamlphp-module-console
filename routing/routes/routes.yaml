@@ -1,0 +1,8 @@
+---
+
+console-home:
+  path: /
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\HomeController::main'
+  }
+  methods: [GET]
