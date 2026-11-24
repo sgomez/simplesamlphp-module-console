@@ -36,4 +36,11 @@ interface EntityRepository
      * @throws \SimpleSAML\Module\console\Application\EntityConflict
      */
     public function update(string $set, string $entityId, int $version, array $document, string $identity): int;
+
+
+    /**
+     * Deletes the entity, whether readable or not, and writes its `delete` row of the Audit trail in the same
+     * transaction. An entity that is already gone is left alone and writes nothing.
+     */
+    public function delete(string $set, string $entityId, string $identity): void;
 }

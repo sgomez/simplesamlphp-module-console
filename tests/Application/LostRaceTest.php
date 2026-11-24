@@ -34,6 +34,12 @@ it('answers "already exists" when the entity appears between the check and the i
         {
             throw new LogicException('not used');
         }
+
+
+        public function delete(string $set, string $entityId, string $identity): void
+        {
+            throw new LogicException('not used');
+        }
     };
 
     $save = new SaveEntity($repository, new SpRemote());
