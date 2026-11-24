@@ -70,12 +70,32 @@ describe('a row of the list', () => {
 
   it('lists an Unreadable row with its load error and no link', async () => {
     const row = await rowOf(
-      sp('https://bad.example.org', { state: 'Unreadable', error: 'The stored document is not valid JSON.' }),
+      sp('https://bad.example.org', {
+        state: 'Unreadable',
+        unreadable: true,
+        error: 'The stored document is not valid JSON.',
+      }),
     );
 
     expect(row.tagName).toBe('DIV');
     expect(row.querySelector('.status')?.className).toBe('status s-danger');
     expect(row.querySelector('.dot')?.className).toBe('dot dot-full');
+    expect(within(row).getByText('The stored document is not valid JSON.').className).toBe('xs faint row-more');
+  });
+
+  it('lists a disabled Unreadable row as Unreadable, with its load error and no link', async () => {
+    const row = await rowOf(
+      sp('https://bad.example.org', {
+        state: null,
+        unreadable: true,
+        labels: [{ text: 'Disabled', kind: 'disabled', title: null }],
+        error: 'The stored document is not valid JSON.',
+      }),
+    );
+
+    expect(row.tagName).toBe('DIV');
+    expect(row.querySelector('.status')?.textContent).toBe('Unreadable');
+    expect(row.querySelector('.status')?.className).toBe('status s-danger');
     expect(within(row).getByText('The stored document is not valid JSON.').className).toBe('xs faint row-more');
   });
 });

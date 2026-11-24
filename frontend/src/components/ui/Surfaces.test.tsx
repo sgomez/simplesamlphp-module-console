@@ -82,7 +82,7 @@ describe('Card and Row', () => {
             Edit
           </Row>
           <Row to="/inside">Inside</Row>
-          <Row>Plain</Row>
+          <Row plain>Plain</Row>
         </Card>
         <Card>Alone</Card>
       </MemoryRouter>,
@@ -93,5 +93,16 @@ describe('Card and Row', () => {
     expect(screen.getByRole('link', { name: 'Inside' }).className).toBe('row');
     expect(screen.getByText('Plain').tagName).toBe('DIV');
     expect(screen.getByText('Alone').className).toBe('card');
+  });
+});
+
+describe('Row targets', () => {
+  it('takes exactly one of a route, an address or plain', () => {
+    // @ts-expect-error a row without a target
+    const neither = <Row>None</Row>;
+    // @ts-expect-error a row with two targets
+    const both = (<Row to="/a" href="/b">Both</Row>);
+
+    expect([neither, both]).toHaveLength(2);
   });
 });

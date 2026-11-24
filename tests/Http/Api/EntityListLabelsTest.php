@@ -15,6 +15,20 @@ it('lists a row that cannot be loaded as Unreadable, with its load error', funct
 
     expect($row['entityId'])->toBe('https://bad.example.org')
         ->and($row['state'])->toBe('Unreadable')
+        ->and($row['unreadable'])->toBeTrue()
+        ->and($row['error'])->toContain('not valid JSON');
+});
+
+it('says a disabled row that cannot be loaded is Unreadable, although it has no state', function (): void {
+    $client = (new ConsoleClient())->loginAsAdmin();
+    EntityDb::seedUnreadable($client);
+    $client->database()->exec('UPDATE console_entity SET enabled = 0');
+
+    $row = Api::get($client, '/entities/saml20-sp-remote')['rows'][0];
+
+    expect($row['state'])->toBeNull()
+        ->and($row['unreadable'])->toBeTrue()
+        ->and($row['labels'])->toBe([['text' => 'Disabled', 'kind' => 'disabled', 'title' => null]])
         ->and($row['error'])->toContain('not valid JSON');
 });
 
@@ -26,7 +40,8 @@ it('labels a disabled service provider', function (): void {
     $row = Api::get($client, '/entities/saml20-sp-remote')['rows'][0];
 
     expect($row['labels'])->toBe([['text' => 'Disabled', 'kind' => 'disabled', 'title' => null]])
-        ->and($row['state'])->toBeNull();
+        ->and($row['state'])->toBeNull()
+        ->and($row['unreadable'])->toBeFalse();
 });
 
 it('labels the warnings of a service provider with their message, and none of a sound one', function (): void {

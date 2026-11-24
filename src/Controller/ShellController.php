@@ -6,6 +6,7 @@ namespace SimpleSAML\Module\console\Controller;
 
 use SimpleSAML\Configuration;
 use SimpleSAML\Module\console\Infrastructure\Http\CsrfToken;
+use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
 use SimpleSAML\Module\console\Infrastructure\Http\FrontendAssets;
 use SimpleSAML\Module\console\Infrastructure\Http\RequestGate;
 use SimpleSAML\XHTML\Template;
@@ -18,6 +19,7 @@ final class ShellController
         private readonly RequestGate $gate,
         private readonly CsrfToken $token,
         private readonly FrontendAssets $assets,
+        private readonly FlashMessage $flash,
     ) {
     }
 
@@ -28,6 +30,8 @@ final class ShellController
         if ($stopped !== null) {
             return $stopped;
         }
+        // Until the screens that queue it move to the API, a Twig POST's message is dropped here, not shown later.
+        $this->flash->take();
         $shell = new Template($this->config, 'console:app.twig');
         $shell->data = ['token' => $this->token->token()] + $this->assets->references();
 

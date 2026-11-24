@@ -15,14 +15,15 @@ interface Note {
 const cycle: Record<string, Omit<Note, 'text'>> = {
   Unpublished: { tone: 'pending', mark: 'dot' },
   Modified: { tone: 'pending', mark: 'half' },
-  Unreadable: { tone: 'danger', mark: 'full' },
 };
 
-// One line per row: the publish cycle first, then warnings; the rest is counted.
+// One line per row: Unreadable and the publish cycle first, then warnings; the rest is counted.
 function notesOf(row: EntityRow): Note[] {
   const notes: Note[] = [];
   const state = row.state === null ? undefined : cycle[row.state];
-  if (state && row.state !== null) {
+  if (row.unreadable) {
+    notes.push({ tone: 'danger', mark: 'full', text: 'Unreadable' });
+  } else if (state && row.state !== null) {
     notes.push({ ...state, text: row.state });
   }
   for (const label of row.labels) {
@@ -64,8 +65,12 @@ export function EntityListRow({ row, editUrl }: { row: EntityRow; editUrl: strin
       <RowNote row={row} />
     </>
   );
-  if (row.state === 'Unreadable') {
-    return <Row wrap>{content}</Row>;
+  if (row.unreadable) {
+    return (
+      <Row wrap plain>
+        {content}
+      </Row>
+    );
   }
 
   return (

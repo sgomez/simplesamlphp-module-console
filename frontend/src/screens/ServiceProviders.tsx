@@ -2,6 +2,7 @@ import type { FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
 import { consoleUrl } from '../api/client';
 import type { EntityPage } from '../api/types';
+import type { ApiState } from '../app/useApi';
 import { SP_LIST } from '../app/paths';
 import { useApi } from '../app/useApi';
 import { LinkButton } from '../components/ui/Button';
@@ -36,6 +37,17 @@ function Listing({ result }: { result: EntityPage }) {
   );
 }
 
+// No skeleton: DesignSystem keeps it for a URL fetch or a Publication. Refusals (401, 503) get their pages in #105/#106.
+function Result({ answer }: { answer: ApiState<EntityPage> }) {
+  switch (answer.state) {
+    case 'ready':
+      return <Listing result={answer.data} />;
+    case 'loading':
+    case 'failed':
+      return null;
+  }
+}
+
 export function ServiceProviders() {
   const [params, setParams] = useSearchParams();
   const query = params.get('q') ?? '';
@@ -47,7 +59,7 @@ export function ServiceProviders() {
   if (page !== null) {
     search.set('page', page);
   }
-  const result = useApi<EntityPage>(`${SP_LIST}${search.size > 0 ? `?${search}` : ''}`);
+  const answer = useApi<EntityPage>(`${SP_LIST}${search.size > 0 ? `?${search}` : ''}`);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -75,7 +87,7 @@ export function ServiceProviders() {
           <Input key={query} name="q" type="search" defaultValue={query} placeholder="Search by name or entity ID" />
         </label>
       </form>
-      {result && <Listing result={result} />}
+      <Result answer={answer} />
     </>
   );
 }

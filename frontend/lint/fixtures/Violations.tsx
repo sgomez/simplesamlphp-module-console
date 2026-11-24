@@ -1,4 +1,4 @@
-import '../../src/console.css';
+import './console.css';
 
 export function Violations() {
   return (

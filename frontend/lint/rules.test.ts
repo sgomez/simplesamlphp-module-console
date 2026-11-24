@@ -22,4 +22,20 @@ describe('the lint rules of the front end', () => {
       'no-restricted-syntax@8',
     ]);
   });
+
+  it('reject imports from the PHP side and of the schemas', async () => {
+    expect(await messages('ServerImports.tsx')).toEqual([
+      'no-restricted-imports@1',
+      'no-restricted-imports@2',
+      'no-restricted-imports@3',
+    ]);
+  });
+
+  it('reject creating a native form or dialog element by name', async () => {
+    expect(await messages('CreateElement.tsx')).toEqual([
+      'no-restricted-syntax@4',
+      'no-restricted-syntax@4',
+      'no-restricted-syntax@4',
+    ]);
+  });
 });

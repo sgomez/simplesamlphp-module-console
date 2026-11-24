@@ -44,14 +44,12 @@ export function Button(props: ButtonProps) {
   );
 }
 
-interface LinkButtonProps extends Look {
-  href?: string;
-  to?: string;
-  disabled?: boolean;
-}
+export type LinkTarget = { to: string; href?: never } | { href: string; to?: never };
+
+type LinkButtonProps = Look & LinkTarget & { disabled?: boolean };
 
 export function LinkButton(props: LinkButtonProps) {
-  const { href, to, disabled, label, children } = props;
+  const { disabled, label, children } = props;
   if (disabled) {
     return (
       <a className={buttonClass(props, 'is-disabled')} aria-disabled="true">
@@ -59,16 +57,16 @@ export function LinkButton(props: LinkButtonProps) {
       </a>
     );
   }
-  if (to !== undefined) {
+  if (props.to !== undefined) {
     return (
-      <Link className={buttonClass(props)} to={to} aria-label={label}>
+      <Link className={buttonClass(props)} to={props.to} aria-label={label}>
         {children}
       </Link>
     );
   }
 
   return (
-    <a className={buttonClass(props)} href={href} aria-label={label}>
+    <a className={buttonClass(props)} href={props.href} aria-label={label}>
       {children}
     </a>
   );

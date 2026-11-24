@@ -8,7 +8,8 @@ import { useApi } from './useApi';
 const crumbs: Record<string, string> = { [SP_LIST]: 'Service providers' };
 
 export function ConsoleRoutes() {
-  const session = useApi<Session>('/session');
+  const answer = useApi<Session>('/session');
+  const session = answer.state === 'ready' ? answer.data : null;
   const { pathname } = useLocation();
 
   return (

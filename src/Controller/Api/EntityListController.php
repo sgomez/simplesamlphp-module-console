@@ -63,6 +63,7 @@ final class EntityListController
             'name' => $entity->name(),
             'state' => $states[$entity->set . "\0" . $entity->entityId] ?? null,
             'labels' => $labels,
+            'unreadable' => $entity->document === null,
             'error' => $entity->loadError,
         ];
     }

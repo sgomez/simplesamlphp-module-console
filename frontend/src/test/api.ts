@@ -31,7 +31,7 @@ export const session: Session = {
 };
 
 export function sp(entityId: string, more: Partial<EntityRow> = {}): EntityRow {
-  return { entityId, name: null, state: 'Up to date', labels: [], error: null, ...more };
+  return { entityId, name: null, state: 'Up to date', labels: [], unreadable: false, error: null, ...more };
 }
 
 export function page(rows: EntityRow[], more: Partial<EntityPage> = {}): EntityPage {

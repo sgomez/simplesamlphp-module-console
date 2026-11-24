@@ -83,4 +83,13 @@ describe('LinkButton', () => {
     expect(link.getAttribute('aria-disabled')).toBe('true');
     expect(link.hasAttribute('href')).toBe(false);
   });
+
+  it('takes exactly one target, an application route or a page address', () => {
+    // @ts-expect-error a link button without a target
+    const neither = <LinkButton>None</LinkButton>;
+    // @ts-expect-error a link button with both targets
+    const both = (<LinkButton to="/a" href="/b">Both</LinkButton>);
+
+    expect([neither, both]).toHaveLength(2);
+  });
 });

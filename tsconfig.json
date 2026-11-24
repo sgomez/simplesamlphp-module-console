@@ -16,5 +16,6 @@
     "noEmit": true,
     "types": ["vite/client"]
   },
-  "include": ["frontend"]
+  "include": ["frontend"],
+  "exclude": ["frontend/lint/fixtures"]
 }

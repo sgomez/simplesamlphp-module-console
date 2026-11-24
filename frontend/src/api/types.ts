@@ -16,6 +16,7 @@ export interface EntityRow {
   name: string | null;
   state: string | null;
   labels: EntityLabel[];
+  unreadable: boolean;
   error: string | null;
 }
 

@@ -24,6 +24,14 @@ export default tseslint.config(
           selector: `JSXOpeningElement[name.name=/^(${NATIVE})$/]`,
           message: 'Render native form and dialog elements through a primitive of components/ui.',
         },
+        {
+          selector: `CallExpression[callee.name='createElement'][arguments.0.value=/^(${NATIVE})$/]`,
+          message: 'Render native form and dialog elements through a primitive of components/ui.',
+        },
+        {
+          selector: `CallExpression[callee.property.name='createElement'][arguments.0.value=/^(${NATIVE})$/]`,
+          message: 'Render native form and dialog elements through a primitive of components/ui.',
+        },
       ],
       'no-restricted-imports': [
         'error',
@@ -32,6 +40,14 @@ export default tseslint.config(
             {
               regex: '\\.(css|scss|sass|less|styl)(\\?.*)?$',
               message: 'The stylesheet is linked by the page shell, never imported.',
+            },
+            {
+              regex: '^(\\.\\./)+src/|\\.php$',
+              message: 'The front end talks to the module through the API only.',
+            },
+            {
+              regex: '(^|/)docs/spec/schemas/',
+              message: 'Schemas reach the front end only through the generated validators and types.',
             },
           ],
         },

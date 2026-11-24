@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { page, session, sp, stubApi } from '../test/api';
 import { location, renderAt } from '../test/render';
 
@@ -77,5 +77,15 @@ describe('the service provider list', () => {
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 
     expect(container.querySelector('.card-list, .empty')).toBeNull();
+  });
+
+  it('renders no list and no skeleton while the page loads', async () => {
+    const fetch = vi.fn(async () => new Promise<Response>(() => undefined));
+    vi.stubGlobal('fetch', fetch);
+    const { container } = renderAt(LIST);
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+
+    expect(container.querySelector('.card, .skel, [aria-busy]')).toBeNull();
   });
 });
