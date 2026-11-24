@@ -59,7 +59,7 @@ it('shows every error at once, linked to its line, keeps what was typed and stor
         ->and($page)->toContain('data-error-line="2"')
         ->and($page)->toContain('data-error-line="3"')
         ->and($page)->toContain('href="#line-2"')
-        ->and($page)->toContain('class="error-mark"')
+        ->and($page)->toContain('class="ed-ln err"')
         ->and($page)->toContain('An absolute http or https URL.')
         ->and($page)->toContain('not available yet')
         ->and($page)->toContain('The entity ID is required.')

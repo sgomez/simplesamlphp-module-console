@@ -2,10 +2,14 @@
 
 {% block title %}Not found{% endblock %}
 
+{% block breadcrumb %}<a class="crumb" href="{{ consoleUrl }}">Console</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" class="crumb-current">{{ block('title') }}</span>{% endblock %}
+
+{% block page_class %}page-narrow{% endblock %}
+
 {% block content %}
-<section class="state-page" data-state="not-found">
-  <h1>Not found</h1>
-  <p>There is nothing at this address.</p>
-  <p><a href="{{ consoleUrl }}entities/saml20-sp-remote">Back to the service providers</a></p>
+<section class="card empty state-page" data-state="not-found">
+  <h1 class="h1">Not found</h1>
+  <p class="muted">There is nothing at this address.</p>
+  <a class="btn btn-secondary" href="{{ consoleUrl }}entities/saml20-sp-remote">Back to the service providers</a>
 </section>
 {% endblock %}

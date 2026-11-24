@@ -66,6 +66,6 @@ it('lists the blocking problems first, each naming its entity, and offers no Pub
     expect($html)->toContain('https://bad.example.org')
         ->and($html)->toContain('https://broken.example.org')
         ->and($html)->toContain('not valid JSON')
-        ->and(strpos($html, 'Problems'))->toBeLessThan((int) strpos($html, 'Pending changes'))
+        ->and(strpos($html, 'data-problems'))->toBeLessThan((int) strpos($html, 'data-pending>'))
         ->and($html)->not->toContain('name="hash"');
 });

@@ -39,7 +39,7 @@ final class Helpers
     public static function assertShellWithoutCounts(string $html): void
     {
         expect($html)->toContain('data-identity')
-            ->and($html)->toContain('class="sidebar"')
+            ->and($html)->toContain('class="shell-side"')
             ->and($html)->not->toContain('Pending changes')
             ->and($html)->not->toContain('data-pending-count');
     }

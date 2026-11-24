@@ -54,11 +54,11 @@ it('labels the entities of the list with their warnings, styled apart from error
     $html = $client->page('/entities/saml20-sp-remote');
     $sound = substr($html, (int) strpos($html, 'data-entity="https://sp.example.org"'));
 
-    expect($html)->toContain('label warning')
+    expect($html)->toContain('status s-warn')
         ->and($html)->toContain('Signing off')
         ->and($html)->toContain('Entity ID not a URI')
-        ->and($html)->not->toContain('label error')
-        ->and(substr($sound, 0, (int) strpos($sound, '</tr>')))->not->toContain('warning');
+        ->and($html)->not->toContain('s-danger')
+        ->and(substr($sound, 0, (int) strpos($sound, '</a>')))->not->toContain('warning');
 });
 
 it('flags a certificate within the configured days of expiring', function (): void {

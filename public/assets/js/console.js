@@ -1,15 +1,32 @@
 (function () {
   'use strict';
 
-  function syncGutter(editor, gutter) {
+  function lineNumber(n) {
+    var line = document.createElement('div');
+    line.className = 'ed-ln';
+    line.id = 'line-' + n;
+    var mark = document.createElement('span');
+    var number = document.createElement('span');
+    number.textContent = String(n);
+    line.append(mark, number);
+    return line;
+  }
+
+  function syncGutter(editor, gutter, background) {
     var wanted = editor.value.split('\n').length;
     while (gutter.children.length < wanted) {
-      gutter.appendChild(document.createElement('li'));
+      gutter.appendChild(lineNumber(gutter.children.length + 1));
+      if (background) {
+        background.appendChild(document.createElement('div'));
+      }
     }
     while (gutter.children.length > wanted) {
       gutter.removeChild(gutter.lastChild);
+      if (background && background.lastChild) {
+        background.removeChild(background.lastChild);
+      }
     }
-    gutter.scrollTop = editor.scrollTop;
+    editor.rows = Math.max(wanted, 12);
   }
 
   function confirmDialog(text) {
@@ -20,11 +37,11 @@
     var actions = document.createElement('form');
     actions.method = 'dialog';
     var cancel = document.createElement('button');
-    cancel.className = 'button';
+    cancel.className = 'btn btn-secondary';
     cancel.value = 'cancel';
     cancel.textContent = 'Cancel';
     var ok = document.createElement('button');
-    ok.className = 'button danger';
+    ok.className = 'btn btn-danger-solid';
     ok.value = 'ok';
     ok.textContent = 'Confirm';
     actions.append(cancel, ok);
@@ -54,7 +71,7 @@
       };
       return;
     }
-    if (document.body.classList.contains('sidebar-open') && !event.target.closest('.sidebar, [data-sidebar-toggle]')) {
+    if (document.body.classList.contains('sidebar-open') && !event.target.closest('.shell-side, [data-sidebar-toggle]')) {
       document.body.classList.remove('sidebar-open');
     }
     var toggle = event.target.closest('[data-sidebar-toggle]');
@@ -74,12 +91,10 @@
     if (!gutter) {
       return;
     }
+    var background = document.querySelector('.ed-bg');
     editor.addEventListener('input', function () {
-      syncGutter(editor, gutter);
+      syncGutter(editor, gutter, background);
     });
-    editor.addEventListener('scroll', function () {
-      gutter.scrollTop = editor.scrollTop;
-    });
-    syncGutter(editor, gutter);
+    syncGutter(editor, gutter, background);
   });
 })();

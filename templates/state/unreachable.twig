@@ -2,9 +2,13 @@
 
 {% block title %}Database unreachable{% endblock %}
 
+{% block breadcrumb %}<a class="crumb" href="{{ consoleUrl }}">Console</a><span aria-hidden="true" class="faint">/</span><span aria-current="page" class="crumb-current">{{ block('title') }}</span>{% endblock %}
+
+{% block page_class %}page-narrow{% endblock %}
+
 {% block content %}
-<section class="state-page" data-state="unreachable">
-  <h1>Database unreachable</h1>
-  <p>The Console cannot reach its database. Nodes keep serving their local Snapshot.</p>
+<section class="card empty state-page" data-state="unreachable">
+  <h1 class="h1">Database unreachable</h1>
+  <p class="muted">The Console cannot reach its database. Nodes keep serving their local Snapshot.</p>
 </section>
 {% endblock %}
