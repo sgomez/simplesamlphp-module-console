@@ -9,6 +9,10 @@
         <testsuite name="console">
             <directory>tests</directory>
         </testsuite>
+        <testsuite name="core">
+            <directory>tests/Unit</directory>
+            <directory>tests/Application</directory>
+        </testsuite>
     </testsuites>
     <php>
         <ini name="memory_limit" value="512M"/>

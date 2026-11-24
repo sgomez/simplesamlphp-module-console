@@ -2162,7 +2162,7 @@ Every threshold blocks.
 
 | Check | Threshold |
 | --- | --- |
-| Mutation score (MSI) | At least 85 %, on `Domain` only |
+| Mutation score (MSI) | At least 85 %, on `Domain` and `Application` only, killed by their own tests (`tests/Unit`, `tests/Application`); infrastructure is not mutated |
 | Line coverage | At least 90 %, on the whole of `src/` |
 | PHPStan | Level `max` on `src/`, no errors |
 | Method length | At most 30 lines (`SlevomatCodingStandard.Functions.FunctionLength`) |
@@ -2246,10 +2246,11 @@ The matrix is not the full product of PHP versions and engines. The SQL does not
 | Job | PHP | Database |
 | --- | --- | --- |
 | Static analysis: PHPStan, PHP_CodeSniffer, method length, cognitive complexity, file size | 8.4 | None |
-| Mutation score and coverage, with PCOV, including the persistence, migration and Publication suites on every engine | 8.4 | SQLite, `postgres:15`, `mariadb:10.11`, `mariadb:11.8`, `mysql:8.4` |
+| Coverage, with PCOV, including the persistence, migration and Publication suites on every engine | 8.4 | SQLite, `postgres:15`, `mariadb:10.11`, `mariadb:11.8`, `mysql:8.4` |
+| Mutation score, with PCOV, in parallel | 8.4 | SQLite |
 | Full suite | Every stable release from 8.4 that SimpleSAMLphp 2.5 supports | SQLite |
 | Lowest dependencies: `composer update --prefer-lowest`, full suite | 8.4 | SQLite |
-| `composer audit` | 8.4 | None |
+| `composer audit --locked` | 8.4 | None |
 | CodeQL on the workflows (section 14.5) | | None |
 
 `mariadb:11.8` runs next to the minimum because the error 1020 path of section 4.8 exists only from MariaDB 11.6.2.
