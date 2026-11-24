@@ -5,6 +5,7 @@ declare(strict_types=1);
 use SimpleSAML\Module\console\Domain\Entity\StoredEntity;
 use SimpleSAML\Module\console\Domain\Publication\SnapshotDocument;
 use SimpleSAML\Module\console\Infrastructure\Persistence\PdoEntityRepository;
+use SimpleSAML\Module\console\Tests\Support\Api;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\EntityPages;
 use SimpleSAML\Module\console\Tests\Support\PublishFixtures as P;
@@ -26,8 +27,8 @@ it('publishes: stores the Snapshot, redirects to Publish and says Snapshot 1 pub
         ->and($row['checksum'])->toBe(hash('sha256', $row['document']))
         ->and([$row['number'], $row['format_version'], $row['comment'], $row['created_by']])
             ->toBe([1, 1, 'first', 'admin'])
-        ->and($client->page(EntityPages::LIST))->toContain('Up to date')
-        ->and($client->page(EntityPages::LIST))->not->toContain('Review ');
+        ->and(Api::get($client, EntityPages::LIST)['rows'][0]['state'])->toBe('Up to date')
+        ->and(Api::get($client, '/session')['pendingCount'])->toBe(0);
 });
 
 it('shows Modified for an edited entity and Deleted for one that left no row', function (): void {
@@ -43,7 +44,7 @@ it('shows Modified for an edited entity and Deleted for one that left no row', f
 
     expect($html)->toContain('Modified')
         ->and($html)->toContain('Deleted')
-        ->and($client->page(EntityPages::LIST))->toContain('Review 2 changes');
+        ->and(Api::get($client, '/session')['pendingCount'])->toBe(2);
 });
 
 it('shows the confirmation screen again, writing nothing, when the Pending changes moved', function (): void {

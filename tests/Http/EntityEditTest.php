@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\EntityPages;
+use SimpleSAML\Module\console\Tests\Support\Flash;
 use SimpleSAML\Module\console\Tests\Support\SpText;
 
 it('shows the entity as the $metadata statement of a flat file, with its header and version', function (): void {
@@ -79,8 +80,8 @@ it('sends an edit of an entity deleted meanwhile back to the list with a message
     $client->database()->exec('DELETE FROM console_entity');
 
     $response = EntityPages::submitEdit($client, $html, '[' . SpText::ACS . ']');
-    $list = $client->page('/entities/saml20-sp-remote');
 
     expect($response->getStatusCode())->toBe(302)
-        ->and($list)->toContain('no longer exists');
+        ->and($response->headers->get('Location'))->toBe(ConsoleClient::BASE . EntityPages::LIST)
+        ->and(Flash::taken())->toContain('no longer exists');
 });

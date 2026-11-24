@@ -27,15 +27,21 @@ final class AdminAccess
     }
 
 
+    public function isAdmin(): bool
+    {
+        return $this->auth->isAdmin();
+    }
+
+
     public function identity(): string
     {
         return Identity::resolve(ModuleConfig::userIdAttribute(), $this->attributes());
     }
 
 
-    public function logoutUrl(): string
+    public function logoutUrl(?string $returnTo = null): string
     {
-        return $this->auth->getAdminLogoutURL();
+        return $this->auth->getAdminLogoutURL($returnTo);
     }
 
 

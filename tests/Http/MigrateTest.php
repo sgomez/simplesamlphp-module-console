@@ -12,6 +12,7 @@ use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
 use SimpleSAML\Module\console\Infrastructure\Http\StatePages;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\Db;
+use SimpleSAML\Module\console\Tests\Support\Flash;
 use SimpleSAML\Session;
 
 it('offers a button with the request-forgery token on the pending migrations page', function (): void {
@@ -27,14 +28,13 @@ it('applies the migrations, redirects and shows a one-shot message', function ()
     $token = ConsoleClient::tokenIn($client->page());
 
     $response = $client->post('/migrate', ['_token' => $token]);
-    $first = $client->page();
-    $second = $client->page();
+    $message = Flash::taken();
 
     expect($response->getStatusCode())->toBe(302)
         ->and($response->headers->get('Location'))->toBe('http://localhost/simplesaml/module.php/console/')
-        ->and($first)->toContain('Migrations applied')
-        ->and($first)->not->toContain('data-state=')
-        ->and($second)->not->toContain('Migrations applied')
+        ->and($message)->toContain('Migrations applied')
+        ->and($client->page())->not->toContain('data-state=')
+        ->and(Flash::taken())->toBeNull()
         ->and(Db::applied($client->database(), 'console_schema_version'))->toBe(range(1, 9));
 });
 

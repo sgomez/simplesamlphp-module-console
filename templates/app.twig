@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="console-token" content="{{ token }}">
+  <title>Console</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('img/favicon.svg', 'console') }}">
+{% for href in stylesheets %}
+  <link rel="stylesheet" href="{{ href }}">
+{% endfor %}
+{% for src in scripts %}
+  <script type="module" src="{{ src }}"></script>
+{% endfor %}
+</head>
+<body>
+</body>
+</html>

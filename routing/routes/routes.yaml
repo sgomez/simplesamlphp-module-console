@@ -1,10 +1,19 @@
 ---
 
-console-home:
-  path: /
+console-api-session:
+  path: /api/session
   defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\HomeController::main'
+    _controller: 'SimpleSAML\Module\console\Controller\Api\SessionController::show'
   }
+  methods: [GET]
+
+console-api-entities:
+  path: /api/entities/{set}
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\Api\EntityListController::list'
+  }
+  requirements:
+    set: saml20-sp-remote
   methods: [GET]
 
 console-migrate:
@@ -13,15 +22,6 @@ console-migrate:
     _controller: 'SimpleSAML\Module\console\Controller\MigrateController::run'
   }
   methods: [POST]
-
-console-entity-list:
-  path: /entities/{set}
-  defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\EntityListController::list'
-  }
-  requirements:
-    set: saml20-sp-remote
-  methods: [GET]
 
 console-entity-new:
   path: /entities/{set}/new
@@ -72,3 +72,14 @@ console-entity-delete:
   requirements:
     set: saml20-sp-remote
   methods: [POST]
+
+# Last: every other GET that is not under api/ or assets/ is a screen of the client router.
+console-shell:
+  path: /{path}
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\ShellController::show',
+    path: ''
+  }
+  requirements:
+    path: '(?!api(?:/|$)|assets/).*'
+  methods: [GET]

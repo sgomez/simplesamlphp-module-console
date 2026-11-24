@@ -107,12 +107,15 @@ final class ConsoleClient
     }
 
 
-    /**
-     * @param array<string, string> $data
-     */
     public function post(string $path, array $data = []): Response
     {
         return $this->send('POST', $path, $data);
+    }
+
+
+    public function api(string $method, string $path, array $server = [], ?string $content = null): Response
+    {
+        return $this->send($method, '/api' . $path, [], $server, $content);
     }
 
 
@@ -124,14 +127,12 @@ final class ConsoleClient
     }
 
 
-    /**
-     * @param array<string, string> $data
-     */
-    private function send(string $method, string $path, array $data): Response
+    private function send(string $method, string $path, array $data, array $server = [], ?string $body = null): Response
     {
         [$path, $query] = explode('?', $path, 2) + [1 => ''];
         $route = rtrim('/console' . $path, '/');
-        $request = Request::create('/module.php' . $route . ($query === '' ? '' : '?' . $query), $method, $data);
+        $uri = '/module.php' . $route . ($query === '' ? '' : '?' . $query);
+        $request = Request::create($uri, $method, $data, [], [], $server, $body);
         $request->server->set('PATH_INFO', $route);
         $request->server->set('SCRIPT_FILENAME', '/var/www/simplesaml/public/module.php');
         $_SERVER = array_merge($_SERVER, $request->server->all());

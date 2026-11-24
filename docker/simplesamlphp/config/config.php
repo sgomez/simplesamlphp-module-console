@@ -2,7 +2,8 @@
 
 // Local development node. Plain HTTP, throwaway secrets.
 $config = [
-    'baseurlpath' => 'http://localhost:8080/simplesaml/',
+    // Host-relative, so the node answers both on its own port and through Vite (SPEC.md section 12.7).
+    'baseurlpath' => '/simplesaml/',
     'application' => ['baseURL' => 'http://localhost:8080'],
     'secretsalt' => 'dev-only-salt-not-a-secret',
     // bcrypt of 'admin'
