@@ -26,6 +26,17 @@ final class RequestGate
 
 
     /**
+     * The state page that stops a GET, or null when it may go on.
+     */
+    public function guardGet(): ?Response
+    {
+        $this->access->requireAdmin();
+
+        return $this->database->blockingPage();
+    }
+
+
+    /**
      * The response that stops a POST, or null when it may go on: the admin login, then the database state
      * (pending migrations let it through for the migration run), then the request-forgery token.
      */

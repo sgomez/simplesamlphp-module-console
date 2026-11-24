@@ -1,0 +1,49 @@
+{% extends "@console/shell.twig" %}
+
+{% block title %}Service providers{% endblock %}
+
+{% block breadcrumb %}Service providers{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Service providers <code>saml20-sp-remote</code></h1>
+  <a class="button primary" href="{{ newUrl }}">Add</a>
+</div>
+
+<form method="get" class="search" action="{{ listUrl }}">
+  <input type="search" name="q" value="{{ query }}" placeholder="Search by entity ID or name" aria-label="Search by entity ID or name">
+  <button type="submit" class="button">Search</button>
+</form>
+
+<p class="total" data-total>{{ total }} service provider{{ total == 1 ? '' : 's' }}</p>
+
+{% if rows is empty %}
+<p class="empty">{{ query ? 'No service providers match the search.' : 'No service providers yet. Use Add to create the first one.' }}</p>
+{% else %}
+<table class="entities">
+  <thead>
+    <tr><th>Name</th><th>Entity ID</th><th>Labels</th></tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+    <tr data-entity="{{ row.entityId }}">
+      <td class="name">{{ row.name }}</td>
+      <td class="entity-id"><code>{% if row.editUrl %}<a href="{{ row.editUrl }}">{{ row.entityId }}</a>{% else %}{{ row.entityId }}{% endif %}</code></td>
+      <td class="labels">
+        {% for label in row.labels %}<span class="label" title="{{ label.title }}">{{ label.text }}</span> {% endfor %}
+        {% if row.error %}<span class="load-error">{{ row.error }}</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+{% if pages > 1 %}
+<nav class="pagination" aria-label="Pages">
+  {% if previousUrl %}<a href="{{ previousUrl }}">Previous</a>{% endif %}
+  <span>Page {{ page }} of {{ pages }}</span>
+  {% if nextUrl %}<a href="{{ nextUrl }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

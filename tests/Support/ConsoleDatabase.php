@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace SimpleSAML\Module\console\Tests\Support;
 
+use SimpleSAML\Module\console\Infrastructure\Persistence\MigrationRunner;
+
 final class ConsoleDatabase
 {
     /**
@@ -34,5 +36,17 @@ final class ConsoleDatabase
         $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
 
         return $pdo;
+    }
+
+
+    /**
+     * A SQLite file with the schema of the code, every migration applied.
+     */
+    public static function migrated(): string
+    {
+        $file = self::create(null);
+        (new MigrationRunner(self::open($file), ''))->run('setup');
+
+        return $file;
     }
 }

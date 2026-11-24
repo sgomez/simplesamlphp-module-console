@@ -183,3 +183,249 @@ a {
   border-radius: 0.375rem;
   cursor: pointer;
 }
+
+.button.primary {
+  background: var(--accent);
+}
+
+.button:not(.primary) {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.nav-group {
+  margin: 1rem 0.5rem 0.25rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sidebar-nav .sidebar-link {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.375rem;
+}
+
+.sidebar-nav .sidebar-link code {
+  display: block;
+  font-size: 0.75rem;
+}
+
+.state-page {
+  max-width: 40rem;
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.page-head h1,
+.entity-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.page-head .button {
+  text-decoration: none;
+}
+
+.search {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.search input {
+  flex: 1;
+  max-width: 28rem;
+  padding: 0.4rem 0.6rem;
+  color: var(--text);
+  font: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+}
+
+.total,
+.empty {
+  color: var(--muted);
+}
+
+.entities {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.entities th,
+.entities td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+
+.label {
+  display: inline-block;
+  padding: 0 0.4rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+}
+
+.load-error {
+  color: #c0392b;
+  font-size: 0.8rem;
+}
+
+.pagination {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.entity-header {
+  margin-bottom: 1rem;
+}
+
+.entity-header p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 0.25rem solid var(--accent);
+  border-radius: 0.375rem;
+}
+
+.notice.hidden {
+  display: none;
+}
+
+.errors {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 0.25rem solid #c0392b;
+  border-radius: 0.375rem;
+}
+
+.errors h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.errors ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  max-width: 40rem;
+  padding: 0.4rem 0.6rem;
+  color: var(--text);
+  font-family: var(--font-mono);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+}
+
+.field-error {
+  margin: 0.25rem 0 0;
+  color: #c0392b;
+}
+
+.editor {
+  display: flex;
+  height: 32rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.gutter,
+.php-editor {
+  margin: 0;
+  padding: 0.5rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.4rem;
+}
+
+.gutter {
+  flex: 0 0 3.25rem;
+  overflow: hidden;
+  list-style: none;
+  color: var(--muted);
+  text-align: right;
+  border-right: 1px solid var(--border);
+  counter-reset: line;
+}
+
+.gutter li {
+  height: 1.4rem;
+  padding-right: 0.5rem;
+  counter-increment: line;
+}
+
+.gutter li::before {
+  content: counter(line);
+}
+
+.gutter li.error-mark {
+  color: #ffffff;
+  background: #c0392b;
+}
+
+.php-editor {
+  flex: 1;
+  min-width: 0;
+  padding-left: 0.75rem;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  resize: none;
+  white-space: pre;
+  overflow: auto;
+}
+
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 0.75rem 0;
+  background: var(--bg);
+}

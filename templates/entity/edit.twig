@@ -1,0 +1,61 @@
+{% extends "@console/shell.twig" %}
+
+{% block title %}{{ isNew ? 'Add service provider' : entityId }}{% endblock %}
+
+{% block breadcrumb %}<a href="{{ listUrl }}">Service providers</a> / {{ isNew ? 'Add' : entityId }}{% endblock %}
+
+{% block content %}
+<header class="entity-header">
+  <h1>{{ name|default(isNew ? 'New service provider' : entityId) }}</h1>
+  <p class="entity-kind"><code>{{ set }}</code></p>
+  {% if not isNew %}<p class="entity-id"><code>{{ entityId }}</code></p>{% endif %}
+</header>
+
+{% if notice %}
+<p class="notice" data-notice="normalised">
+  <span>{{ notice }}</span>
+  <button type="button" class="button" data-dismiss>Dismiss</button>
+</p>
+{% endif %}
+
+{% if errors %}
+<section class="errors" data-errors aria-label="Errors">
+  <h2>{{ errors|length == 1 ? '1 error' : errors|length ~ ' errors' }}</h2>
+  <ul>
+    {% for error in errors %}
+    <li{% if error.line %} data-error-line="{{ error.line }}"{% endif %}>
+      {% if error.line %}<a href="#line-{{ error.line }}">Line {{ error.line }}{% if error.column %}, column {{ error.column }}{% endif %}</a>: {% endif %}{{ error.message }}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<form method="post" action="{{ saveUrl }}" data-entity-form>
+  <input type="hidden" name="_token" value="{{ csrfToken }}">
+  {% if isNew %}
+  <div class="field">
+    <label for="entityid">Entity ID</label>
+    <input type="text" id="entityid" name="entityid" value="{{ entityId }}" spellcheck="false" autocomplete="off" placeholder="Taken from the text when empty">
+    {% for message in identityErrors %}
+    <p class="field-error" data-field-error="entityid">{{ message }}
+      {% if existingUrl is defined %}<a href="{{ existingUrl }}">Open the existing one</a>{% endif %}</p>
+    {% endfor %}
+  </div>
+  {% else %}
+  <input type="hidden" name="entityid" value="{{ entityId }}">
+  <input type="hidden" name="version" value="{{ version }}">
+  {% endif %}
+
+  <div class="editor">
+    <ol class="gutter" data-gutter aria-hidden="true">
+      {% for n in 1..lineCount %}<li id="line-{{ n }}"{% if n in errorLines %} class="error-mark"{% endif %}></li>{% endfor %}
+    </ol>
+    <textarea name="php" id="php-editor" class="php-editor" data-editor rows="24" spellcheck="false" wrap="off" aria-label="PHP">{{ text }}</textarea>
+  </div>
+
+  <div class="save-bar">
+    <button type="submit" class="button primary">Save</button>
+  </div>
+</form>
+{% endblock %}

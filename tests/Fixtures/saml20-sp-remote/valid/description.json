@@ -1,0 +1,92 @@
+{
+  "AssertionConsumerService": [
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+      "Location": "https://sp.example.org/acs"
+    }
+  ],
+  "certificates": [
+    {
+      "pem": "@PEM@",
+      "use": "signing"
+    },
+    {
+      "pem": "@PEM@",
+      "use": "encryption"
+    }
+  ],
+  "name": {
+    "en": "Example service",
+    "es": "Servicio de ejemplo"
+  },
+  "description": {
+    "en": "A service used in tests"
+  },
+  "OrganizationName": {
+    "en": "Example organisation"
+  },
+  "OrganizationDisplayName": {
+    "en": "Example"
+  },
+  "OrganizationURL": {
+    "en": "https://example.org"
+  },
+  "UIInfo": {
+    "DisplayName": {
+      "en": "Example service"
+    },
+    "Keywords": {
+      "en": [
+        "example",
+        "test"
+      ]
+    },
+    "Logo": [
+      {
+        "url": "https://sp.example.org/logo.png",
+        "width": 80,
+        "height": 60
+      }
+    ]
+  },
+  "contacts": [
+    {
+      "contactType": "technical",
+      "givenName": "Support",
+      "emailAddress": [
+        "mailto:support@example.org"
+      ],
+      "telephoneNumber": [
+        "+34000000000"
+      ],
+      "attributes": [
+        {
+          "name": "example:attr",
+          "value": "1"
+        }
+      ]
+    }
+  ],
+  "EntityAttributes": [
+    {
+      "name": "http://macedir.org/entity-category",
+      "values": [
+        "http://refeds.org/category/research-and-scholarship"
+      ]
+    }
+  ],
+  "RegistrationInfo": {
+    "authority": "https://registrar.example.org",
+    "instant": "2026-11-24T10:15:00Z",
+    "policies": {
+      "en": "https://registrar.example.org/policy"
+    }
+  },
+  "scope": [
+    "example.org"
+  ],
+  "hide.from.discovery": true,
+  "extra": {
+    "consent.disable": true
+  }
+}

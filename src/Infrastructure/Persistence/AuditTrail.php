@@ -23,4 +23,20 @@ final class AuditTrail
         );
         $statement->execute([Timestamp::now(), $identity, $schemaVersion]);
     }
+
+
+    public function recordEntity(
+        string $identity,
+        string $action,
+        string $set,
+        string $entityId,
+        string $document,
+    ): void {
+        $statement = $this->pdo->prepare(
+            'INSERT INTO ' . $this->prefix . 'console_audit '
+            . '(at, identity, action, object_type, entity_set, entity_id, document) '
+            . "VALUES (?, ?, ?, 'entity', ?, ?, ?)",
+        );
+        $statement->execute([Timestamp::now(), $identity, $action, $set, $entityId, $document]);
+    }
 }

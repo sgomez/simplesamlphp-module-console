@@ -14,7 +14,12 @@
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">Console</div>
       <nav class="sidebar-nav" aria-label="Console">
-        {% block nav %}{% endblock %}
+        {% block nav %}
+        <p class="nav-group">Entities</p>
+        <a class="sidebar-link" data-nav="service-providers" href="{{ consoleUrl }}entities/saml20-sp-remote">Service providers <code>saml20-sp-remote</code></a>
+        <p class="nav-group">Changes</p>
+        <a class="sidebar-link" data-nav="publish" href="{{ consoleUrl }}publish">Publish</a>
+        {% endblock %}
       </nav>
       <div class="sidebar-foot">
         <div class="identity">
