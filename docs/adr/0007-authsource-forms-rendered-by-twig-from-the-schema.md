@@ -16,7 +16,7 @@ The form shows only the root options that are set, meaning their key exists in t
 
 - Order is the declaration order of `properties`.
 - `x-groups` at the root lists `{title, properties}`; every root property belongs to exactly one group. A group states how many of its options are set out of those that currently apply.
-- The widget follows from the type. `x-widget` allows only `textarea` and `radio`.
+- The widget follows from the type. `x-widget` allows only `textarea`, `radio`, `suggest`, `key-slot` and `certificates`.
 - `x-when` on a property names a sibling and the values for which the property applies. `if`/`then` keeps expressing what is required.
   - An option that a branch makes required appears on its own and cannot be unset.
   - An optional one that starts to apply is only offered as an add button.
@@ -42,5 +42,5 @@ The form shows only the root options that are set, meaning their key exists in t
 - `x-when` repeats part of `if`/`then`. The test suite checks that every property a branch requires carries a compatible `x-when`, that every root property is grouped, and that every `pattern` has its own message.
 - Error texts are generic per keyword and written in the module; a `pattern` carries its own text through `$error`; cross-field rules word their own. The Console is English only in v1.
 - A select whose values come from the same document (a query's database in `sqlauth:SQL2`) is a plain text field checked on save. Fields annotated `x-authsource-reference` are rendered as a server-built select.
-- Language maps are lists of language and text rows, `authproc` is a JSON text area, and a Key reference has its own control. None of these was prototyped.
+- Language maps are lists of language and text rows, `authproc` is a JSON text area, and a key slot has its own control. None of these was prototyped.
 - The script adds, unsets and finds options, keeps the group counts, shows or hides conditional options, edits list rows and reveals secrets: an estimated 300 to 400 lines. It has no type checking and no browser tests cover it in v1. A bundle becomes a new decision when the script would need to know the schema or validate, not at a line count.

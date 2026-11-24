@@ -19,7 +19,6 @@
       "type": "string",
       "minLength": 1,
       "x-literal": true,
-      "maxLength": 1024,
       "not": {"const": "https://myapp.example.org/"},
       "examples": ["https://sp.example.org/metadata"]
     },
@@ -196,9 +195,7 @@
     "SingleLogoutServiceLocation": {
       "title": "Single logout service location",
       "description": "Not set: the module's own endpoint.",
-      "type": "string",
-      "pattern": "^https?://",
-      "$error": {"pattern": "A location is an absolute http or https URL."}
+      "$ref": "../../common.json#/$defs/url"
     },
     "name": {
       "title": "Name",

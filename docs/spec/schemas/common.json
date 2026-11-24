@@ -57,7 +57,6 @@
     "certificate": {
       "title": "Certificate",
       "type": "object",
-      "x-key-reference": "certificate",
       "additionalProperties": false,
       "required": ["source"],
       "properties": {
@@ -90,6 +89,7 @@
     },
     "keySlot": {
       "type": "object",
+      "x-widget": "key-slot",
       "additionalProperties": false,
       "minProperties": 1,
       "dependentRequired": {
@@ -102,7 +102,6 @@
           "description": "A name relative to the node's certdir, or an absolute path. Every node provides the file; the Console never holds a private key.",
           "type": "string",
           "minLength": 1,
-          "x-key-reference": "private-key",
           "examples": ["/run/secrets/sp.key"]
         },
         "privatekey_pass": {
@@ -267,6 +266,7 @@
       "description": "Any absolute URI. Core skips an endpoint whose binding it does not implement.",
       "type": "string",
       "x-literal": true,
+      "x-widget": "suggest",
       "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:[^\\s]+$",
       "$error": {"pattern": "An absolute URI."},
       "examples": [
@@ -336,7 +336,7 @@
       "title": "Certificates",
       "description": "Held by the Console. Emitted as keys, in this order.",
       "type": "array",
-      "x-key-reference": "certificate",
+      "x-widget": "certificates",
       "items": {
         "title": "certificate",
         "type": "object",
