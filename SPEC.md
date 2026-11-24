@@ -84,6 +84,7 @@ The Console does none of the following in v1.
 - A site that keeps the core `pdo` source in `metadata.sources` loses the guarantee that SSO survives a database outage, because that source's constructor throws. The Console can only warn about it.
 - Every node must run the same module version as the Console and carry the same `metadata.sources`, File authsources, key files and secrets. The Console sees only the node it runs on and cannot verify the others.
 - Removing or renaming a managed authsource in a Publication fails logins that are in flight, as a hand edit of `authsources.php` already does.
+- GitHub disables the weekly workflow after 60 days without activity in the repository (section 13.3).
 
 ## 2. Installation and configuration
 
@@ -2063,12 +2064,198 @@ OPEN: what the Console does with a stored row whose `document` is not valid JSON
 
 ## 12. Test harness and local environment
 
-_Not written yet._
+### 12.1 Tools
+
+| Tool | Use |
+| --- | --- |
+| Pest 5 (PHPUnit 13), with its `arch` and `mutate` plugins | Every test, the architecture checks and mutation testing |
+| PHPStan 2 at `max` level, on `src/` only | Static analysis |
+| `tomasvotruba/cognitive-complexity` 1.x | Cognitive complexity per method, as a PHPStan extension |
+| PHP_CodeSniffer 4 with the SimpleSAMLphp ruleset of `simplesamlphp/simplesamlphp-test-framework` and `slevomat/coding-standard` 8.x | Coding style and method length |
+| PCOV | Coverage, for the coverage threshold and for mutation testing |
+
+There are no browser tests in v1: no Pest browser plugin, no Playwright and no Node. Mago is not used. Test files are not under static analysis.
+
+### 12.2 Checks
+
+**Unit and integration suites** cover each layer of section 3.6. Beyond them, the harness runs these checks:
+
+- **Differential test.** The oracle for translation. Every valid fixture of a managed entity is loaded two ways: as a flat file read by core, and through Import, Publication and the node's build. What core receives must be the same array. Every valid fixture of an Authsource type is compared the same way with its `authsources.php` equivalent. There are no hand-kept golden output files.
+- **Authsource instantiation.** For every Authsource type, the array translated from every valid fixture is accepted by the real authsource class. The Console itself never instantiates it (section 6.8).
+- **Round trip.** For every schema, document to PHP to document is the identity (section 10.11).
+- **Schema contract.** Every valid fixture passes its JSON Schema, and every invalid one fails for the reason the fixture names.
+- **Conditions.** For every schema, the `x-when` annotations and the `if`/`then` clauses agree on what is required.
+- **Fault injection.** A malformed database record, a corrupt Snapshot on disk, the database down during an SSO request, a `cron` fetch interrupted midway and a Secret reference that does not resolve. None causes a fatal error, and the remaining entities, authsources and file-based sources keep loading (section 11).
+- **Secret leakage.** A sensitive value never appears in a list, the Audit trail, a log or any response other than its own edit form and the response to Reveal.
+- **Request forgery walk.** Every POST route answers 403 without a valid token (section 10.6).
+- **After a Publication.** Without access to the database, core's `MetaDataStorageHandler` returns the published entity and `Auth\Source::getById()` instantiates the published managed authsource. The check stops at that seam: there is no SAML round trip in v1, and a fault visible only in a real SSO flow is an accepted gap.
+- **Publication race.** In each engine suite, two PDO connections in one process interleave two Publications deterministically, and the loser gets the conflict error of section 4.8.
+- **SimpleSAMLphp development branches.** A weekly run against the tip of the SimpleSAMLphp 2.5 branch and of `master` (section 13.3). It never blocks.
+
+**HTTP-level tests** cover the Console's routes and forms with a client that keeps cookies and submits forms. They boot the SimpleSAMLphp kernel in-process against SQLite, with no web server and no dependency on the local environment of section 12.7.
+
+### 12.3 Thresholds
+
+Every threshold blocks.
+
+| Check | Threshold |
+| --- | --- |
+| Mutation score (MSI) | At least 85 %, on `Domain` only |
+| Line coverage | At least 90 %, on the whole of `src/` |
+| PHPStan | Level `max` on `src/`, no errors |
+| Method length | At most 30 lines (`SlevomatCodingStandard.Functions.FunctionLength`) |
+| Cognitive complexity | At most 8 per method |
+| PHP file size | At most 5000 characters per file in `src/` and `tests/` |
+
+The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, Twig templates, the script and fixtures are exempt.
+
+Coverage thresholds are enforced by Pest. No external coverage service is used.
+
+### 12.4 Architecture and code rules
+
+The architecture checks are Pest `arch()` tests. They enforce:
+
+- the layers of section 3.6 and their direction of dependency;
+- SQL and `PDO` only in the persistence namespace;
+- no dependency of the serving side on persistence, except the first-request fetch;
+- `declare(strict_types=1)` in every file;
+- classes `final` unless a reason exists;
+- no `dump`, `var_dump` or `die`.
+
+Code carries no descriptive comments or docblocks. A type annotation PHPStan needs and a one-line comment for a non-obvious reason are allowed. The sniffs of the SimpleSAMLphp ruleset that demand docblocks are excluded.
+
+### 12.5 Fixtures
+
+- Synthetic and written by hand. No real federation metadata.
+- Organised per managed entity set and per Authsource type, each in valid, malformed and edge cases.
+- Keys and certificates are generated when the test runs, or are visibly marked as test keys. Secret scanning is not relied on to catch a real secret in a fixture (section 14.5).
+
+### 12.6 Database engines in the suites
+
+| Suites | Engines |
+| --- | --- |
+| Persistence, migrations and Publication | SQLite, PostgreSQL, MariaDB and MySQL |
+| Everything else, HTTP-level tests included | SQLite only |
+
+The DSN of each engine comes from an environment variable, so the suites can be pointed at any engine.
+
+### 12.7 Local environment
+
+One `docker-compose` file defines two separate environments. No automated test depends on the development one. The whole environment is excluded from the distributed package (`export-ignore`).
+
+**Test environment.** Databases only. Pest and PHPStan run on the host's PHP against the published database ports.
+
+| Service | Image | Starts |
+| --- | --- | --- |
+| MariaDB | `mariadb:10.11` | By default. Healthcheck: the image's `healthcheck.sh`. |
+| PostgreSQL | `postgres:15` | Only with the `postgres` profile. Healthcheck: `pg_isready`. |
+| MariaDB, newest | `mariadb:11.8` | Only with its own profile, to reproduce the error 1020 path of section 4.8. |
+
+SQLite needs no container. MySQL is not in the local environment; it runs in GitHub Actions only (section 13). Day-to-day work runs against MariaDB; the profiles exist to debug a failure specific to one engine.
+
+**Development environment.** The `dev` profile, enough to see the module work by hand:
+
+- One SimpleSAMLphp 2.5 instance in an image built from `php:8.4-apache`, installed with Composer, with the module mounted as a volume. Plain HTTP on `localhost`.
+- It uses a database of its own in the same MariaDB service, separate from the one the tests use.
+- It is a hosted IdP connected to its own SP, both configured with flat files. Users come from `exampleauth:UserPass`.
+- It starts with an empty Console. The first steps are the schema migration and an Import of those flat files, both from the web.
+- There is no scheduler. The single node updates itself when it serves a Publication (section 2.7). The core `cron` module is enabled and can be called by hand to exercise the periodic check.
+- There is no LDAP server, no SQL users table, no second SimpleSAMLphp and no second node. Two nodes serving different Snapshots cannot be seen locally; the Publication suites cover that behaviour.
+
+Services wait for each other with `depends_on: service_healthy`. Data is synthetic, and the only persistent volume is the database's.
 
 ## 13. GitHub Actions
 
-_Not written yet._
+### 13.1 Triggers
+
+| Trigger | Runs | Blocking |
+| --- | --- | --- |
+| Every pull request (`pull_request`) and every push to `main` | Every job of section 13.2 | Yes |
+| Weekly schedule | The jobs of section 13.3 | No |
+
+`pull_request_target` is never used. There are no path filters: every pull request runs everything.
+
+### 13.2 Blocking jobs
+
+The matrix is not the full product of PHP versions and engines. The SQL does not depend on the PHP version, and the PHP code does not depend on the engine outside persistence.
+
+| Job | PHP | Database |
+| --- | --- | --- |
+| Static analysis: PHPStan, PHP_CodeSniffer, method length, cognitive complexity, file size | 8.4 | None |
+| Mutation score and coverage, with PCOV | 8.4 | SQLite |
+| Full suite | Every stable release from 8.4 that SimpleSAMLphp 2.5 supports | SQLite |
+| Persistence, migration and Publication suites | 8.4 | `postgres:15`, `mariadb:10.11`, `mariadb:11.8`, `mysql:8.4` |
+| Lowest dependencies: `composer update --prefer-lowest`, full suite | 8.4 | SQLite |
+| `composer audit` | 8.4 | None |
+| CodeQL on the workflows (section 14.5) | | None |
+
+`mariadb:11.8` runs next to the minimum because the error 1020 path of section 4.8 exists only from MariaDB 11.6.2.
+
+- CI does not reuse the `docker-compose` file. Databases are service containers; PHP is installed on the runner, with the extensions SimpleSAMLphp 2.5 requires, the three PDO drivers and PCOV.
+- `composer.lock` is committed (`export-ignore`) and every job except the lowest-dependencies one installs from it, so a pull request never breaks because of someone else's release.
+- A single aggregating job depends on all the others. It is the only check the ruleset on `main` requires (section 14.6), so the matrix can change without touching the ruleset.
+
+### 13.3 Weekly job
+
+Scheduled once a week, non-blocking:
+
+- `composer update` to the newest dependencies;
+- the tip of the SimpleSAMLphp 2.5 branch and of `master`;
+- the latest PostgreSQL and MySQL, on their `latest` tags.
+
+A failed run is reported only by GitHub's own email for failed scheduled workflows. The workflow opens no issue.
+
+GitHub disables a scheduled workflow after 60 days without activity in the repository. Nothing is done about it: merged weekly Dependabot pull requests keep the repository active, and GitHub warns by email first. This is an accepted risk.
+
+### 13.4 Hardening
+
+- `permissions: contents: read` by default. No job has write permissions.
+- No workflow uses a secret.
+- Actions are pinned by commit SHA and updated by Dependabot (section 14.5).
+- `actions/checkout` runs with `persist-credentials: false`.
+- `concurrency` cancels runs superseded by a newer push to the same branch or pull request.
 
 ## 14. Repository security policy
 
-_Not written yet._
+The policy applies from the first tagged release. Until then a security bug is an ordinary issue, with no advisory and no CVE. Private vulnerability reporting is already enabled.
+
+### 14.1 Reporting
+
+- The only channel is GitHub private vulnerability reporting. There is no contact email.
+- `SECURITY.md` points to it and asks reporters not to open public issues.
+- Reports reach the sole maintainer. There is no SLA: acknowledgement is best effort, indicatively within 7 days, with no committed time to a fix.
+
+### 14.2 Disclosure
+
+- Coordinated, with a cap of 90 days from the report.
+- The advisory is published together with the release that fixes it. At 90 days without a fix, it is published anyway with the known mitigations.
+- Fixes are prepared in the advisory's temporary private fork.
+
+### 14.3 Supported versions
+
+Only the latest released minor receives security fixes. There are no backports. Before 1.0, only the latest release does.
+
+### 14.4 Scope
+
+`SECURITY.md` states what is out of scope:
+
+- flaws in SimpleSAMLphp core or in other modules, which are referred to their own channels;
+- secrets stored in clear in the database and in the Snapshot, a documented decision ([ADR 0001](docs/adr/0001-no-application-level-encryption-of-secrets.md));
+- the administrator seeing a secret in the edit form of the object that holds it (section 7.3).
+
+### 14.5 Advisories and automation
+
+- Every confirmed vulnerability is published as a GitHub Security Advisory, so that it reaches Packagist and `composer audit`.
+- A CVE is requested through GitHub for medium severity or above. Below that, the advisory alone.
+- Reporters are credited. There are no bounties.
+- **Dependabot.** Alerts and security updates are on. Version updates cover `composer` and `github-actions`, weekly, as one grouped pull request per ecosystem. Security updates are immediate and not grouped. No Dependabot pull request is merged automatically, whether a patch or an action: each passes the full CI and is merged by the maintainer.
+- **Secret scanning and push protection** are on. They are not a defence for this domain's secrets, such as LDAP bind passwords and SAML keys, which mostly match no provider pattern; fixtures follow section 12.5 instead.
+- **Static security analysis.** There is no dedicated PHP security analyser: CodeQL does not support PHP, and Psalm taint analysis and Semgrep are not used. PHPStan at `max` level (section 12) and a blocking `composer audit` on every pull request (section 13.2) stand in. CodeQL runs for the `actions` language only, to analyse the workflows.
+
+### 14.6 Branch and release integrity
+
+- A ruleset on `main` forbids force-push and deletion and requires the aggregating CI check of section 13.2 to pass. No review is required, since there is one maintainer.
+- Release tags are protected against deletion and rewriting.
+- Commits and tags are not signed: Composer does not verify signatures.
+
+`SECURITY.md`, the Dependabot configuration, the workflows and the repository settings are built as part of the implementation.
