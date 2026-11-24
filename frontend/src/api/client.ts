@@ -21,15 +21,23 @@ async function bodyOf(response: Response): Promise<{ read: boolean; body: unknow
   }
 }
 
-export async function getJson<T>(path: string): Promise<ApiResult<T>> {
+// Every API call goes through here: a 401 means the session is gone, and a reload lets core ask for login.
+export async function requestJson<T>(
+  path: string,
+  init: Omit<RequestInit, 'headers'> & { headers?: Record<string, string> } = {},
+): Promise<ApiResult<T>> {
   let response: Response;
   try {
     response = await fetch(consoleUrl(`/api${path}`), {
-      headers: { Accept: 'application/json' },
+      ...init,
+      headers: { Accept: 'application/json', ...init.headers },
       credentials: 'same-origin',
     });
   } catch {
     return { ok: false, status: 0, body: null };
+  }
+  if (response.status === 401) {
+    location.reload();
   }
   const { read, body } = await bodyOf(response);
   if (!response.ok || !read) {
@@ -37,4 +45,8 @@ export async function getJson<T>(path: string): Promise<ApiResult<T>> {
   }
 
   return { ok: true, data: body as T };
+}
+
+export function getJson<T>(path: string): Promise<ApiResult<T>> {
+  return requestJson<T>(path);
 }

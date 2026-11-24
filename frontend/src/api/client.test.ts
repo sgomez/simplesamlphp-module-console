@@ -39,6 +39,25 @@ describe('the API client', () => {
     expect(await getJson('/session')).toEqual({ ok: false, status: 200, body: null });
   });
 
+  it('reloads the page on a lost session, so core asks for login', async () => {
+    const reload = vi.fn();
+    vi.stubGlobal('location', { pathname: '/simplesaml/module.php/console/', reload });
+    answer(new Response('{"error":"unauthenticated"}', { status: 401 }));
+
+    expect(await getJson('/session')).toEqual({ ok: false, status: 401, body: { error: 'unauthenticated' } });
+    expect(reload).toHaveBeenCalledOnce();
+  });
+
+  it('does not reload the page on any other refusal', async () => {
+    const reload = vi.fn();
+    vi.stubGlobal('location', { pathname: '/', reload });
+    answer(new Response('{"error":"refused"}', { status: 403 }));
+
+    await getJson('/session');
+
+    expect(reload).not.toHaveBeenCalled();
+  });
+
   it('answers a network failure with status 0', async () => {
     answer(new TypeError('Failed to fetch'));
 

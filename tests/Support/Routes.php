@@ -25,4 +25,27 @@ final class Routes
 
         return $paths;
     }
+
+
+    /**
+     * The method and the path under api/ of every API route, keyed by route name; {set} is filled in.
+     *
+     * @return array<string, array{string, string}>
+     */
+    public static function api(): array
+    {
+        $routes = Yaml::parseFile(dirname(__DIR__, 2) . '/routing/routes/routes.yaml');
+        $paths = [];
+        foreach (is_array($routes) ? $routes : [] as $name => $route) {
+            $path = is_array($route) ? (string) $route['path'] : '';
+            if (str_starts_with($path, '/api/')) {
+                $paths[(string) $name] = [
+                    (string) ($route['methods'][0] ?? 'GET'),
+                    str_replace('{set}', 'saml20-sp-remote', substr($path, 4)),
+                ];
+            }
+        }
+
+        return $paths;
+    }
 }

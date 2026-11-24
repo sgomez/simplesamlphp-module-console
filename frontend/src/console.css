@@ -291,6 +291,11 @@ a.row:focus-visible{outline-offset:-2px}
 .empty-text{margin:0;max-width:48ch}
 @media (max-width:600px){.page,.shell-head{padding-inline:16px}.row-main{flex-basis:300px}.row-note{flex:0 1 auto}}
 
+/* page width and state card (Migration: 760px, margin-top 48px), wrapping identifiers (Form) */
+.page-narrow{max-width:760px}
+.state-card{margin-top:48px}
+.wrap-any{overflow-wrap:anywhere}
+
 /* component layout (DesignSystem) */
 .field{display:flex;flex-direction:column;gap:6px}
 .switch-field{display:flex;align-items:center;gap:10px}
