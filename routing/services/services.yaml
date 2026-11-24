@@ -6,3 +6,5 @@ services:
     public: false
 
   SimpleSAML\Module\console\Infrastructure\Http\AdminAccess: ~
+  SimpleSAML\Module\console\Infrastructure\Http\StatePages: ~
+  SimpleSAML\Module\console\Infrastructure\Http\DatabaseGate: ~

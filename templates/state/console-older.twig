@@ -1,0 +1,11 @@
+{% extends "@console/shell.twig" %}
+
+{% block title %}Console older than the database{% endblock %}
+
+{% block content %}
+<section class="state-page" data-state="console-older">
+  <h1>Console older than the database</h1>
+  <p>This node's Console knows schema version {{ status.known }}, but the database holds schema version {{ status.highest }}.</p>
+  <p>Please update the package on this node. The Console stays blocked until then.</p>
+</section>
+{% endblock %}

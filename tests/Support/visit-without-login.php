@@ -6,4 +6,8 @@ use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 
 require __DIR__ . '/../bootstrap.php';
 
-(new ConsoleClient())->get('/');
+$client = new ConsoleClient();
+if (($argv[1] ?? '') === 'unreachable') {
+    $client->withUnreachableDatabase();
+}
+$client->get('/');

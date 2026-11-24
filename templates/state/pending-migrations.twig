@@ -1,0 +1,17 @@
+{% extends "@console/shell.twig" %}
+
+{% block title %}Pending migrations{% endblock %}
+
+{% block content %}
+<section class="state-page" data-state="pending-migrations">
+  <h1>Pending migrations</h1>
+  <p>The database schema does not match this version of the Console. These migrations have to be applied:</p>
+  <ul>
+    {% for number in status.missing %}
+    <li>Migration {{ number }}</li>
+    {% endfor %}
+  </ul>
+  <p>A migration cannot be undone without restoring a backup.</p>
+  <p>SSO is not affected: nodes keep serving their local Snapshot.</p>
+</section>
+{% endblock %}
