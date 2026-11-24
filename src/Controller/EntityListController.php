@@ -30,11 +30,15 @@ final class EntityListController
         if ($stopped !== null) {
             return $stopped;
         }
+        $states = [];
+        foreach ($this->repositories->publication()->states() as $change) {
+            $states[$change->set . "\0" . $change->entityId] = $change->state->value;
+        }
         $listing = new ListEntities($this->repositories->entities());
         $page = $listing->page($set, (string) $request->query->get('q', ''), $request->query->getInt('page', 1));
 
         return $this->pages->make('entity/list.twig', [
-            'rows' => array_map($this->row(...), $page->rows),
+            'rows' => array_map(fn (StoredEntity $entity): array => $this->row($entity, $states), $page->rows),
             'total' => $page->total,
             'query' => $page->query,
             'page' => $page->page,
@@ -48,17 +52,18 @@ final class EntityListController
 
 
     /**
+     * @param array<string, string> $states
      * @return array<string, mixed>
      */
-    private function row(StoredEntity $entity): array
+    private function row(StoredEntity $entity, array $states): array
     {
         $labels = [];
         $entity->enabled || $labels[] = ['text' => 'Disabled', 'title' => ''];
-        $entity->document === null && $labels[] = ['text' => 'Unreadable', 'title' => (string) $entity->loadError];
 
         return [
             'entityId' => $entity->entityId,
             'name' => $entity->name(),
+            'state' => $states[$entity->set . "\0" . $entity->entityId] ?? '',
             'labels' => $labels,
             'editUrl' => $entity->document === null ? null : Module::getModuleURL(
                 'console/entities/' . $entity->set . '/edit',

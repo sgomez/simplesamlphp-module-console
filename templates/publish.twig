@@ -1,0 +1,73 @@
+{% extends "@console/shell.twig" %}
+
+{% block title %}Publish{% endblock %}
+
+{% block breadcrumb %}Publish{% endblock %}
+
+{% block header_pending %}
+{% if currentNumber %}<span class="current-snapshot" data-current-snapshot>Snapshot {{ currentNumber }}, published {{ currentCreatedAt }}</span>{% else %}<span class="current-snapshot" data-current-snapshot>No Snapshot published yet</span>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Publish</h1>
+</div>
+
+{% if problems %}
+<section class="problems" data-problems>
+  <h2>Problems</h2>
+  <p>Publication is blocked until these are fixed.</p>
+  <ul>
+    {% for problem in problems %}
+    <li>{% if problem.entityId %}<a href="{{ problem.url }}"><code>{{ problem.entityId }}</code></a>: {% endif %}{{ problem.message }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if groups %}
+<section class="pending" data-pending>
+  <h2>Pending changes</h2>
+  {% for group in groups %}
+  <h3 data-state="{{ group.state }}">{{ group.state }} ({{ group.changes|length }})</h3>
+  <ul>
+    {% for change in group.changes %}
+    <li>
+      <span class="kind">Service provider</span>
+      <code>{% if change.url %}<a href="{{ change.url }}">{{ change.entityId }}</a>{% else %}{{ change.entityId }}{% endif %}</code>
+      {% if change.loadError %}<span class="load-error">{{ change.loadError }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if warnings %}
+<details class="warnings" data-warnings>
+  <summary>Warnings ({{ warnings|length }})</summary>
+  <ul>
+    {% for warning in warnings %}
+    <li>{% if warning.entityId %}<code>{{ warning.entityId }}</code>: {% endif %}{{ warning.message }}</li>
+    {% endfor %}
+  </ul>
+</details>
+{% endif %}
+
+<section class="publish-panel">
+  {% if canPublish %}
+  <form method="post" action="{{ publishUrl }}">
+    <input type="hidden" name="_token" value="{{ csrfToken }}">
+    <input type="hidden" name="hash" value="{{ hash }}">
+    <p>The new Snapshot will be Snapshot {{ nextNumber }}.</p>
+    <label for="comment">Comment (optional)</label>
+    <textarea id="comment" name="comment" rows="3"></textarea>
+    <button type="submit" class="button primary">Publish</button>
+  </form>
+  {% elseif problems %}
+  <p>Publication is not offered: fix the problems above.</p>
+  {% else %}
+  <p>Nothing to publish. {% if currentNumber %}Snapshot {{ currentNumber }} is the current one and has no Pending changes.{% else %}There are no Pending changes.{% endif %}</p>
+  {% endif %}
+</section>
+{% endblock %}
