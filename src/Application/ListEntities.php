@@ -19,12 +19,11 @@ final class ListEntities
     public function page(string $set, string $query, int $page): EntityPage
     {
         $query = trim($query);
-        $matching = array_values(array_filter(
+        $matching = array_filter(
             $this->repository->all($set),
-            static fn (StoredEntity $entity): bool => $query === ''
-                || stripos($entity->entityId, $query) !== false
+            static fn (StoredEntity $entity): bool => stripos($entity->entityId, $query) !== false
                 || self::nameMatches($entity, $query),
-        ));
+        );
         $pages = max(1, (int) ceil(count($matching) / self::PER_PAGE));
         $page = min(max($page, 1), $pages);
 

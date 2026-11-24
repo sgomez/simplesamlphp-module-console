@@ -9,19 +9,6 @@ namespace SimpleSAML\Module\console\Domain\Entity;
  */
 final class SpRemoteWarnings
 {
-    private const array SIGNING = [
-        'saml20.sign.response', 'saml20.sign.assertion', 'sign.authnrequest', 'sign.logout',
-        'validate.authnrequest', 'validate.logout',
-    ];
-
-    private const array SERVICES = ['AssertionConsumerService', 'SingleLogoutService', 'DiscoveryResponse'];
-
-    private const array USABLE_SLO = [
-        'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
-        'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-    ];
-
-
     public function __construct(private readonly int $expiryDays)
     {
     }
@@ -69,7 +56,11 @@ final class SpRemoteWarnings
      */
     private function signingOff(array $document): ?Warning
     {
-        $off = array_filter(self::SIGNING, static fn (string $option): bool => ($document[$option] ?? null) === false);
+        $off = array_filter(
+            ['saml20.sign.response', 'saml20.sign.assertion', 'sign.authnrequest', 'sign.logout',
+                'validate.authnrequest', 'validate.logout'],
+            static fn (string $option): bool => ($document[$option] ?? null) === false,
+        );
 
         return $off === [] ? null : new Warning(
             'Signing off',
@@ -83,7 +74,7 @@ final class SpRemoteWarnings
      */
     private function http(array $document): ?Warning
     {
-        foreach (self::SERVICES as $service) {
+        foreach (['AssertionConsumerService', 'SingleLogoutService', 'DiscoveryResponse'] as $service) {
             $urls = array_map(
                 static fn (mixed $url): bool => is_string($url) && stripos($url, 'http://') === 0,
                 self::locations((array) ($document[$service] ?? [])),
@@ -122,8 +113,12 @@ final class SpRemoteWarnings
         if ($endpoints === []) {
             return null;
         }
+        $usable = [
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect',
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+        ];
         foreach ($endpoints as $endpoint) {
-            if (in_array(((array) $endpoint)['Binding'] ?? null, self::USABLE_SLO, true)) {
+            if (in_array(((array) $endpoint)['Binding'] ?? null, $usable, true)) {
                 return null;
             }
         }

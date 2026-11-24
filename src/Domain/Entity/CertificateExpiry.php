@@ -21,7 +21,7 @@ final class CertificateExpiry
             static fn (mixed $c): ?int => self::validTo(((array) $c)['pem'] ?? null),
             (array) ($document['certificates'] ?? []),
         ), static fn (?int $end): bool => $end !== null);
-        $limit = $now->modify('+' . $this->days . ' days')->getTimestamp();
+        $limit = $now->getTimestamp() + $this->days * 86400;
         $expired = array_filter($ends, static fn (int $end): bool => $end < $now->getTimestamp());
         $expiring = array_filter($ends, static fn (int $end): bool => $end >= $now->getTimestamp() && $end < $limit);
 

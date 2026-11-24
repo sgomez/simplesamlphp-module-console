@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use SimpleSAML\Module\console\Domain\Publication\EntityState;
+use SimpleSAML\Module\console\Domain\Publication\PendingChange;
 use SimpleSAML\Module\console\Domain\Publication\PendingChanges;
 use SimpleSAML\Module\console\Domain\Publication\SnapshotContent;
 use SimpleSAML\Module\console\Domain\Publication\SnapshotDocument;
@@ -54,4 +55,30 @@ it('hashes the keys and versions of the Pending changes, whatever the order they
 
     expect(PendingChanges::hash($a))->toBe(PendingChanges::hash($b))
         ->and(PendingChanges::hash($a))->not->toBe(PendingChanges::hash($edited));
+});
+
+it('hashes the same changes the same in any order, and tells apart every key, version and deletion', function (): void {
+    $change = static fn (string $id, ?int $version, string $set = 'saml20-sp-remote'): PendingChange =>
+        new PendingChange(
+            $set,
+            $id,
+            $version === null ? EntityState::Deleted : EntityState::Modified,
+            $version,
+        );
+    $base = PendingChanges::hash([$change('a', 1), $change('b', 2)]);
+
+    expect(PendingChanges::hash([$change('b', 2), $change('a', 1)]))->toBe($base)
+        ->and(PendingChanges::hash([$change('a', 1), $change('b', 3)]))->not->toBe($base)
+        ->and(PendingChanges::hash([$change('a', 1), $change('b', null)]))->not->toBe($base)
+        ->and(PendingChanges::hash([$change('a', 1), $change('b', 2, 'saml20-idp-remote')]))->not->toBe($base)
+        ->and(PendingChanges::hash([$change('a1', 1)]))->not->toBe(PendingChanges::hash([$change('a', 11)]))
+        ->and(PendingChanges::hash([$change('b', 1, 'a')]))->not->toBe(PendingChanges::hash([$change('ab', 1, '')]))
+        ->and(PendingChanges::hash([$change('a', null)]))->toBe(hash('sha256', "saml20-sp-remote\0a\0deleted"));
+});
+
+it('keeps the Pending changes as a list, in the order given', function (): void {
+    $upToDate = new PendingChange('saml20-sp-remote', 'a', EntityState::UpToDate, 1);
+    $modified = new PendingChange('saml20-sp-remote', 'b', EntityState::Modified, 1);
+
+    expect(PendingChanges::pending([$upToDate, $modified]))->toBe([$modified]);
 });
