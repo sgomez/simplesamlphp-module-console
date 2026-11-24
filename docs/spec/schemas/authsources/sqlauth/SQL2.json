@@ -25,6 +25,7 @@
             "title": "Name",
             "description": "The queries refer to the database by this name.",
             "type": "string",
+            "x-literal": true,
             "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
             "$error": {"pattern": "A name starts with a letter or an underscore and holds only letters, digits, underscores and hyphens."}
           },
@@ -54,6 +55,7 @@
           "name": {
             "title": "Name",
             "type": "string",
+            "x-literal": true,
             "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$",
             "$error": {"pattern": "A name starts with a letter or an underscore and holds only letters, digits, underscores and hyphens."}
           },
@@ -61,7 +63,8 @@
             "title": "Database",
             "description": "The name of one of the databases above.",
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "x-literal": true
           },
           "query": {
             "title": "Query",
@@ -105,7 +108,8 @@
             "title": "Database",
             "description": "The name of one of the databases above.",
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "x-literal": true
           },
           "query": {
             "title": "Query",
@@ -118,7 +122,7 @@
             "title": "Only after these authentication queries",
             "description": "One name per line.",
             "type": "array",
-            "items": {"type": "string", "minLength": 1},
+            "items": {"type": "string", "minLength": 1, "x-literal": true},
             "minItems": 1
           }
         }

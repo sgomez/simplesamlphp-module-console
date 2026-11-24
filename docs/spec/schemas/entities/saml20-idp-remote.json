@@ -20,7 +20,14 @@
       "title": "Single sign-on service",
       "description": "The SP sends its request to the first endpoint whose binding it supports.",
       "$ref": "../common.json#/$defs/endpoints",
-      "minItems": 1
+      "minItems": 1,
+      "contains": {
+        "properties": {"Binding": {"enum": [
+          "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+          "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+        ]}}
+      },
+      "$error": {"contains": "At least one endpoint needs a binding SimpleSAMLphp uses for this service."}
     },
     "SingleLogoutService": {
       "title": "Single logout service",

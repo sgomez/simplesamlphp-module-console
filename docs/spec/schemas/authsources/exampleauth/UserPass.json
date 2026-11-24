@@ -23,6 +23,7 @@
           "username": {
             "title": "Username",
             "type": "string",
+            "x-literal": true,
             "pattern": "^[^:]+$",
             "$error": {"pattern": "A username cannot be empty or contain a colon."}
           },

@@ -21,7 +21,16 @@
       "title": "Assertion consumer service",
       "description": "Where the IdP sends responses. The IdP uses the first endpoint whose binding it supports, unless the request names one.",
       "$ref": "../common.json#/$defs/indexedEndpoints",
-      "minItems": 1
+      "minItems": 1,
+      "contains": {
+        "properties": {"Binding": {"enum": [
+          "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+          "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+          "urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser",
+          "urn:oasis:names:tc:SAML:2.0:bindings:PAOS"
+        ]}}
+      },
+      "$error": {"contains": "At least one endpoint needs a binding SimpleSAMLphp uses for this service."}
     },
     "SingleLogoutService": {
       "title": "Single logout service",

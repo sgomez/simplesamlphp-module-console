@@ -92,6 +92,10 @@
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
+      "dependentRequired": {
+        "privatekey": ["certificate"],
+        "certificate": ["privatekey"]
+      },
       "properties": {
         "privatekey": {
           "title": "Private key file",
@@ -258,13 +262,29 @@
         "urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser"
       ]
     },
+    "remoteBinding": {
+      "title": "Binding",
+      "description": "Any absolute URI. Core skips an endpoint whose binding it does not implement.",
+      "type": "string",
+      "x-literal": true,
+      "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:[^\\s]+$",
+      "$error": {"pattern": "An absolute URI."},
+      "examples": [
+        "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+        "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+        "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+        "urn:oasis:names:tc:SAML:2.0:bindings:SOAP",
+        "urn:oasis:names:tc:SAML:2.0:bindings:PAOS",
+        "urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser"
+      ]
+    },
     "endpoint": {
       "title": "endpoint",
       "type": "object",
       "additionalProperties": false,
       "required": ["Binding", "Location"],
       "properties": {
-        "Binding": {"$ref": "#/$defs/binding"},
+        "Binding": {"$ref": "#/$defs/remoteBinding"},
         "Location": {"title": "Location", "$ref": "#/$defs/url"},
         "ResponseLocation": {
           "title": "Response location",
@@ -283,7 +303,7 @@
       "additionalProperties": false,
       "required": ["Binding", "Location"],
       "properties": {
-        "Binding": {"$ref": "#/$defs/binding"},
+        "Binding": {"$ref": "#/$defs/remoteBinding"},
         "Location": {"title": "Location", "$ref": "#/$defs/url"},
         "index": {"title": "Index", "type": "integer", "minimum": 0},
         "isDefault": {"title": "Default", "type": "boolean"}

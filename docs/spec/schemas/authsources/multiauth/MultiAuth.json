@@ -23,6 +23,7 @@
             "title": "Authsource",
             "type": "string",
             "minLength": 1,
+            "x-literal": true,
             "x-authsource-reference": true
           },
           "text": {
@@ -45,7 +46,8 @@
       "title": "Preselected source",
       "description": "The id of one of the sources above.",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "x-literal": true
     }
   }
 }

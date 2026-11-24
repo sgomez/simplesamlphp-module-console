@@ -111,52 +111,55 @@ Steps 1 to 6 are repeated identically on every node. Step 7 is done once per dep
 
 The module reads its options from `config/module_console.php`. The file is optional; every option has a default.
 
-| Option | Default | Meaning |
+| Key | Default | Meaning |
 | --- | --- | --- |
 | `useridattr` | unset | Attribute of the `admin` session whose first value is recorded as the identity in the Audit trail and on Snapshots. When unset, or when the attribute is missing or empty, the identity is the constant `admin`. Access is never refused because of it. |
 | `cron_tag` | unset | The `cron` tag on which the node checks for a newer Snapshot. When unset, the node checks on every tag. |
-| Database section | core `database.*` | Points the Console at a different database than the one in `config.php` (section 2.4). |
-| Snapshot directory | see `OPEN` below | Node-local directory holding the node's copies of Snapshots. Writable by the web server user only. |
-| Secrets directory | `/run/secrets` | Directory in which `%secret(name)%` is resolved on the node. |
-| Node identifier | the hostname | Name under which the node reports its status. |
-| Node forgetting interval | one hour | Time without a check after which a node is dropped from the node list. |
-| Snapshot retention | 10 | Number of Snapshots kept in the database. |
-| Certificate expiry warning | 30 days | How long before its expiry a certificate is flagged. |
+| `database` | core `database.*` | Points the Console at a different database than the one in `config.php` (section 2.4). |
+| `snapshot_dir` | `/var/lib/simplesamlphp/console` | Node-local directory holding the node's copies of Snapshots. Writable by the web server user only. |
+| `secrets_dir` | `/run/secrets` | Directory in which `%secret(name)%` is resolved on the node. |
+| `node_id` | the hostname | Name under which the node reports its status. |
+| `node_forget_after` | `3600` | Seconds without a check after which a node is dropped from the node list. |
+| `snapshot_retention` | `10` | Number of Snapshots kept in the database. |
+| `cert_expiry_warning_days` | `30` | Days before its expiry that a certificate is flagged. |
 
-OPEN: the keys of the last seven options, the shape of the database section and the default Snapshot directory are not decided.
+The Snapshot directory is an absolute path outside `cachedir`. Core caches the module's kernel under `<cachedir>/console` and an upgrade clears it; a Snapshot under `cachedir` would be lost to a cache wipe and leave the node with nothing to serve while the database is down.
 
 ### 2.4 Database settings
 
 By default the Console builds its connection from the core settings `database.dsn`, `database.username`, `database.password` and `database.prefix`. It ignores `database.slaves` and `database.persistent`: it always uses the primary and never a persistent connection.
 
-The optional database section of `module_console.php` replaces those four values with its own.
+The optional `database` key of `module_console.php` is a nested array with `dsn`, `username`, `password` and `prefix`. When present it replaces the four core values as a whole, with no per-key merge. `dsn` is required inside it; `username` and `password` default to `null` and `prefix` to `''`.
 
 SQLite is for single-node deployments and for tests. In a container its file needs a persistent volume. A deployment with more than one node requires PostgreSQL, MariaDB or MySQL.
 
 ### 2.5 `metadata.sources`
 
-The administrator adds one entry of a type provided by the module to `metadata.sources` in `config.php`. It takes no database settings: it serves the node-local Snapshot.
+The administrator adds `['type' => 'console:Snapshot']` to `metadata.sources` in `config.php`. Core resolves it to `SimpleSAML\Module\console\MetadataStore\Snapshot`. It takes no database settings: it serves the node-local Snapshot.
 
 The order of `metadata.sources` decides which source wins when the same entity ID exists in more than one for the same set; core has no other mechanism. The documentation recommends listing the Console's source first. The Console does not enforce it; it reports each collision as an Override or as Shadowed according to the `config.php` of the node serving the page (section 9).
 
 The core `pdo` source may stay in `metadata.sources`. The Console then warns on that node's status screen that SSO depends on the database.
 
-OPEN: the class name of the module's `MetadataStore`, and so the `type` value of the entry, is not decided.
-
 ### 2.6 The `authsources.php` fragment
 
 Managed authsources reach core through a fragment the administrator adds by hand, once, to `config/authsources.php`. The Console never writes it. See [ADR 0005](docs/adr/0005-managed-authsources-through-a-hand-added-fragment.md).
 
-The fragment is one expression: a static call into a class of the module, guarded with `class_exists()`. It is the last thing the file executes, in one of two documented forms:
+The fragment is one expression: a call to `\SimpleSAML\Module\console\Authsources::merge()`, guarded with `class_exists()`. It is the last thing the file executes, in one of two documented forms. As the last statement:
 
-- as the last statement, assigning the result of the call on `$config` back to `$config`; or
-- as the file's `return`, wrapping the array of file authsources in the call.
+```php
+$config = class_exists(\SimpleSAML\Module\console\Authsources::class)
+    ? \SimpleSAML\Module\console\Authsources::merge($config)
+    : $config;
+```
+
+Or as the file's `return`, wrapping the array of file authsources in the same call.
+
+`class_exists()` is true when the package is installed but the module is not enabled, so `merge()` checks that the module is enabled and otherwise returns the array untouched.
 
 The fragment itself never changes between module versions. All logic lives in the method it calls (section 3.2).
 
 Without the fragment, managed authsources can be edited and published but have no effect on that node, and the node reports it as a problem when the current Snapshot holds managed authsources.
-
-OPEN: the class and method the fragment calls are not decided, so the literal text of the fragment cannot be given yet.
 
 ### 2.7 `cron`
 
@@ -207,21 +210,21 @@ The module has two sides that share no code path at run time other than the Snap
 | --- | --- | --- |
 | Web interface | Routes under `routing/routes/`, autowired controllers in `src/Controller/`, templates through core's `Template` class, assets under `public/assets/` referenced with `asset()` | Every Console screen |
 | Access control | `requireAdmin()` | The only access check (section 3.8) |
-| Metadata | A `MetadataStore` class of the module, named in `metadata.sources` | Serves managed entities from the local Snapshot |
-| Authsources | A static method of the module, called by the fragment in `authsources.php` | Merges managed authsources from the local Snapshot into the file's array |
+| Metadata | `SimpleSAML\Module\console\MetadataStore\Snapshot`, named `console:Snapshot` in `metadata.sources` | Serves managed entities from the local Snapshot |
+| Authsources | `Authsources::merge()`, called by the fragment in `authsources.php` | Merges managed authsources from the local Snapshot into the file's array |
 | Periodic check | A listener for core's `CronEvent`, under `src/Event/Listener/` | Fetches a newer Snapshot and reports the node's status |
 | Sanity check | A listener for core's `SanityCheckEvent` | Shows the node's problems on core's admin page |
-| Entry in core's admin interface | A PSR-14 listener of the admin module | Link from core's admin pages to the Console |
+| Entry in core's admin interface | A listener for the admin module's `ConfigPageEvent` | A "Console" link on the Configuration tab |
 
 The module uses PSR-14 listeners only. It ships no legacy `hooks/` files.
 
-**The `MetadataStore`** extends core's `MetaDataStorageSource`. It reads the `current` pointer once per request, loads the PHP file of the requested set from that version's directory, and catches every error of its own: when the local Snapshot is missing or unreadable it returns no entities and logs a warning, so the other sources keep answering.
+**The `MetadataStore`** extends core's `MetaDataStorageSource`. It reads the `current` file once per request, loads the PHP file of the requested set from the build it names, and catches every error of its own: when the local Snapshot is missing or unreadable it returns no entities and logs a warning, so the other sources keep answering.
 
 **The fragment's method** takes the array of file authsources and returns it merged with the managed ones. It catches every `\Throwable`, leaks no variables into the scope of `authsources.php`, and merges with `+`, so a file authsource always wins over a managed authsource with the same id. An unreadable authsources section is ignored as a whole with a warning; inside a readable one, each entry is checked again (an array, a string at key `0`, a non-numeric id) and only invalid entries are dropped. It records that it ran, which is how a node detects a missing fragment.
 
 **The entry in core's admin interface** never queries the database, or catches its own errors, so a stale schema or an unreachable database never breaks core's admin page.
 
-OPEN: whether the entry in core's admin interface is a tab (`AdminMenuEvent`) or a link on the Configuration tab (`ConfigPageEvent`) is not decided.
+The entry is a link, not a tab: the Console's own shell does not render core's tab bar, and `AdminMenuEvent` has no method to add an entry. The listener appends `['href' => ..., 'text' => 'Console']` to the template's `links`.
 
 ### 3.3 Documents, schemas and translators
 
@@ -260,7 +263,7 @@ A node never reads the edit tables. It reads the pointer table and the Snapshot 
 
 - **`cron`.** On every `cron` tag, or only on `cron_tag` when set, the node compares the current number with the one it serves and fetches the Snapshot when they differ. The check is idempotent and reports its outcome in the `cron` summary.
 - **First request.** A node with no local Snapshot fetches the current one during its first request, under a local lock. This is the only case in which an SSO request reads the database. If nothing has been published yet, the node records that locally and its requests ask no more. After a failed attempt it waits 60 seconds before trying again.
-- **Publication.** The node that serves the Publication request updates itself within that request.
+- **Publication or Rollback.** The node that serves the Publication or Rollback request updates itself within that request. After a Rollback it always rebuilds, even when it still holds a build of that number, because secrets may have rotated.
 
 **Building the local copy.** After fetching, the node verifies the checksum and the format version, resolves every Secret reference, checks every Key reference, translates each document, and writes the result. An object that cannot be built (an unresolved Secret reference, a current key or certificate that fails its check, a document the node's code cannot translate) is left out of that node's copy alone; the rest is served. The per-object rules are in sections 7 and 11.
 
@@ -268,16 +271,17 @@ A node whose code is older than the Snapshot's format version keeps the local co
 
 On every `cron` check the node resolves the Secret references of the current Snapshot again and rewrites its local copy only when the result differs. A rotated secret therefore needs no Publication and takes effect within one `cron` cycle.
 
-**On disk.** The Snapshot directory holds one directory per version, `<dir>/<n>/`, containing:
+**On disk.** The Snapshot directory holds one directory per build, `<dir>/<n>-<b>/`, where `n` is the Snapshot number and `b` starts at 1 and grows with every rebuild of the same number (a rotated secret, a Rollback to a number still on disk). A file is never rewritten in place: with `opcache.validate_timestamps=0` PHP would keep serving the old one. A build holds:
 
-- one PHP file per set and one for authsources, each a `return [...]` of arrays ready for core;
-- a `manifest.json`.
+- `saml20-sp-remote.php`, `saml20-idp-remote.php`, `saml20-idp-hosted.php` and `authsources.php`, each a `return [...]` of arrays ready for core;
+- `manifest.json`, fixed for the build: Snapshot number, format version, checksum, build time, module version, and the objects left out with their reason.
 
-The node's local status (the objects left out with their reason, and the other problems listed below) is kept on disk next to it.
+Next to the builds:
 
-Files are readable by the web server user only (`0600`), because secrets are resolved in them. A `current` pointer names the version being served; it is switched by atomic rename and read once per request. The current and the previous version are kept; older ones are removed.
+- `<dir>/current`, a text file holding the name of the build being served, replaced by atomic rename and read once per request. It is not a symlink.
+- `<dir>/status.json`, rewritten on every check: time and outcome of the last check, the environment problems listed below, the "nothing published yet" mark and the time of the last failed fetch for the 60-second wait.
 
-OPEN: the contents of `manifest.json`, the file names inside a version directory and the form of the local status are not decided. Nor is whether the node that serves a Rollback request updates itself within it, as it does for a Publication.
+Files are readable by the web server user only (`0600`), because secrets are resolved in them. The current and the previous build are kept; older ones are removed. The node's status screen reads `manifest.json` of the current build and `status.json`.
 
 **Status.** After each check, each first-request fetch and each Publication it serves, the node writes its identifier, the number it serves, the time of the check and a "has problems" flag to the Node table. A failed write is logged and ignored. Nothing else about a node reaches the database.
 
@@ -286,6 +290,7 @@ What the problems are stays on the node's disk and is shown by that node only, o
 - objects left out of its copy, each with its reason;
 - managed authsources Shadowed by a file authsource of that node;
 - a missing `authsources.php` fragment, when the current Snapshot holds managed authsources;
+- `console:Snapshot` missing from `metadata.sources`; the node still fetches and builds Snapshots, since managed authsources depend on them;
 - the core `pdo` source in `metadata.sources`.
 
 Behind a load balancer the administrator sees which node has problems and has to reach that node to read them.
@@ -428,8 +433,8 @@ One row per retained Snapshot.
 | Column | Meaning |
 | --- | --- |
 | `number` | The Snapshot's number. Numbers grow by one and are never reused, not even after a purge. |
-| `format_version` | Version of the layout of `document`. A node whose code knows only a lower one does not use the Snapshot. |
-| `checksum` | Checksum of `document`, verified by nodes and before a Rollback |
+| `format_version` | Version of the layout of `document`, `1` in v1. A node whose code knows only a lower one does not use the Snapshot. |
+| `checksum` | SHA-256, lowercase hex, of the exact bytes stored in `document`, verified by nodes and before a Rollback. It detects corruption, not tampering. |
 | `document` | The whole Snapshot as one JSON document: every enabled managed entity and managed authsource as Console documents, with Secret references unresolved and literal secrets in clear |
 | `comment` | The optional comment given at Publication |
 | `created_at` | When it was published |
@@ -437,7 +442,23 @@ One row per retained Snapshot.
 
 A row is never updated. Rows are deleted only by the purge of section 4.10.
 
-OPEN: the layout of the Snapshot `document` (its top-level keys and how entities and authsources are keyed inside it), the checksum algorithm and what exactly it covers, and the value of `format_version` in v1 are not decided.
+The `document` holds lists, not maps, because PHP decodes a numeric-looking key such as `"123"` as an integer and encodes an empty map as `[]`:
+
+```json
+{
+  "entities": {
+    "saml20-sp-remote":  [{"entityid": "https://sp.example.org", "document": {}}],
+    "saml20-idp-remote": [],
+    "saml20-idp-hosted": []
+  },
+  "authsources": [{"id": "default-sp", "type": "saml:SP", "document": {}}]
+}
+```
+
+- Each list is sorted bytewise by entity ID or by id. The three sets are always present, empty or not.
+- It holds content only: no number, dates, author or per-object `version`, which live in the columns. The same content gives the same bytes.
+
+The format version rises only when an older node would misread the document without noticing: a change of the envelope above, or of the meaning of an existing option. A new option or a new Authsource type does not raise it: an older node cannot translate that object, leaves it out of its copy and sets its flag.
 
 #### `console_pointer`
 
@@ -629,12 +650,12 @@ Each set has, besides its schema, a PHP class that holds its cross-field rules, 
 
 ### 5.4 Schema conventions
 
-Every entity schema follows the conventions of section 6.6: JSON Schema 2020-12, `additionalProperties: false` on the root and every nested object, core's option names, `title` and `description` with the fallback in the help text, `default` and `examples` as hints only, declaration order as form and PHP order, `$ref` only to files of the catalog, `$error` on every `pattern`, and the annotations `x-sensitive`, `x-key-reference`, `x-authsource-reference`, `x-groups`, `x-widget` and `x-when`.
+Every entity schema follows the conventions of section 6.6: JSON Schema 2020-12, `additionalProperties: false` on the root and every nested object, core's option names, `title` and `description` with the fallback in the help text, `default` and `examples` as hints only, declaration order as form and PHP order, `$ref` only to files of the catalog, `$error` on every `pattern`, and the annotations `x-sensitive`, `x-key-reference`, `x-literal`, `x-authsource-reference`, `x-groups`, `x-widget` and `x-when`.
 
 What differs:
 
 - **Open root.** The root carries `additionalProperties: false` like any other object, but holds an `extra` option of free-form JSON (section 5.6).
-- **`x-literal: true`.** Marks a string without an `enum` that refuses a Secret reference because the Console compares it or core needs it before secrets are resolved. In the entity schemas: `host` and `auth` of `saml20-idp-hosted`, and every `Location` and `ResponseLocation` of an endpoint, through the shared `url` shape.
+- **Where `x-literal` applies.** In the entity schemas: `host` and `auth` of `saml20-idp-hosted`, every `Location` and `ResponseLocation` through the shared `url` shape, and every `Binding` of a remote entity through `remoteBinding`. The entity ID is not part of the document.
 - **Key reference slots have names of their own.** Core spreads a key over prefixed options (`privatekey`, `new_certData`, `signature.certificate`…). The document groups them in one option per slot, named with an underscore so that it cannot be mistaken for a core option: `key`, `next_key`, `signature_key`, `metadata_sign_key`, `https_certificate` and `certificates`. `privatekey`, `certificate`, `certData`, `keys`, `key_name` and their prefixed forms are never options of their own.
 - **No defaults on tri-state options.** `validate.authnrequest` and `validate.logout` are optional booleans without `default`: not set means "check a signature when one is present", `false` means "never check, even when signed".
 - **Precedence in the help text.** Many options fall back to the other side of the exchange. The help text of each option says which side wins, as the code does it: for `sign.logout` and `sign.authnrequest` the sender's value wins, the reverse of what the reference documentation states.
@@ -645,7 +666,7 @@ The entity schemas use the shapes of section 6.7 (`stringList`, `languageMap`, `
 
 **URL** (`url`). An absolute `http` or `https` URL, marked `x-literal`. Every `Location` and `ResponseLocation` uses it.
 
-**Binding** (`binding`). One of the SAML 2.0 bindings core implements:
+**Binding** (`binding`). One of the SAML 2.0 bindings core implements. Only the `Bindings` of a hosted endpoint use it, because that is the Console's own configuration:
 
 | Binding |
 | --- |
@@ -656,14 +677,25 @@ The entity schemas use the shapes of section 6.7 (`stringList`, `languageMap`, `
 | `urn:oasis:names:tc:SAML:2.0:bindings:PAOS` |
 | `urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser` |
 
-OPEN: real metadata routinely carries endpoints with other bindings, which core skips when it chooses an endpoint: `HTTP-POST-SimpleSign`, the SAML 1.x profiles in the assertion consumer service of a Shibboleth SP that supports both protocols, the `URI` binding. With the enum above, such an entity is rejected on save and skipped by Import. Whether to reject it, drop those endpoints with a report, or accept any binding with a warning is not decided.
+**Remote binding** (`remoteBinding`). Any non-empty absolute URI, marked `x-literal`. Real metadata carries bindings core does not implement (`HTTP-POST-SimpleSign`, the SAML 1.x profiles of a Shibboleth SP, the `URI` binding); an endpoint that uses one is kept as it is, never rejected, never dropped by Import, paste or "Replace from…", and gets no warning of its own. Core skips it when it chooses an endpoint. The form offers the bindings above as suggestions and accepts free text.
+
+**Usable endpoint.** An endpoint of a remote entity is usable when its binding is one core uses for that service:
+
+| Service | Usable bindings |
+| --- | --- |
+| `AssertionConsumerService` | HTTP-POST, HTTP-Artifact, holder-of-key SSO browser, PAOS |
+| `SingleSignOnService` | HTTP-Redirect, HTTP-POST |
+| `SingleLogoutService` | HTTP-Redirect, HTTP-POST |
+| `ArtifactResolutionService` | SOAP |
+
+A required service with no usable endpoint blocks the save (section 5.7). This also keeps out a trap in core: when a service has a single endpoint with a binding core does not implement, `Configuration::getEndpoints()` rewrites it to the service's default binding, so an SP whose only assertion consumer service is SAML 1.x would be sent a SAML 2.0 response over HTTP-POST. An optional service whose endpoints are all unusable gets a warning (section 5.9).
 
 **Endpoints.** The remote sets hold each service as a list of endpoints, in the order core tries them. Two shapes follow the SAML metadata schema:
 
 | Shape | Fields | Used by |
 | --- | --- | --- |
-| `endpoint` | `Binding`, `Location`, optional `ResponseLocation` | `SingleSignOnService`, `SingleLogoutService` |
-| `indexedEndpoint` | `Binding`, `Location`, optional `index` (integer, 0 or more) and `isDefault` | `AssertionConsumerService`, `ArtifactResolutionService` |
+| `endpoint` | `Binding` (a remote binding), `Location`, optional `ResponseLocation` | `SingleSignOnService`, `SingleLogoutService` |
+| `indexedEndpoint` | `Binding` (a remote binding), `Location`, optional `index` (integer, 0 or more) and `isDefault` | `AssertionConsumerService`, `ArtifactResolutionService` |
 
 `DiscoveryResponse` of `saml20-sp-remote` is an indexed endpoint whose `Binding` is always `urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol`.
 
@@ -708,13 +740,13 @@ Errors of all three are reported together, each by the JSON pointer of the value
 
 **Minimum content**, in the schemas:
 
-- `saml20-sp-remote`: at least one `AssertionConsumerService` endpoint.
-- `saml20-idp-remote`: at least one `SingleSignOnService` endpoint and at least one certificate whose `use` is `signing` or `both`.
+- `saml20-sp-remote`: at least one usable `AssertionConsumerService` endpoint (section 5.5).
+- `saml20-idp-remote`: at least one usable `SingleSignOnService` endpoint and at least one certificate whose `use` is `signing` or `both`.
 - `saml20-idp-hosted`: `host`, `auth` and the `key` slot.
 
 **Rules that apply to every set**
 
-- Every `Location` and `ResponseLocation` is an absolute `http` or `https` URL; every `Binding` is in the enum of section 5.5.
+- Every `Location` and `ResponseLocation` is an absolute `http` or `https` URL. Every `Binding` of a remote entity is an absolute URI; every binding of a hosted endpoint is in the enum of section 5.5.
 - Within one service, no two endpoints share an `index` and at most one is `isDefault`.
 - A signature algorithm outside `signatureAlgorithm`, or a shared key algorithm outside `sharedkeyAlgorithm`, is rejected by the schema.
 - A processing filter whose `class` names `core:PHP`, in the short form or as the full class name, is rejected; an entity that needs it stays an External entity. Two filters with the same priority are rejected.
@@ -758,6 +790,7 @@ Warnings never block. They are computed for every enabled managed entity and sho
 - SHA-1 as `signature.algorithm` or `metadata.sign.algorithm`.
 - Signing or signature checking switched off: `saml20.sign.response`, `saml20.sign.assertion`, `sign.authnrequest`, `sign.logout`, `validate.authnrequest` or `validate.logout` set to `false`.
 - An endpoint whose `Location` or `ResponseLocation` is `http`.
+- An optional service (`SingleLogoutService`, `ArtifactResolutionService`) that has endpoints but none usable (section 5.5).
 - An entity ID that is not an absolute URI.
 - Use of `extra`.
 - A `host` shared with an External `saml20-idp-hosted`.
@@ -1038,6 +1071,7 @@ The annotations the Console adds:
 | --- | --- | --- |
 | `x-sensitive: true` | A string | A sensitive value (section 6.8) |
 | `x-key-reference` | `private-key` on a string, `certificate` on a certificate object | The value is a Key reference (section 7) |
+| `x-literal: true` | A string without an `enum` | The value refuses a Secret reference, because the Console compares it or core needs it before secrets are resolved (section 6.8) |
 | `x-authsource-reference: true` | A string | The value is the id of another authsource. Publication checks it without knowing the type (section 6.9), and the form renders it as a select built on the server. |
 | `x-groups` | The root | A list of `{title, properties}`. Every root option belongs to exactly one group. |
 | `x-widget` | Any property | `radio` or `textarea`; otherwise the widget follows from the type. On a value that is not a string, `textarea` means the value is edited as JSON text. |
@@ -1071,9 +1105,7 @@ The translator turns the rows into core's map of priority to filter array.
 | `certificate` with `source: file` | A file reference in `file`, in the same forms as `privatekey` | `certificate` |
 | `key_name` | The name published with the certificate | `key_name` |
 
-A slot emits exactly one certificate form. In a next-key slot every emitted name takes the prefix `new_`. On save the Console rewrites a pasted certificate as PEM with armour and 64-character lines, so that the document is the same after a round trip through the PHP text. The rules for Key references, the next key and Promote are in section 7.
-
-OPEN: whether a key slot may hold a private key without a certificate or a certificate without a private key. The schema accepts either; core does too.
+A slot holds both `privatekey` and `certificate`, or neither; the schema enforces it with `dependentRequired` in both directions. A key without a certificate signs, but publishes nothing the other side can verify against; a certificate without a key is published for encryption, but nothing can be decrypted. The node's check that the key matches its certificate therefore always has both pieces. A slot emits exactly one certificate form. In a next-key slot every emitted name takes the prefix `new_`. On save the Console rewrites a pasted certificate as PEM with armour and 64-character lines, so that the document is the same after a round trip through the PHP text. The rules for Key references, the next key and Promote are in section 7.
 
 **Contacts, `EntityAttributes`, `UIInfo` and `RegistrationInfo`.** Closed shapes, the same wherever they are cataloged:
 
@@ -1110,12 +1142,12 @@ Errors of all three are reported together, each by the JSON pointer of the value
 
 **Secret references.** A string value may be a Secret reference instead of a literal (section 7), under these rules:
 
-- only in a string that has no `enum`, and the reference fills the whole value;
+- only in a string that has no `enum` and no `x-literal`, and the reference fills the whole value;
 - `pattern` and `format` are not applied to it;
 - an integer or a boolean cannot be a Secret reference, so it cannot vary per node;
 - inside the free-form configuration of a processing filter, any string may be one.
 
-OPEN: which string options of a managed authsource refuse a Secret reference although they have no `enum`. Candidates are the values the Console itself compares: an `x-authsource-reference`, the `preselect` of `multiauth:MultiAuth`, the names that link the lists of `sqlauth:SQL2`, the `username` of `exampleauth:UserPass` and the `entityID` of `saml:SP`. No annotation marks such an option yet.
+The options marked `x-literal`, because the Console compares them: every `x-authsource-reference`; `preselect` of `multiauth:MultiAuth`; in `sqlauth:SQL2`, the `name` of each database and authentication query and the `database` and `only_for_auth` of each query; the `username` of `exampleauth:UserPass`; and the `entityID` of `saml:SP`.
 
 **Sensitive values.** The options annotated `x-sensitive` are:
 
@@ -1201,22 +1233,21 @@ The schema catalogs 51 root options in seven groups. `entityID` is the only requ
 | `NameIDPolicy`, an object with optional `Format`, `AllowCreate` and `SPNameQualifier` | The array; an object with no fields becomes `[]`, which makes core omit the element |
 | `attributes`, rows `{name, friendlyName?}` | A row with a friendly name becomes `friendlyName => name`; one without is positional |
 | `contacts`, `EntityAttributes` | As in section 6.7 |
-| `AssertionConsumerService`, a list of `{Binding, Location, index?, isDefault?}` | The list |
+| `AssertionConsumerService`, a list of `{Binding, Location, index?, isDefault?, hoksso:ProtocolBinding?}` | The list |
 | `authproc` | As in section 6.7 |
 
 `privatekey`, `certificate`, `certData`, `keys`, `key_name` and their `new_` forms are never options of their own.
 
-**Rules.** The first two are in the schema, the rest in the class.
+**Rules.** The first two and the bindings of `AssertionConsumerService` are in the schema, the rest in the class.
 
 - `entityID` is at most 1024 characters and is not core's placeholder `https://myapp.example.org/`.
 - `signature.algorithm` is one of the four RSA algorithms of the schema's enum.
 - `OrganizationName` without `OrganizationURL` is rejected; core throws on it.
 - No two rows of `attributes` share a `name` or a `friendlyName`.
+- In `AssertionConsumerService`, `Binding` is one of the three bindings core's `saml2-acs.php` handles: HTTP-POST, HTTP-Artifact and holder-of-key Web Browser SSO. `hoksso:ProtocolBinding` is optional and applies only when `Binding` is holder-of-key (`x-when`), as in what core generates from `acs.Bindings`. `ResponseLocation` is not accepted: SAML metadata forbids it on an assertion consumer service.
 - In `AssertionConsumerService`, no two endpoints share an `index` and at most one is `isDefault`.
 
 **Left out.** `saml:Extensions` and `saml:logout:Extensions`, which are XML objects and not expressible in JSON; every `saml.SOAPClient.*` option; `NameIDFormat`, which the code does not read.
-
-OPEN: which `Binding` values an `AssertionConsumerService` endpoint of a `saml:SP` accepts, and whether the endpoint may carry `ResponseLocation` or `hoksso:ProtocolBinding`. The schema accepts any non-empty `Binding` and neither of the two fields.
 
 ### 6.12 `ldap:Ldap`
 
@@ -1316,9 +1347,8 @@ What is specific to authsources:
 - A block whose id or whose type differs from the authsource being edited is rejected. In "Add authsource" the type is read from key `0`, and a type outside the five stops there.
 - The inverse translator accepts each form core accepts for a cataloged option and returns the single form of the document: a string where core takes a string or a list becomes a list of one; a plain localized string becomes a language map with the language `en`, which is how core reads it; `search.*` and `priv.*` keys are gathered into their objects; an absent `attributes` of `ldap:Ldap` becomes `mode: none` and a `null` one `mode: all`.
 - `certData` becomes a pasted certificate, and a `certificate` location a file reference.
+- `keys` and `new_keys` are rejected with an error that names the key and points to `certData` or `certificate`. A `keys` list can hold several certificates with their own `signing` and `encryption` flags and never carries the private key, so mapping it onto a slot would drop information silently.
 - In `exampleauth:UserPass` the password sits in the key, so the sentinel of a stored password is part of the key and renaming the user in the text means retyping the password.
-
-OPEN: how the inverse translator of `saml:SP` reads `keys` and `new_keys`, which core accepts in place of `certData` and `certificate` and the Console never emits.
 
 ### 6.17 Accepted gaps
 
@@ -1346,8 +1376,7 @@ A private key is never a value of a document. It is always a file that each node
 - Where a Secret reference is accepted is set by the schemas: only in a string without an `enum` and without `x-literal`, and anywhere inside the configuration of a processing filter; never inside `extra`, in an integer or in a boolean (sections 5.7 and 6.8).
 - `%secret()%` is the recommended form for secrets. `%env()%` serves deployments without mounted secrets, and values that vary per environment without being sensitive.
 - In a private key or certificate file reference only `%env()%` is accepted, and it must resolve to a path (section 7.4).
-
-OPEN: whether trailing line breaks in a `%secret()%` file are stripped. A file written with `echo` ends with one, which a password must not carry.
+- When a node resolves `%secret(name)%`, every trailing `\r` and `\n` of the file is stripped, and no other whitespace is touched, so that a file written with `echo` works. A secret therefore cannot end with a line break.
 
 **Resolution.** Only a node resolves Secret references, when it builds its local copy of a Snapshot (section 3.5), never during an SSO request. The Console stores a Secret reference as it is, carries it unresolved in the Snapshot and the Audit trail, and shows it as plain text everywhere.
 
@@ -1464,6 +1493,7 @@ There is no state column. The state of each object is computed by comparing what
 | Yes | Enabled, different document | Modified | Yes |
 | Yes | Disabled | To be withdrawn | Yes |
 | Yes | Deleted | Deleted | Yes |
+| Either | A row that cannot be loaded | Unreadable | Yes |
 
 - Before the first Publication every enabled object is Unpublished, imported ones included.
 - Editing or deleting an object that is disabled and absent from the Snapshot produces no Pending change.
@@ -1482,6 +1512,7 @@ Discarding restores an object from the current Snapshot:
 | To be withdrawn | The object returns to its published version, enabled |
 | Deleted | The object is created again from the Snapshot |
 | Unpublished | Not offered; the object can only be deleted |
+| Unreadable | The row is rewritten from the Snapshot, or deleted when the object is not in it (section 11.4) |
 
 "Discard all" does the same for every Pending change; after a Rollback it brings what is saved back to what is served. A discard is a save: it increments `version` and leaves one `discard` row in the Audit trail per object.
 
@@ -1552,9 +1583,9 @@ An External entity is read live, at request time, from the `metadata.sources` of
 - An expired External entity is shown, marked as expired.
 - The Console assumes every node has the same `metadata.sources` (section 2.8) and never compares them.
 
-OPEN: whether the sensitive options of an External entity (`sharedkey`, `privatekey_pass`) are shown in clear on its detail view or masked as on a managed entity.
+**Sensitive options.** The sensitive options of the set (section 5.7) are always masked with the marker on an External entity, with no reveal control: an External entity has no edit form, and a sensitive value reaches only the edit form of the object that holds it. The catalog is applied to the root keys of the array core returns. A managed copy or an Import copies the value, which can then be revealed in the copy's edit form.
 
-OPEN: what the Console reports when `console:Snapshot` is missing from `metadata.sources` on the node serving it. Managed entities are then served by none of the node's sources, and the Override and Shadowed labels of section 9.3 do not apply.
+**`console:Snapshot` missing.** When `console:Snapshot` is not in `metadata.sources`, managed entities are served by none of the node's sources. Each node detects it when it builds and reports it as a node problem (section 3.5). When the node serving the Console lacks the entry, Overview and the entity lists also show a warning, because the Override and Shadowed labels of section 9.3 are then meaningless. Nothing is blocked.
 
 ### 9.2 The External entities screen
 
@@ -1562,7 +1593,7 @@ A read-only screen of its own, separate from the lists of managed entities.
 
 - Entities are grouped by source and set, paginated on the server, and searchable by entity ID and name.
 - An External entity that is already a managed entity of the same set is marked as such.
-- The detail view shows the entity as core receives it, as PHP written with `VarExporter::export` (section 3.7), and offers "Create managed copy" (section 9.5).
+- The detail view shows the entity as core receives it, as PHP written with `VarExporter::export` (section 3.7), with its sensitive options masked (section 9.1), and offers "Create managed copy" (section 9.5).
 - Sources of type `flatfile` and `pdo` also offer Import (section 9.5).
 
 ### 9.3 Collisions: Override and Shadowed
@@ -1717,43 +1748,47 @@ The set of an entity is always shown by its friendly name with the set name besi
 
 Every route is declared under `routing/routes/` and served by an autowired controller (section 3.2). Every route passes the checks of section 3.8 in this order: `requireAdmin()`, the state of the database (section 10.5), and, for a POST, the request-forgery token (section 10.6). Run migrations is the one route that proceeds when the schema does not match the code.
 
-| Method | Route | Does |
-| --- | --- | --- |
-| GET | Overview | Section 10.7 |
-| GET | Entity list, per set | Section 10.8; search, filters and page in the query string |
-| GET | Add entity, per set | The paste area of section 9.6 |
-| POST | Read pasted entity configuration | Renders the editor filled and unsaved, or the selectable list of several entities (section 9.6) |
-| POST | Create several entities | Saves the selected entities and shows the result screen (section 9.6) |
-| GET | Entity | The edit screen (section 10.9) |
-| POST | Save entity | Create or edit, from the form or the PHP view |
-| POST | Switch view, Reveal | Renders the other view, or the PHP view with sensitive values, without saving |
-| POST | Enable, disable, delete, discard, Promote | One route per operation, per object (section 8.1) |
-| POST | Replace from… | Renders the editor with the merged document, unsaved (section 9.7) |
-| GET | Authsource list | Section 10.8 |
-| GET | Add authsource | The paste area, and the choice of type for "Start empty" |
-| POST | Read pasted authsource configuration | Renders the editor filled and unsaved |
-| GET | Authsource | The edit screen |
-| POST | Save authsource, switch view, Reveal, enable, disable, delete, discard, Promote | As for entities |
-| GET | External entities | Section 10.13; source, set, search and page in the query string |
-| GET | External entity | Its detail |
-| GET | Managed copy | The editor of the set filled with the External entity, unsaved (section 9.5) |
-| POST | Confirm Import | The confirmation step for the ticked entities |
-| POST | Import | Runs the Import and shows its result screen (section 9.5) |
-| GET | Override comparison | Section 10.13 |
-| POST | Mark as reviewed | Section 9.4 |
-| GET | Publish | The confirmation screen (section 10.14) |
-| POST | Publish | The confirming request (section 8.4) |
-| POST | Discard all | Section 8.3 |
-| GET | Snapshots | The first tab of History (section 10.15) |
-| GET | Rollback confirmation | For one retained Snapshot |
-| POST | Roll back | The confirming request (section 8.5) |
-| GET | Audit trail | The second tab of History; filters and page in the query string |
-| GET | Nodes | Section 10.16 |
-| POST | Run migrations | Applies the pending migrations (section 4.6) |
+All paths are under `module.php/console/`. `{set}` is core's set name, `{id}` an authsource id, `{n}` a Snapshot number (digits only).
+
+| Method | Path | Route | Does |
+| --- | --- | --- | --- |
+| GET | `/` | Overview | Section 10.7; also the target of the link on core's Configuration tab |
+| GET | `/entities/{set}` | Entity list, per set | Section 10.8; `q`, filters and `page` in the query string |
+| GET | `/entities/{set}/new` | Add entity, per set | The paste area of section 9.6 |
+| POST | `/entities/{set}/new` | Read pasted entity configuration | Renders the editor filled and unsaved, or the selectable list of several entities (section 9.6) |
+| POST | `/entities/{set}/new/create` | Create several entities | Saves the selected entities and shows the result screen (section 9.6) |
+| GET | `/entities/{set}/edit?entityid=…` | Entity | The edit screen (section 10.9) |
+| POST | `/entities/{set}/save` | Save entity | Create or edit, from the form or the PHP view |
+| POST | `/entities/{set}/view` | Switch view, Reveal | Renders the other view, or the PHP view with sensitive values, without saving |
+| POST | `/entities/{set}/{op}` | Enable, disable, delete, discard, Promote, Replace from… | `op` is `enable`, `disable`, `delete`, `discard`, `promote` or `replace` (sections 8.1 and 9.7); `replace` renders the editor with the merged document, unsaved |
+| GET | `/entities/{set}/override?entityid=…` | Override comparison | Section 10.13 |
+| POST | `/entities/{set}/reviewed` | Mark as reviewed | Section 9.4 |
+| GET | `/authsources` | Authsource list | Section 10.8 |
+| GET | `/authsources/new` | Add authsource | The paste area, and the choice of type for "Start empty" |
+| POST | `/authsources/new` | Read pasted authsource configuration | Renders the editor filled and unsaved |
+| POST | `/authsources/save` | Save a new authsource | The id travels in the body |
+| GET | `/authsources/{id}/edit` | Authsource | The edit screen |
+| POST | `/authsources/{id}/save`, `/authsources/{id}/view`, `/authsources/{id}/{op}` | Save authsource, switch view, Reveal, enable, disable, delete, discard, Promote | As for entities |
+| GET | `/external` | External entities | Section 10.13; `source`, `set`, `q` and `page` in the query string |
+| GET | `/external/{set}?entityid=…` | External entity | Its detail |
+| GET | `/external/{set}/copy?entityid=…&source=N` | Managed copy | The editor of the set filled with the External entity, unsaved (section 9.5) |
+| POST | `/external/import/confirm` | Confirm Import | The confirmation step for the ticked entities |
+| POST | `/external/import` | Import | Runs the Import and shows its result screen (section 9.5) |
+| GET | `/publish` | Publish | The confirmation screen (section 10.14) |
+| POST | `/publish` | Publish | The confirming request (section 8.4) |
+| POST | `/changes/discard` | Discard all | Section 8.3 |
+| GET | `/history` | Snapshots | The first tab of History (section 10.15) |
+| GET | `/history/{n}/rollback` | Rollback confirmation | For one retained Snapshot |
+| POST | `/history/{n}/rollback` | Roll back | The confirming request (section 8.5) |
+| GET | `/history/audit` | Audit trail | The second tab of History; filters and `page` in the query string |
+| GET | `/nodes` | Nodes | Section 10.16 |
+| POST | `/migrate` | Run migrations | Applies the pending migrations (section 4.6) |
 
 Every object, every list with its filters and every page of results has a URL that can be bookmarked. An entity is addressed by its set and entity ID, an authsource by its id; neither is a surrogate key.
 
-OPEN: the URL paths of these routes, and how an entity ID, which is a URL of up to 1024 bytes, is carried in a path or a query string, are not decided.
+- **The entity ID is never in the path.** A GET carries it in the query string as `entityid`, URL-encoded; a POST carries it in the body, as a hidden field next to the request-forgery token. An encoded `%2F` in a path is refused with a 404 by Apache's default `AllowEncodedSlashes Off` and decoded by nginx, and base64url cannot be read or edited by hand.
+- **An External entity is identified by (set, entity ID).** Its detail lists every copy held by the `metadata.sources` of the serving node, in source order, and marks the one the node serves. A source is named by its 0-based position in `metadata.sources` only where one copy is meant: `source` on the Managed copy GET and in the body of the Import POSTs. The position is checked again on every request; when it no longer holds that entity, the page is a "not found", never another source's copy.
+- **The authsource page is `/authsources/{id}/edit`**, not `/authsources/{id}`, because `new` is a valid authsource id. Entity paths do not collide, because `{set}` and `{op}` are closed lists.
 
 ### 10.5 State pages
 
@@ -1935,7 +1970,7 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 
 - An unreadable source is shown with its error; the other sources are still listed.
 - An expired External entity is marked, not hidden. One that is already managed in the same set is marked as such.
-- The detail of an entity shows it as PHP (section 10.11) and offers "Create managed copy", which says that the copy stops following its source.
+- The detail of an entity lists every copy the node's sources hold, marks the one served, shows each as PHP (section 10.11) with its sensitive options masked, and offers "Create managed copy", which says that the copy stops following its source.
 - On `flatfile` and `pdo` sources each row has a checkbox, nothing ticked by default, and each source a "select all" that covers the whole source and not only the visible page. Rows already managed in the same set cannot be ticked. Import goes through a confirmation step and ends on the result screen of section 9.5.
 
 **Override comparison.** Reached from the notice on the edit screen and from Overview. It shows the current External entity against the managed one, as PHP text with the keys left out of the fingerprint hidden (section 9.4), and offers one action, "Mark as reviewed".
@@ -2014,6 +2049,7 @@ There is no fallback without it. No browser test covers it in v1 (section 12).
 | An entry of the build's `authsources.php` that is not an array, has no string at key `0` or has an integer id | Dropped with a warning; the other entries are merged |
 | The module is not enabled, or the fragment is missing from `authsources.php` | Only the File authsources are served; a problem on the node's status when the current Snapshot holds managed authsources |
 | A managed authsource Shadowed by a File authsource | The File authsource is served; a problem on the node's status |
+| `console:Snapshot` missing from `metadata.sources` | No managed entity is served; managed authsources still are. A problem on the node's status (section 9.1) |
 | The core `pdo` source in `metadata.sources`, with the database down | Core breaks every metadata operation, because that source's constructor throws. Outside the Console's control: a warning on the node's status and an accepted risk (section 1.6). |
 
 ### 11.3 Building a local copy
@@ -2055,12 +2091,12 @@ Every object or slot left out is recorded with its reason in the build's `manife
 | Writing the Audit trail row fails | The change it records fails with it, being in the same transaction |
 | A request without a valid request-forgery token | A plain HTTP 403 page and a warning in the log (section 3.8) |
 | A stored document that the current schema rejects, as after a module update | Listed with its errors and editable; blocks Publication until fixed or disabled; the current Snapshot keeps being served |
+| A stored row whose `document` is not valid JSON or cannot be loaded otherwise | Listed with an "Unreadable" label and the load error, and counted as a Pending change. It has no form and no PHP view: opening it shows its raw bytes, read-only. Disable, Delete and Discard are available; Discard rewrites the row from the current Snapshot, or deletes it when the object is not in it. It blocks Publication until disabled, deleted or discarded, since skipping it would silently drop the object from the next Snapshot. |
 | A metadata source that throws when the Console reads it | That source is shown as unreadable on the External entities screen; the others are listed (section 9.1) |
 | A building problem on the node serving the Console | Shown on that node's status screen |
+| `console:Snapshot` missing from the node serving the Console | A warning on Overview and the entity lists, as the Override and Shadowed labels are then meaningless; nothing is blocked (section 9.1) |
 
 The Console's link on core's Configuration tab never queries the database, so none of the states above breaks core's admin pages.
-
-OPEN: what the Console does with a stored row whose `document` is not valid JSON, or that it cannot load for another reason: how the row is listed, whether it can be opened, disabled or deleted, and what a Publication says about it.
 
 ## 12. Test harness and local environment
 
