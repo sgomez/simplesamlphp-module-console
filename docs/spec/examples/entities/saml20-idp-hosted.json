@@ -1,0 +1,80 @@
+{
+  "host": "idp.example.org",
+  "auth": "campus-ldap",
+  "key": {
+    "privatekey": "/run/secrets/idp.key",
+    "privatekey_pass": "%env(CONSOLE_IDP_KEY_PASS)%",
+    "certificate": {
+      "source": "file",
+      "file": "/run/secrets/idp.crt"
+    }
+  },
+  "next_key": {
+    "privatekey": "idp-2027.key",
+    "certificate": {
+      "source": "pasted",
+      "pem": "-----BEGIN CERTIFICATE-----\nMIIBijCCAS+gAwIBAgIUBOipfhs3LtI/6gAma+kwyjvO3UswCgYIKoZIzj0EAwIw\nGjEYMBYGA1UEAwwPaWRwLmV4YW1wbGUubmV0MB4XDTI2MTEyNDE3MjIxNloXDTM2\nMTEyMTE3MjIxNlowGjEYMBYGA1UEAwwPaWRwLmV4YW1wbGUubmV0MFkwEwYHKoZI\nzj0CAQYIKoZIzj0DAQcDQgAENSMNu5VqhChygJaGT7MxzfZXedEjZOrCAvNCMqXU\nzCGt1YCOHNOHGUo2+r+ciR2Mx8Mx+fvB2U4jIwBcCy7M1aNTMFEwHQYDVR0OBBYE\nFCWZtS+7Lw8ibLBhwxSVjmlqNxt4MB8GA1UdIwQYMBaAFCWZtS+7Lw8ibLBhwxSV\njmlqNxt4MA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwIDSQAwRgIhAImZAhgf\nl3R8Er9p+btTwMYVw/SkDq0cBIf6Hn/aMQyBAiEAq+KQ94GUUGBNcXQ68epD6iWN\nfbjVJYKTRQqzZAvb9rw=\n-----END CERTIFICATE-----\n"
+    }
+  },
+  "SingleSignOnService": {
+    "Bindings": [
+      "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+      "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+    ]
+  },
+  "SingleLogoutService": {
+    "Location": "https://idp.example.org/simplesaml/module.php/saml/idp/singleLogout",
+    "Bindings": [
+      "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+    ]
+  },
+  "attributes.NameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+  "NameIDFormat": [
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:transient",
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+  ],
+  "validate.authnrequest": false,
+  "OrganizationName": {
+    "en": "Example University"
+  },
+  "OrganizationURL": {
+    "en": "https://www.example.org"
+  },
+  "contacts": [
+    {
+      "contactType": "support",
+      "company": "Example University",
+      "emailAddress": [
+        "mailto:helpdesk@example.org"
+      ],
+      "telephoneNumber": [
+        "+34 900 000 000"
+      ]
+    }
+  ],
+  "scope": [
+    "example.org"
+  ],
+  "RegistrationInfo": {
+    "authority": "https://federation.example.org",
+    "instant": "2026-01-15T09:00:00Z"
+  },
+  "metadata.sign.enable": true,
+  "metadata.sign.algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+  "authproc": [
+    {
+      "priority": 30,
+      "filter": {
+        "class": "core:TargetedID",
+        "identifyingAttribute": "uid"
+      }
+    },
+    {
+      "priority": 90,
+      "filter": {
+        "class": "core:AttributeMap",
+        "0": "name2oid"
+      }
+    }
+  ]
+}

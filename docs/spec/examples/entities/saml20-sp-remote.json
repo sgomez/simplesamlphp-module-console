@@ -1,0 +1,100 @@
+{
+  "AssertionConsumerService": [
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+      "Location": "https://sp.example.net/Shibboleth.sso/SAML2/POST",
+      "index": 1,
+      "isDefault": true
+    },
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact",
+      "Location": "https://sp.example.net/Shibboleth.sso/SAML2/Artifact",
+      "index": 2
+    }
+  ],
+  "SingleLogoutService": [
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+      "Location": "https://sp.example.net/Shibboleth.sso/SLO/Redirect"
+    }
+  ],
+  "certificates": [
+    {
+      "pem": "-----BEGIN CERTIFICATE-----\nMIIBhzCCAS2gAwIBAgIUMYEkNMi2NmvWJcijz7C1Wzf7h54wCgYIKoZIzj0EAwIw\nGTEXMBUGA1UEAwwOc3AuZXhhbXBsZS5uZXQwHhcNMjYxMTI0MTcyMjE2WhcNMzYx\nMTIxMTcyMjE2WjAZMRcwFQYDVQQDDA5zcC5leGFtcGxlLm5ldDBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABL5aDkN3KKoUJchTdDxewZnowahYEtAuvn4AfbuJkb0B\nMfrtUMNHH/Y26bDjzG7jchaiITeVgFXXRTUi5GioQlmjUzBRMB0GA1UdDgQWBBS9\nIItIMsk7y1gj8HMyVd4Cp+2GnjAfBgNVHSMEGDAWgBS9IItIMsk7y1gj8HMyVd4C\np+2GnjAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIGu2NI6cNouL\ny5AiMpn/sPyJkcy5k8DPVxxEiEl3OesAAiEAz3wRjEQ1803SAamlbJi/PUcrLeiD\nFXKk3jf+vjPF13Y=\n-----END CERTIFICATE-----\n",
+      "use": "both"
+    }
+  ],
+  "name": {
+    "en": "Example library",
+    "es": "Biblioteca de ejemplo"
+  },
+  "OrganizationName": {
+    "en": "Example Library Services"
+  },
+  "UIInfo": {
+    "DisplayName": {
+      "en": "Example library"
+    },
+    "Logo": [
+      {
+        "url": "https://sp.example.net/logo.png",
+        "width": 80,
+        "height": 60
+      }
+    ]
+  },
+  "contacts": [
+    {
+      "contactType": "technical",
+      "givenName": "Library systems",
+      "emailAddress": [
+        "mailto:systems@example.net"
+      ]
+    }
+  ],
+  "EntityAttributes": [
+    {
+      "name": "http://macedir.org/entity-category",
+      "values": [
+        "http://refeds.org/category/research-and-scholarship"
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "name": "urn:oid:1.3.6.1.4.1.5923.1.1.1.6"
+    },
+    {
+      "name": "urn:oid:1.3.6.1.4.1.5923.1.1.1.7",
+      "values": [
+        "urn:mace:dir:entitlement:common-lib-terms"
+      ]
+    }
+  ],
+  "attributes.required": [
+    "urn:oid:1.3.6.1.4.1.5923.1.1.1.6"
+  ],
+  "attributes.NameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
+  "attributeencodings": [
+    {
+      "name": "urn:oid:1.3.6.1.4.1.5923.1.1.1.10",
+      "encoding": "raw"
+    }
+  ],
+  "NameIDFormat": [
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+  ],
+  "validate.authnrequest": true,
+  "assertion.encryption": true,
+  "authproc": [
+    {
+      "priority": 60,
+      "filter": {
+        "class": "core:AttributeLimit"
+      }
+    }
+  ],
+  "extra": {
+    "consent.disable": true
+  }
+}

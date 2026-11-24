@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Remote SAML 2.0 identity provider (saml20-idp-remote)",
+  "type": "object",
+  "additionalProperties": false,
+  "x-groups": [
+    {"title": "Endpoints", "properties": ["SingleSignOnService", "SingleLogoutService", "ArtifactResolutionService"]},
+    {"title": "Keys", "properties": ["certificates", "signature_key"]},
+    {"title": "Description and discovery", "properties": ["name", "description", "OrganizationName", "OrganizationDisplayName", "OrganizationURL", "icon", "UIInfo", "DiscoHints", "hint.cidr", "hide.from.discovery", "contacts", "EntityAttributes", "RegistrationInfo", "scope"]},
+    {"title": "Authentication request", "properties": ["AuthnContextClassRef", "AuthnContextComparison", "disable_scoping", "IDPList", "ProxyCount", "NameIDFormats", "nameid.encryption"]},
+    {"title": "Signing and validation", "properties": ["signature.algorithm", "sign.authnrequest", "sign.logout", "redirect.sign", "validate.logout", "redirect.validate"]},
+    {"title": "Encryption", "properties": ["assertion.encryption", "sharedkey", "sharedkey_algorithm", "encryption.blacklisted-algorithms"]},
+    {"title": "Attributes", "properties": ["attributes", "attributesRegex"]},
+    {"title": "Processing", "properties": ["authproc"]},
+    {"title": "Uncataloged options", "properties": ["extra"]}
+  ],
+  "required": ["SingleSignOnService", "certificates"],
+  "properties": {
+    "SingleSignOnService": {
+      "title": "Single sign-on service",
+      "description": "The SP sends its request to the first endpoint whose binding it supports.",
+      "$ref": "../common.json#/$defs/endpoints",
+      "minItems": 1
+    },
+    "SingleLogoutService": {
+      "title": "Single logout service",
+      "description": "Not set: logging out does not reach the IdP.",
+      "$ref": "../common.json#/$defs/endpoints",
+      "minItems": 1
+    },
+    "ArtifactResolutionService": {
+      "title": "Artifact resolution service",
+      "$ref": "../common.json#/$defs/indexedEndpoints",
+      "minItems": 1
+    },
+    "certificates": {
+      "$ref": "../common.json#/$defs/remoteCertificates",
+      "minItems": 1,
+      "description": "Used to verify the IdP's signatures and to encrypt to it. At least one is for signing.",
+      "contains": {
+        "properties": {"use": {"enum": ["signing", "both"]}},
+        "required": ["use"]
+      },
+      "$error": {"contains": "At least one certificate is for signing."}
+    },
+    "signature_key": {
+      "title": "Signing key towards this IdP",
+      "description": "Not set: the SP's own key.",
+      "$ref": "../common.json#/$defs/keySlot",
+      "required": ["privatekey", "certificate"]
+    },
+    "name": {
+      "title": "Name",
+      "description": "Shown in discovery. The display name of the user interface information wins over it. Not set: the organization names, then the entity ID.",
+      "$ref": "../common.json#/$defs/languageMap"
+    },
+    "description": {
+      "title": "Description",
+      "description": "Shown in discovery.",
+      "$ref": "../common.json#/$defs/languageMap"
+    },
+    "OrganizationName": {"title": "Organization name", "$ref": "../common.json#/$defs/languageMap"},
+    "OrganizationDisplayName": {"title": "Organization display name", "$ref": "../common.json#/$defs/languageMap"},
+    "OrganizationURL": {
+      "title": "Organization URL",
+      "description": "Not read by core for this set.",
+      "$ref": "../common.json#/$defs/languageMap"
+    },
+    "icon": {
+      "title": "Icon",
+      "description": "Address of an image shown in discovery.",
+      "type": "string",
+      "minLength": 1
+    },
+    "UIInfo": {"title": "User interface information", "$ref": "../common.json#/$defs/UIInfo"},
+    "DiscoHints": {"title": "Discovery hints", "$ref": "../common.json#/$defs/DiscoHints"},
+    "hint.cidr": {
+      "title": "Preselect for these IP blocks",
+      "description": "One CIDR block per line. Merged with the IP blocks of the discovery hints.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "hide.from.discovery": {"title": "Hide from discovery", "type": "boolean", "default": false},
+    "contacts": {"title": "Contacts", "$ref": "../common.json#/$defs/contacts", "minItems": 1},
+    "EntityAttributes": {"title": "Entity attributes", "$ref": "../common.json#/$defs/EntityAttributes", "minItems": 1},
+    "RegistrationInfo": {"title": "Registration information", "$ref": "../common.json#/$defs/RegistrationInfo"},
+    "scope": {
+      "title": "Scopes",
+      "description": "One per line. Used only by the saml:FilterScopes filter. Not set: the host of the default single sign-on endpoint.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "AuthnContextClassRef": {
+      "title": "Requested authentication context class",
+      "description": "A single class. Not set: the one in the request, then the SP's own.",
+      "type": "string",
+      "minLength": 1
+    },
+    "AuthnContextComparison": {
+      "title": "Authentication context comparison",
+      "description": "Not set: the SP's value, then exact.",
+      "type": "string",
+      "enum": ["exact", "minimum", "maximum", "better"]
+    },
+    "disable_scoping": {
+      "title": "Send no scoping element",
+      "description": "Scoping is also disabled when the SP disables it.",
+      "type": "boolean",
+      "default": false
+    },
+    "IDPList": {
+      "title": "IdP list",
+      "description": "One entity ID per line. Used only when neither the request nor the SP gives one.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "ProxyCount": {
+      "title": "Proxy count",
+      "description": "Not set: the SP's value. The request's value wins over both.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "NameIDFormats": {
+      "title": "NameID formats",
+      "description": "One per line. Published by the IdP; core does not choose by it.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "nameid.encryption": {
+      "title": "Encrypt the NameID",
+      "description": "Not set: the SP's value, then off.",
+      "type": "boolean"
+    },
+    "signature.algorithm": {
+      "title": "Signature algorithm",
+      "description": "Not set: the SP's value, then RSA-SHA256.",
+      "$ref": "../common.json#/$defs/signatureAlgorithm"
+    },
+    "sign.authnrequest": {
+      "title": "Sign authentication requests",
+      "description": "The SP's value wins over this one. Not set there or here: the redirect signing option.",
+      "type": "boolean"
+    },
+    "sign.logout": {
+      "title": "Sign logout messages",
+      "description": "The SP's value wins over this one. Not set there or here: the redirect signing option.",
+      "type": "boolean"
+    },
+    "redirect.sign": {
+      "title": "Sign messages sent with the redirect binding",
+      "description": "Not set: the SP's value, then off.",
+      "type": "boolean"
+    },
+    "validate.logout": {
+      "title": "Validate the signature of logout messages",
+      "description": "Not set: the SP's value, then redirect validation; a signature that is present is still checked. Off: never checked, even when present.",
+      "type": "boolean"
+    },
+    "redirect.validate": {
+      "title": "Require signatures on the redirect binding",
+      "description": "Not set: the SP's value, then off.",
+      "type": "boolean"
+    },
+    "assertion.encryption": {
+      "title": "Require encrypted assertions",
+      "description": "Not set: the SP's value, then off.",
+      "type": "boolean"
+    },
+    "sharedkey": {
+      "title": "Shared encryption key",
+      "description": "Not set: assertions are decrypted with the SP's private key.",
+      "type": "string",
+      "minLength": 1,
+      "x-sensitive": true
+    },
+    "sharedkey_algorithm": {
+      "title": "Shared key algorithm",
+      "description": "Not set: the SP's value, then AES128-GCM.",
+      "$ref": "../common.json#/$defs/sharedkeyAlgorithm"
+    },
+    "encryption.blacklisted-algorithms": {
+      "title": "Refused encryption algorithms",
+      "description": "One algorithm URI per line. Not set: the SP's value, then RSA 1.5.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "attributes": {
+      "description": "Not set: every attribute.",
+      "$ref": "../common.json#/$defs/attributePolicy",
+      "minItems": 1
+    },
+    "attributesRegex": {
+      "title": "Attributes accepted, as regular expressions",
+      "description": "One per line. Applied only when the core:AttributeLimit filter runs.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "authproc": {
+      "title": "Processing filters",
+      "description": "Merged with authproc.sp of config.php and the SP's filters, ordered by priority.",
+      "$ref": "../common.json#/$defs/authproc"
+    },
+    "extra": {"$ref": "../common.json#/$defs/extra"}
+  }
+}

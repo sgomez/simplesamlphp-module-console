@@ -586,7 +586,347 @@ The Console sets no limit of its own, applies none on PostgreSQL or SQLite, and 
 
 ## 5. Managed entities
 
-_Not written yet._
+### 5.1 What a managed entity is
+
+A managed entity is one row of `console_entity` (section 4.4): a set, an entity ID, an enabled flag and a Console document holding its metadata. The set, the entity ID and the flag are not part of the document.
+
+**Set.** One of `saml20-sp-remote`, `saml20-idp-remote` and `saml20-idp-hosted`, chosen when the entity is created. It cannot be changed afterwards.
+
+**Entity ID.**
+
+- It is not empty, is at most 1024 bytes long and is compared byte for byte (section 4.3).
+- It cannot be changed once the entity exists. Renaming is duplicating and deleting.
+- Two managed entities of the same set cannot share an entity ID. The same entity ID may be a managed entity in more than one set.
+- In `saml20-idp-hosted`, `__DEFAULT__` and `__DYNAMIC:<n>__` are rejected: the entity ID is always written out.
+- An entity ID that is not an absolute URI is accepted with a warning (section 5.9).
+
+**Enabled flag.** A disabled managed entity does not travel in the Snapshot. Enabling and disabling are Pending changes like any other and have no effect before the next Publication (section 8).
+
+A managed entity may share its entity ID and set with an External entity; it is then an Override or Shadowed, depending on the order of `metadata.sources` (section 9).
+
+### 5.2 How a managed entity reaches core
+
+Core asks the module's `MetadataStore`, named `console:Snapshot` in `metadata.sources` (section 2.5), for the entities of a set. The store reads the PHP file of that set from the build the node is serving (section 3.5): a `return` of an array keyed by entity ID, each entry already translated into what core expects, with Secret references resolved. It catches every error of its own (section 3.2).
+
+Which source wins for an entity ID is decided by the order of `metadata.sources`, never by the Console. Core validates only `expire` and the presence of an entity ID when it loads an entity; everything else is checked lazily by whichever code reads the option. The Console therefore validates every document itself (sections 5.7 and 5.8).
+
+### 5.3 The catalog
+
+| Set | Schema | Example document and array |
+| --- | --- | --- |
+| `saml20-sp-remote` | [`saml20-sp-remote.json`](docs/spec/schemas/entities/saml20-sp-remote.json) | [`saml20-sp-remote.json`](docs/spec/examples/entities/saml20-sp-remote.json), [`saml20-sp-remote.php`](docs/spec/examples/entities/saml20-sp-remote.php) |
+| `saml20-idp-remote` | [`saml20-idp-remote.json`](docs/spec/schemas/entities/saml20-idp-remote.json) | [`saml20-idp-remote.json`](docs/spec/examples/entities/saml20-idp-remote.json), [`saml20-idp-remote.php`](docs/spec/examples/entities/saml20-idp-remote.php) |
+| `saml20-idp-hosted` | [`saml20-idp-hosted.json`](docs/spec/schemas/entities/saml20-idp-hosted.json) | [`saml20-idp-hosted.json`](docs/spec/examples/entities/saml20-idp-hosted.json), [`saml20-idp-hosted.php`](docs/spec/examples/entities/saml20-idp-hosted.php) |
+
+Each example is one valid document next to the `$metadata[...]` statement a flat file would hold for it. A Secret reference in a document appears in the array as the value a node resolved it to.
+
+Each set has, besides its schema, a PHP class that holds its cross-field rules, its translator and its inverse translator (section 3.3).
+
+**What is cataloged.** An option is cataloged for a set when SimpleSAMLphp 2.5 reads it from an entity of that set, documented or not, or when `SAMLParser` emits it for that set, so that an entity created from XML metadata does not start out with `extra`. An option the reference documentation lists but no code reads is not cataloged. Options owned by modules outside core are never cataloged. The full lists are in sections 5.11 to 5.13.
+
+**What is not.** Unlike the authsource catalog, the entity schemas are open: an option they do not catalog goes in the `extra` bag (section 5.6). See [ADR 0008](docs/adr/0008-open-entity-documents-with-an-extra-bag.md).
+
+### 5.4 Schema conventions
+
+Every entity schema follows the conventions of section 6.6: JSON Schema 2020-12, `additionalProperties: false` on the root and every nested object, core's option names, `title` and `description` with the fallback in the help text, `default` and `examples` as hints only, declaration order as form and PHP order, `$ref` only to files of the catalog, `$error` on every `pattern`, and the annotations `x-sensitive`, `x-key-reference`, `x-authsource-reference`, `x-groups`, `x-widget` and `x-when`.
+
+What differs:
+
+- **Open root.** The root carries `additionalProperties: false` like any other object, but holds an `extra` option of free-form JSON (section 5.6).
+- **`x-literal: true`.** Marks a string without an `enum` that refuses a Secret reference because the Console compares it or core needs it before secrets are resolved. In the entity schemas: `host` and `auth` of `saml20-idp-hosted`, and every `Location` and `ResponseLocation` of an endpoint, through the shared `url` shape.
+- **Key reference slots have names of their own.** Core spreads a key over prefixed options (`privatekey`, `new_certData`, `signature.certificate`…). The document groups them in one option per slot, named with an underscore so that it cannot be mistaken for a core option: `key`, `next_key`, `signature_key`, `metadata_sign_key`, `https_certificate` and `certificates`. `privatekey`, `certificate`, `certData`, `keys`, `key_name` and their prefixed forms are never options of their own.
+- **No defaults on tri-state options.** `validate.authnrequest` and `validate.logout` are optional booleans without `default`: not set means "check a signature when one is present", `false` means "never check, even when signed".
+- **Precedence in the help text.** Many options fall back to the other side of the exchange. The help text of each option says which side wins, as the code does it: for `sign.logout` and `sign.authnrequest` the sender's value wins, the reverse of what the reference documentation states.
+
+### 5.5 Shared shapes
+
+The entity schemas use the shapes of section 6.7 (`stringList`, `languageMap`, `languageListMap`, `signatureAlgorithm`, `authproc`, `keySlot`, `certificate`, `contacts`, `EntityAttributes`, `UIInfo`, `RegistrationInfo`) and these, also defined in [`common.json`](docs/spec/schemas/common.json):
+
+**URL** (`url`). An absolute `http` or `https` URL, marked `x-literal`. Every `Location` and `ResponseLocation` uses it.
+
+**Binding** (`binding`). One of the SAML 2.0 bindings core implements:
+
+| Binding |
+| --- |
+| `urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect` |
+| `urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST` |
+| `urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact` |
+| `urn:oasis:names:tc:SAML:2.0:bindings:SOAP` |
+| `urn:oasis:names:tc:SAML:2.0:bindings:PAOS` |
+| `urn:oasis:names:tc:SAML:2.0:profiles:holder-of-key:SSO:browser` |
+
+OPEN: real metadata routinely carries endpoints with other bindings, which core skips when it chooses an endpoint: `HTTP-POST-SimpleSign`, the SAML 1.x profiles in the assertion consumer service of a Shibboleth SP that supports both protocols, the `URI` binding. With the enum above, such an entity is rejected on save and skipped by Import. Whether to reject it, drop those endpoints with a report, or accept any binding with a warning is not decided.
+
+**Endpoints.** The remote sets hold each service as a list of endpoints, in the order core tries them. Two shapes follow the SAML metadata schema:
+
+| Shape | Fields | Used by |
+| --- | --- | --- |
+| `endpoint` | `Binding`, `Location`, optional `ResponseLocation` | `SingleSignOnService`, `SingleLogoutService` |
+| `indexedEndpoint` | `Binding`, `Location`, optional `index` (integer, 0 or more) and `isDefault` | `AssertionConsumerService`, `ArtifactResolutionService` |
+
+`DiscoveryResponse` of `saml20-sp-remote` is an indexed endpoint whose `Binding` is always `urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol`.
+
+**Hosted endpoint** (`hostedEndpoint`). `SingleSignOnService` and `SingleLogoutService` of `saml20-idp-hosted` are not endpoint lists in core but one URL plus a list of bindings. The document holds `{Location?, Bindings}`: `Bindings` is a non-empty list of distinct bindings; `Location` is normally absent, and core then derives it from its base URL.
+
+**Certificates of a remote entity** (`remoteCertificates`). A list of pasted certificates, each `{pem, use}` with `use` one of `signing`, `encryption` or `both`. The Console holds them; a remote entity has no file references. The list is emitted as core's `keys`, in the same order: each row becomes `{type: "X509Certificate", signing, encryption, X509Certificate}` with the base64 body. As for key slots (section 6.7), a pasted certificate is rewritten as PEM with armour and 64-character lines on save.
+
+**Key slots.** The `keySlot` of section 6.7. In every entity schema a slot that is set requires both `privatekey` and `certificate`.
+
+**Attributes released** (`attributePolicy`). Core takes a list of names, a map of name to allowed values, or both mixed. The document holds rows `{name, values?}`; a row without `values` becomes a positional name, a row with them becomes `name => values`.
+
+**Attribute encodings** (`attributeencodings`). Rows `{name, encoding}`, `encoding` one of `string`, `base64` and `raw`, translated to core's map.
+
+**Discovery hints** (`DiscoHints`). Optional lists `IPHint`, `DomainHint` and `GeolocationHint`, at least one present.
+
+**Shared key algorithm** (`sharedkeyAlgorithm`). The seven block ciphers of the XML encryption library: AES-128, AES-192 and AES-256 in GCM and in CBC mode, and Triple DES.
+
+Rows keyed by `name` reject a repeated name on save, as in section 6.7.
+
+### 5.6 `extra`
+
+`extra` is an object of options the set's schema does not catalog. The translator merges it as it is into the array core receives, after the cataloged options. It is the only place a document can carry such an option.
+
+- It is neither validated nor masked. Whatever is in it is shown in clear wherever the entity is shown.
+- It may not contain a key the translator emits from a cataloged option (for example `keys`, `certData`, `new_privatekey`, `SingleSignOnServiceBinding`, or a cataloged option's own name), so it cannot bypass validation, masking or Key references.
+- It may not contain `expire`, nor the keys core adds itself: `entityid`, `metadata-set` and `metadata-index`.
+- It accepts no Secret references: a string anywhere inside it that has the form of one is rejected.
+- An empty `extra` is not stored; the option is unset instead.
+- Every managed entity that uses `extra` carries a warning (section 5.9).
+
+In the form, `extra` is alone in the last group, "Uncataloged options", edited as JSON text and shown only once added (section 10).
+
+### 5.7 Validation on save
+
+A managed entity is saved only when it is valid on its own. There are no invalid drafts.
+
+1. The entity ID rules of section 5.1, when the entity is created.
+2. The schema of the set, with `opis/json-schema` reporting every error.
+3. The cross-field rules of the set's class (sections 5.11 to 5.13) and the rules below.
+
+Errors of all three are reported together, each by the JSON pointer of the value it concerns. The Console never runs an entity through core to validate it.
+
+**Minimum content**, in the schemas:
+
+- `saml20-sp-remote`: at least one `AssertionConsumerService` endpoint.
+- `saml20-idp-remote`: at least one `SingleSignOnService` endpoint and at least one certificate whose `use` is `signing` or `both`.
+- `saml20-idp-hosted`: `host`, `auth` and the `key` slot.
+
+**Rules that apply to every set**
+
+- Every `Location` and `ResponseLocation` is an absolute `http` or `https` URL; every `Binding` is in the enum of section 5.5.
+- Within one service, no two endpoints share an `index` and at most one is `isDefault`.
+- A signature algorithm outside `signatureAlgorithm`, or a shared key algorithm outside `sharedkeyAlgorithm`, is rejected by the schema.
+- A processing filter whose `class` names `core:PHP`, in the short form or as the full class name, is rejected; an entity that needs it stays an External entity. Two filters with the same priority are rejected.
+- A pasted certificate that cannot be parsed is rejected. In a private key or certificate file reference, a `pdo://` location and a `%secret(name)%` reference are rejected.
+- The rules of `extra` (section 5.6).
+
+**Secret references.** The rules of section 6.8 apply: only in a string without an `enum` and without `x-literal`, filling the whole value, with `pattern` and `format` skipped. Inside the free-form configuration of a processing filter any string may be one; inside `extra`, none.
+
+**Sensitive values.** The options annotated `x-sensitive` are:
+
+| Set | Sensitive options |
+| --- | --- |
+| `saml20-sp-remote` | `sharedkey`, `privatekey_pass` of `signature_key` |
+| `saml20-idp-remote` | `sharedkey`, `privatekey_pass` of `signature_key` |
+| `saml20-idp-hosted` | `privatekey_pass` of `key`, `next_key` and `metadata_sign_key` |
+
+A stored literal of a sensitive option is sent only to the edit form of its own entity; everywhere else it is a marker (sections 7 and 10). `contacts` hold personal data and are not masked. Neither is anything in `extra` or in the configuration of a processing filter; the Console recommends a Secret reference in a filter.
+
+### 5.8 Checks at Publication
+
+A Publication validates every enabled managed entity again and adds the checks that span objects. Each block names the entity.
+
+**Blocks**
+
+- Anything that would block a save, judged against the schemas and rules of the code that publishes. A module update that tightens a schema can therefore block Publication until the stored document is fixed or the entity disabled; the current Snapshot keeps being served.
+- The `auth` of an enabled `saml20-idp-hosted` that is neither the id of an enabled managed authsource nor the id of a File authsource of the publishing node, checked as an `x-authsource-reference` (section 6.9).
+- Two enabled managed `saml20-idp-hosted` with the same `host`, two `__DEFAULT__` included.
+- A processing filter whose `class` does not resolve on the publishing node.
+
+**Warnings, never blocking**
+
+- An `auth` satisfied only by a File authsource: that File authsource has to exist on every node.
+- The warnings of section 5.9, for the entities with Pending changes.
+- Collisions with External entities: new Overrides, Shadowed managed entities and Overrides whose source has changed (section 9). Collisions never block.
+
+### 5.9 Warnings
+
+Warnings never block. They are computed for every enabled managed entity and shown on the entity list at all times, and on the Publication screen for the entities with Pending changes.
+
+- A pasted certificate that has expired or expires within `cert_expiry_warning_days` (section 2.3). For a certificate file, only what the node serving the Console can read.
+- SHA-1 as `signature.algorithm` or `metadata.sign.algorithm`.
+- Signing or signature checking switched off: `saml20.sign.response`, `saml20.sign.assertion`, `sign.authnrequest`, `sign.logout`, `validate.authnrequest` or `validate.logout` set to `false`.
+- An endpoint whose `Location` or `ResponseLocation` is `http`.
+- An entity ID that is not an absolute URI.
+- Use of `extra`.
+- A `host` shared with an External `saml20-idp-hosted`.
+- On save only, judged on the node serving the Console: a processing filter whose `class` does not resolve, a Secret reference that does not resolve, a key or certificate file that is missing, a private key that does not match its certificate.
+
+### 5.10 Translation on the node
+
+The Snapshot carries each enabled managed entity in the list of its set as `{entityid, document}`, with Secret references unresolved. A node that builds its local copy takes each one through the steps of section 6.10: resolve every Secret reference, check every Key reference (section 7), translate the document with the class of its set, and write the result, keyed by entity ID, into the build's PHP file for that set.
+
+- A Key reference of `next_key` that fails its check leaves out only that slot; the entity is served with its current key. Any other slot that fails leaves the whole entity out of that node's build.
+- An entity whose document the node's code cannot translate is left out of its build, and the node flags itself (section 3.5).
+
+Every translator follows the general rules of section 6.10, except that the entity ID is the array key and there is no type at key `0`. Besides:
+
+- Key reference slots are emitted under core's names with the slot's prefix:
+
+  | Slot | Prefix |
+  | --- | --- |
+  | `key` | none |
+  | `next_key` | `new_` |
+  | `signature_key` | `signature.` |
+  | `metadata_sign_key` | `metadata.sign.` |
+  | `https_certificate` | `https.`, certificate only |
+
+  A slot emits `privatekey`, `privatekey_pass`, one certificate form (`certData` when pasted, `certificate` when a file) and `key_name`, each when set.
+- `certificates` becomes `keys` (section 5.5).
+- Rows keyed by `name` (`attributes`, `attributeencodings`, `EntityAttributes`, contact `attributes`) become core's maps; `authproc` rows become a map of priority to filter, as in section 6.7.
+- `RegistrationInfo.instant` is emitted as a Unix timestamp in the remote sets, as `SAMLParser` writes it, and as the date-time string in `saml20-idp-hosted`, which core parses when it publishes the metadata.
+- `extra` is merged last.
+
+The test suite checks, for every set, that a managed entity reaches core as the same array as its flat-file equivalent (the differential test) and that document to PHP to document is the identity (section 12).
+
+### 5.11 `saml20-sp-remote`
+
+A remote service provider the hosted IdP sends assertions to. The schema catalogs 45 root options in nine groups, plus `extra` in a last group of its own. `AssertionConsumerService` is the only required one.
+
+| Group | Options |
+| --- | --- |
+| Endpoints | `AssertionConsumerService`, `SingleLogoutService`, `DiscoveryResponse` |
+| Keys | `certificates`, `signature_key` |
+| Description | `name`, `description`, `OrganizationName`, `OrganizationDisplayName`, `OrganizationURL`, `UIInfo`, `contacts`, `EntityAttributes`, `RegistrationInfo`, `scope`, `hide.from.discovery` |
+| Attributes | `attributes`, `attributesRegex`, `attributes.required`, `attributes.NameFormat`, `attributeencodings`, `simplesaml.attributes` |
+| NameID | `NameIDFormat`, `nameid.encryption`, `SPNameQualifier` |
+| Signing and validation | `saml20.sign.response`, `saml20.sign.assertion`, `signature.algorithm`, `sign.logout`, `redirect.sign`, `validate.authnrequest`, `validate.logout`, `redirect.validate`, `skipEndpointValidationWhenSigned` |
+| Encryption | `assertion.encryption`, `sharedkey`, `sharedkey_algorithm` |
+| Request and session | `audience`, `ForceAuthn`, `IDPList`, `ProxyCount`, `assertion.lifetime`, `core:statistics-id`, `core:logout-timeout` |
+| Processing | `authproc` |
+
+**Remodelled options**
+
+| In the document | Core receives |
+| --- | --- |
+| `AssertionConsumerService`, `DiscoveryResponse`, lists of indexed endpoints | The lists |
+| `SingleLogoutService`, a list of endpoints | The list; `ResponseLocation` is how a separate logout response address is given |
+| `certificates` | `keys` |
+| `signature_key`, a key slot | `signature.privatekey`, `signature.privatekey_pass`, `signature.key_name`, and `signature.certData` or `signature.certificate` |
+| `name`, `description`, `OrganizationName`, `OrganizationDisplayName`, `OrganizationURL`, always language maps | The map |
+| `NameIDFormat`, `IDPList`, `audience`, always lists | The list; core uses only the first `NameIDFormat` |
+| `attributes`, `attributeencodings`, `contacts`, `EntityAttributes` | As in sections 5.5 and 6.7 |
+| `skipEndpointValidationWhenSigned`, a boolean only | The boolean; core's callable form is not expressible |
+| `authproc` | As in section 6.7 |
+
+**Rules.** All in the class, besides those of section 5.7.
+
+- No two rows of `attributes` or `attributeencodings` share a `name`.
+
+**Left out**, so in `extra` when present: `SingleLogoutServiceResponse` and `encryption.blacklisted-algorithms`, which the code does not read for this set; `AttributeNameFormat`, a legacy alias of `attributes.NameFormat`.
+
+### 5.12 `saml20-idp-remote`
+
+A remote identity provider that the `saml:SP` authsources of the node send requests to. The schema catalogs 39 root options in eight groups, plus `extra` in a last group of its own. `SingleSignOnService` and `certificates` are required.
+
+| Group | Options |
+| --- | --- |
+| Endpoints | `SingleSignOnService`, `SingleLogoutService`, `ArtifactResolutionService` |
+| Keys | `certificates`, `signature_key` |
+| Description and discovery | `name`, `description`, `OrganizationName`, `OrganizationDisplayName`, `OrganizationURL`, `icon`, `UIInfo`, `DiscoHints`, `hint.cidr`, `hide.from.discovery`, `contacts`, `EntityAttributes`, `RegistrationInfo`, `scope` |
+| Authentication request | `AuthnContextClassRef`, `AuthnContextComparison`, `disable_scoping`, `IDPList`, `ProxyCount`, `NameIDFormats`, `nameid.encryption` |
+| Signing and validation | `signature.algorithm`, `sign.authnrequest`, `sign.logout`, `redirect.sign`, `validate.logout`, `redirect.validate` |
+| Encryption | `assertion.encryption`, `sharedkey`, `sharedkey_algorithm`, `encryption.blacklisted-algorithms` |
+| Attributes | `attributes`, `attributesRegex` |
+| Processing | `authproc` |
+
+**Remodelled options**
+
+| In the document | Core receives |
+| --- | --- |
+| `SingleSignOnService`, `SingleLogoutService`, lists of endpoints; `ArtifactResolutionService`, a list of indexed endpoints | The lists |
+| `certificates`, with at least one for signing | `keys` |
+| `signature_key`, a key slot | The `signature.` options, as in section 5.11 |
+| `name`, `description`, `OrganizationName`, `OrganizationDisplayName`, `OrganizationURL`, always language maps | The map; core's discovery page ignores a plain string |
+| `NameIDFormats`, `IDPList`, `hint.cidr`, `scope`, `encryption.blacklisted-algorithms`, always lists | The list |
+| `AuthnContextClassRef`, a single string | The string; core throws on a list for this set |
+| `attributes`, `contacts`, `EntityAttributes` | As in sections 5.5 and 6.7 |
+| `authproc` | As in section 6.7 |
+
+The names follow core per set: `NameIDFormats` here, `NameIDFormat` in the other two sets. They are not unified.
+
+**Rules.** In the class, besides those of section 5.7.
+
+- No two rows of `attributes` share a `name`.
+
+**Left out**, so in `extra` when present: `NameIDPolicy`, which core reads and then overwrites with the SP's value; top-level `SPNameQualifier` and `base64attributes`, which the code does not read; `SingleLogoutServiceResponse`.
+
+### 5.13 `saml20-idp-hosted`
+
+The identity provider the node itself runs. The schema catalogs 43 root options in ten groups, plus `extra` in a last group of its own. `host`, `auth` and `key` are required.
+
+| Group | Options |
+| --- | --- |
+| Identity and login | `host`, `auth` |
+| Keys | `key`, `next_key`, `https_certificate` |
+| Endpoints | `SingleSignOnService`, `SingleLogoutService` |
+| Behaviour | `logouttype`, `saml20.ecp`, `saml20.hok.assertion`, `saml20.sendartifact`, `assertion.lifetime`, `errorURL` |
+| Attributes | `attributes`, `attributesRegex`, `attributeencodings`, `attributes.NameFormat` |
+| NameID | `NameIDFormat`, `nameid.encryption` |
+| Signing and validation | `saml20.sign.assertion`, `saml20.sign.response`, `signature.algorithm`, `sign.logout`, `redirect.sign`, `validate.authnrequest`, `validate.logout`, `redirect.validate` |
+| Encryption | `assertion.encryption`, `encryption.optional`, `sharedkey_algorithm` |
+| Published metadata | `OrganizationName`, `OrganizationDisplayName`, `OrganizationURL`, `contacts`, `scope`, `RegistrationInfo`, `UIInfo`, `DiscoHints`, `EntityAttributes`, `metadata.sign.enable`, `metadata.sign.algorithm`, `metadata_sign_key` |
+| Processing | `authproc` |
+
+**Remodelled options**
+
+| In the document | Core receives |
+| --- | --- |
+| `key`, a key slot | `privatekey`, `privatekey_pass`, `key_name`, and `certData` or `certificate` |
+| `next_key`, a key slot | The same names with the prefix `new_`, published in the metadata beside the current certificate |
+| `metadata_sign_key`, a key slot | The `metadata.sign.` options |
+| `https_certificate`, a certificate | `https.certData` or `https.certificate` |
+| `SingleSignOnService`, `SingleLogoutService`, hosted endpoints | `SingleSignOnService` or `SingleLogoutService` as a URL string when `Location` is set, and `SingleSignOnServiceBinding` or `SingleLogoutServiceBinding` as a list |
+| `NameIDFormat`, `scope`, always lists | The list |
+| `OrganizationName`, `OrganizationDisplayName`, `OrganizationURL`, always language maps | The map |
+| `attributes`, `attributeencodings`, `contacts`, `EntityAttributes` | As in sections 5.5 and 6.7 |
+| `authproc` | As in section 6.7 |
+
+`auth` carries `x-authsource-reference` and is checked at Publication (section 5.8). The rules for Key references, the next key and Promote are in section 7.
+
+**Rules.** The first two are in the schema, the third in the class.
+
+- `OrganizationName` without `OrganizationURL` is rejected; core throws on it.
+- `metadata.sign.algorithm` or `metadata_sign_key` without `metadata.sign.enable` set to `true` is rejected; core ignores them with an error in the log. Both carry an `x-when` on `metadata.sign.enable`.
+- No two rows of `attributes` or `attributeencodings` share a `name`.
+
+`host` is compared byte for byte for the duplicate check of section 5.8; the Console does not check its form.
+
+**Left out.** `encryption.blacklisted-algorithms`, which the code does not read for this set, and `AttributeNameFormat` go to `extra` when present. `saml:Extensions` holds PHP objects and fits neither the document nor `extra`: a hosted IdP that needs it stays in a flat file.
+
+### 5.14 PHP text and XML
+
+The edit screen shows a managed entity either as a form or as the `$metadata['<entity ID>'] = [...];` statement an administrator would write in a flat file. The text is produced by the translator with Secret references unresolved and is never stored. Reading it back, reading PHP or XML pasted into "Add entity", Import and "Replace from…" all go through the inverse translator of the set; XML is first parsed with `SAMLParser`. The editor, its sentinel for sensitive values and its errors are specified in section 10; Import, creation from pasted configuration and "Replace from…" in section 9. See [ADR 0010](docs/adr/0010-php-view-through-inverse-translators.md).
+
+What is specific to entities:
+
+- A key the set does not catalog goes to `extra`, with a non-blocking warning and a suggestion when it is close to a cataloged option. That includes every option listed as left out in sections 5.11 to 5.13.
+- A block whose entity ID differs from the entity being edited is rejected. An `entityid` key inside the array must match it too; `entityid`, `metadata-set` and `metadata-index` are then dropped.
+- `expire` is dropped and reported. `url`, which `SAMLParser` writes beside `OrganizationURL`, is dropped without a report.
+- An empty list or map counts as unset. `SAMLParser` writes several: `SingleLogoutService`, `ArtifactResolutionService`, `NameIDFormats`, `contacts`, empty members of `UIInfo`.
+- The inverse translator accepts each form core accepts for a cataloged option and returns the single form of the document: a string where core takes a string or a list becomes a list of one; a plain localized string becomes a language map with the language `en`; a filter given as a class name string becomes `{class}`; a Unix timestamp in `RegistrationInfo.instant` becomes a UTC date-time string.
+- In a remote set, `keys` becomes `certificates`. A `certData` becomes a certificate with `use: both`; a `certificate` file or `pdo://` location is read through core on the node serving the Console and stored pasted. A `keys` entry whose type is not `X509Certificate`, or that is neither for signing nor for encryption, is an error.
+- In `saml20-idp-hosted`, and in `signature_key` and `metadata_sign_key`, `certData` becomes a pasted certificate and a `certificate` location a file reference. `keys` and `new_keys` are rejected with an error that names the key and points to `certData` or `certificate`, as for `saml:SP` (section 6.16): a `keys` list can hold several certificates and never carries the private key.
+- A private key at a `pdo://` location is an error the administrator fixes in the editor; Import skips such an entity.
+
+### 5.15 Accepted gaps
+
+- No `saml:Extensions` on a hosted IdP.
+- `NameIDPolicy` of a remote IdP has no effect in core 2.5 and is not cataloged.
+- `skipEndpointValidationWhenSigned` cannot be a callable.
+- A key descriptor with more than one certificate yields only the first, as `SAMLParser` does.
+- Options written by sources other than `SAMLParser`, such as `metarefresh`'s `entityDescriptor` or `tags`, were not surveyed and land in `extra`.
+- The Console checks `auth` and processing filter classes against the publishing node only. Keeping modules and File authsources identical across nodes is the deployment's job (section 2.8).
 
 ## 6. Managed authsources
 

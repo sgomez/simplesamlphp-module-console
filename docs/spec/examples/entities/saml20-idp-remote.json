@@ -1,0 +1,64 @@
+{
+  "SingleSignOnService": [
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+      "Location": "https://idp.example.net/idp/profile/SAML2/Redirect/SSO"
+    },
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+      "Location": "https://idp.example.net/idp/profile/SAML2/POST/SSO"
+    }
+  ],
+  "SingleLogoutService": [
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+      "Location": "https://idp.example.net/idp/profile/SAML2/Redirect/SLO",
+      "ResponseLocation": "https://idp.example.net/idp/profile/SAML2/Redirect/SLO/Response"
+    }
+  ],
+  "certificates": [
+    {
+      "pem": "-----BEGIN CERTIFICATE-----\nMIIBijCCAS+gAwIBAgIUBOipfhs3LtI/6gAma+kwyjvO3UswCgYIKoZIzj0EAwIw\nGjEYMBYGA1UEAwwPaWRwLmV4YW1wbGUubmV0MB4XDTI2MTEyNDE3MjIxNloXDTM2\nMTEyMTE3MjIxNlowGjEYMBYGA1UEAwwPaWRwLmV4YW1wbGUubmV0MFkwEwYHKoZI\nzj0CAQYIKoZIzj0DAQcDQgAENSMNu5VqhChygJaGT7MxzfZXedEjZOrCAvNCMqXU\nzCGt1YCOHNOHGUo2+r+ciR2Mx8Mx+fvB2U4jIwBcCy7M1aNTMFEwHQYDVR0OBBYE\nFCWZtS+7Lw8ibLBhwxSVjmlqNxt4MB8GA1UdIwQYMBaAFCWZtS+7Lw8ibLBhwxSV\njmlqNxt4MA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwIDSQAwRgIhAImZAhgf\nl3R8Er9p+btTwMYVw/SkDq0cBIf6Hn/aMQyBAiEAq+KQ94GUUGBNcXQ68epD6iWN\nfbjVJYKTRQqzZAvb9rw=\n-----END CERTIFICATE-----\n",
+      "use": "signing"
+    }
+  ],
+  "name": {
+    "en": "Example University",
+    "es": "Universidad de Ejemplo"
+  },
+  "UIInfo": {
+    "DisplayName": {
+      "en": "Example University"
+    }
+  },
+  "DiscoHints": {
+    "DomainHint": [
+      "example.net"
+    ]
+  },
+  "hint.cidr": [
+    "192.0.2.0/24"
+  ],
+  "RegistrationInfo": {
+    "authority": "https://federation.example.org",
+    "instant": "2026-01-15T09:00:00Z"
+  },
+  "scope": [
+    "example.net"
+  ],
+  "AuthnContextClassRef": "https://refeds.org/profile/mfa",
+  "NameIDFormats": [
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
+  ],
+  "sign.authnrequest": true,
+  "sharedkey": "%secret(idp-example-net-sharedkey)%",
+  "authproc": [
+    {
+      "priority": 10,
+      "filter": {
+        "class": "saml:FilterScopes"
+      }
+    }
+  ]
+}

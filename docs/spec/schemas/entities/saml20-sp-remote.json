@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Remote SAML 2.0 service provider (saml20-sp-remote)",
+  "type": "object",
+  "additionalProperties": false,
+  "x-groups": [
+    {"title": "Endpoints", "properties": ["AssertionConsumerService", "SingleLogoutService", "DiscoveryResponse"]},
+    {"title": "Keys", "properties": ["certificates", "signature_key"]},
+    {"title": "Description", "properties": ["name", "description", "OrganizationName", "OrganizationDisplayName", "OrganizationURL", "UIInfo", "contacts", "EntityAttributes", "RegistrationInfo", "scope", "hide.from.discovery"]},
+    {"title": "Attributes", "properties": ["attributes", "attributesRegex", "attributes.required", "attributes.NameFormat", "attributeencodings", "simplesaml.attributes"]},
+    {"title": "NameID", "properties": ["NameIDFormat", "nameid.encryption", "SPNameQualifier"]},
+    {"title": "Signing and validation", "properties": ["saml20.sign.response", "saml20.sign.assertion", "signature.algorithm", "sign.logout", "redirect.sign", "validate.authnrequest", "validate.logout", "redirect.validate", "skipEndpointValidationWhenSigned"]},
+    {"title": "Encryption", "properties": ["assertion.encryption", "sharedkey", "sharedkey_algorithm"]},
+    {"title": "Request and session", "properties": ["audience", "ForceAuthn", "IDPList", "ProxyCount", "assertion.lifetime", "core:statistics-id", "core:logout-timeout"]},
+    {"title": "Processing", "properties": ["authproc"]},
+    {"title": "Uncataloged options", "properties": ["extra"]}
+  ],
+  "required": ["AssertionConsumerService"],
+  "properties": {
+    "AssertionConsumerService": {
+      "title": "Assertion consumer service",
+      "description": "Where the IdP sends responses. The IdP uses the first endpoint whose binding it supports, unless the request names one.",
+      "$ref": "../common.json#/$defs/indexedEndpoints",
+      "minItems": 1
+    },
+    "SingleLogoutService": {
+      "title": "Single logout service",
+      "description": "Not set: the SP takes no part in single logout.",
+      "$ref": "../common.json#/$defs/endpoints",
+      "minItems": 1
+    },
+    "DiscoveryResponse": {
+      "title": "Discovery response",
+      "description": "Published only. Every row carries the idp-discovery-protocol binding.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "title": "endpoint",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["Binding", "Location"],
+        "properties": {
+          "Binding": {"title": "Binding", "type": "string", "const": "urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol"},
+          "Location": {"title": "Location", "$ref": "../common.json#/$defs/url"},
+          "index": {"title": "Index", "type": "integer", "minimum": 0},
+          "isDefault": {"title": "Default", "type": "boolean"}
+        }
+      }
+    },
+    "certificates": {
+      "$ref": "../common.json#/$defs/remoteCertificates",
+      "minItems": 1,
+      "description": "Used to verify the SP's signatures and to encrypt assertions to it. Not set: signed requests cannot be verified and assertions are sent unencrypted."
+    },
+    "signature_key": {
+      "title": "Signing key towards this SP",
+      "description": "Not set: the hosted IdP's own key.",
+      "$ref": "../common.json#/$defs/keySlot",
+      "required": ["privatekey", "certificate"]
+    },
+    "name": {
+      "title": "Name",
+      "description": "Not set: the organization display name, then the entity ID.",
+      "$ref": "../common.json#/$defs/languageMap"
+    },
+    "description": {
+      "title": "Description",
+      "description": "Not read by core; shown by other modules.",
+      "$ref": "../common.json#/$defs/languageMap"
+    },
+    "OrganizationName": {"title": "Organization name", "$ref": "../common.json#/$defs/languageMap"},
+    "OrganizationDisplayName": {"title": "Organization display name", "$ref": "../common.json#/$defs/languageMap"},
+    "OrganizationURL": {
+      "title": "Organization URL",
+      "description": "Not read by core for this set.",
+      "$ref": "../common.json#/$defs/languageMap"
+    },
+    "UIInfo": {"title": "User interface information", "$ref": "../common.json#/$defs/UIInfo"},
+    "contacts": {"title": "Contacts", "$ref": "../common.json#/$defs/contacts", "minItems": 1},
+    "EntityAttributes": {"title": "Entity attributes", "$ref": "../common.json#/$defs/EntityAttributes", "minItems": 1},
+    "RegistrationInfo": {"title": "Registration information", "$ref": "../common.json#/$defs/RegistrationInfo"},
+    "scope": {
+      "title": "Scopes",
+      "description": "One per line.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "hide.from.discovery": {"title": "Hide from discovery", "type": "boolean", "default": false},
+    "attributes": {
+      "description": "Not set: the hosted IdP's attributes option, then every attribute.",
+      "$ref": "../common.json#/$defs/attributePolicy",
+      "minItems": 1
+    },
+    "attributesRegex": {
+      "title": "Attributes released, as regular expressions",
+      "description": "One per line. Applied only when the core:AttributeLimit filter runs.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "attributes.required": {
+      "title": "Required attributes",
+      "description": "One name per line.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "attributes.NameFormat": {
+      "title": "Attribute name format",
+      "description": "Not set: the hosted IdP's value, then the URI format.",
+      "type": "string",
+      "minLength": 1,
+      "examples": ["urn:oasis:names:tc:SAML:2.0:attrname-format:uri"]
+    },
+    "attributeencodings": {
+      "description": "Merged over the hosted IdP's encodings, attribute by attribute.",
+      "$ref": "../common.json#/$defs/attributeencodings",
+      "minItems": 1
+    },
+    "simplesaml.attributes": {"title": "Send attributes", "type": "boolean", "default": true},
+    "NameIDFormat": {
+      "title": "NameID formats",
+      "description": "One per line; only the first is used. Not set: the hosted IdP's value, then transient.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "nameid.encryption": {
+      "title": "Encrypt the NameID",
+      "description": "Not set: the hosted IdP's value, then off.",
+      "type": "boolean"
+    },
+    "SPNameQualifier": {
+      "title": "SP name qualifier",
+      "description": "Used only for a transient NameID. Not set: the entity ID.",
+      "type": "string",
+      "minLength": 1
+    },
+    "saml20.sign.response": {
+      "title": "Sign the response",
+      "description": "Not set: the hosted IdP's value, then on.",
+      "type": "boolean"
+    },
+    "saml20.sign.assertion": {
+      "title": "Sign the assertion",
+      "description": "Not set: the hosted IdP's value, then on.",
+      "type": "boolean"
+    },
+    "signature.algorithm": {
+      "title": "Signature algorithm",
+      "description": "Not set: the hosted IdP's value, then RSA-SHA256.",
+      "$ref": "../common.json#/$defs/signatureAlgorithm"
+    },
+    "sign.logout": {
+      "title": "Sign logout messages",
+      "description": "The hosted IdP's value wins over this one. Not set there or here: the redirect signing option.",
+      "type": "boolean"
+    },
+    "redirect.sign": {
+      "title": "Sign messages sent with the redirect binding",
+      "description": "Not set: the hosted IdP's value, then off.",
+      "type": "boolean"
+    },
+    "validate.authnrequest": {
+      "title": "Validate the signature of authentication requests",
+      "description": "Not set: the hosted IdP's value, then redirect validation; a signature that is present is still checked. Off: never checked, even when present.",
+      "type": "boolean"
+    },
+    "validate.logout": {
+      "title": "Validate the signature of logout messages",
+      "description": "Not set: the hosted IdP's value, then redirect validation; a signature that is present is still checked. Off: never checked, even when present.",
+      "type": "boolean"
+    },
+    "redirect.validate": {
+      "title": "Require signatures on the redirect binding",
+      "description": "Not set: the hosted IdP's value, then off.",
+      "type": "boolean"
+    },
+    "skipEndpointValidationWhenSigned": {
+      "title": "Accept any response location in a signed request",
+      "type": "boolean",
+      "default": false
+    },
+    "assertion.encryption": {
+      "title": "Encrypt assertions",
+      "description": "Not set: the hosted IdP's value, then off.",
+      "type": "boolean"
+    },
+    "sharedkey": {
+      "title": "Shared encryption key",
+      "description": "Not set: assertions are encrypted with the SP's certificate.",
+      "type": "string",
+      "minLength": 1,
+      "x-sensitive": true
+    },
+    "sharedkey_algorithm": {
+      "title": "Shared key algorithm",
+      "description": "Not set: the hosted IdP's value, then AES128-GCM.",
+      "$ref": "../common.json#/$defs/sharedkeyAlgorithm"
+    },
+    "audience": {
+      "title": "Additional audiences",
+      "description": "One per line. The entity ID is always an audience.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "ForceAuthn": {"title": "Always force re-authentication", "type": "boolean", "default": false},
+    "IDPList": {
+      "title": "IdP list",
+      "description": "One entity ID per line. Merged with the list in the request.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "ProxyCount": {"title": "Proxy count", "type": "integer", "minimum": 0},
+    "assertion.lifetime": {
+      "title": "Assertion lifetime in seconds",
+      "description": "Not set: the hosted IdP's value, then 300.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "core:statistics-id": {
+      "title": "Statistics identifier",
+      "description": "Not set: the entity ID.",
+      "type": "string",
+      "minLength": 1
+    },
+    "core:logout-timeout": {
+      "title": "Logout timeout in seconds",
+      "type": "integer",
+      "minimum": 1,
+      "default": 5
+    },
+    "authproc": {
+      "title": "Processing filters",
+      "description": "Merged with authproc.idp of config.php and the hosted IdP's filters, ordered by priority.",
+      "$ref": "../common.json#/$defs/authproc"
+    },
+    "extra": {"$ref": "../common.json#/$defs/extra"}
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Hosted SAML 2.0 identity provider (saml20-idp-hosted)",
+  "type": "object",
+  "additionalProperties": false,
+  "x-groups": [
+    {"title": "Identity and login", "properties": ["host", "auth"]},
+    {"title": "Keys", "properties": ["key", "next_key", "https_certificate"]},
+    {"title": "Endpoints", "properties": ["SingleSignOnService", "SingleLogoutService"]},
+    {"title": "Behaviour", "properties": ["logouttype", "saml20.ecp", "saml20.hok.assertion", "saml20.sendartifact", "assertion.lifetime", "errorURL"]},
+    {"title": "Attributes", "properties": ["attributes", "attributesRegex", "attributeencodings", "attributes.NameFormat"]},
+    {"title": "NameID", "properties": ["NameIDFormat", "nameid.encryption"]},
+    {"title": "Signing and validation", "properties": ["saml20.sign.assertion", "saml20.sign.response", "signature.algorithm", "sign.logout", "redirect.sign", "validate.authnrequest", "validate.logout", "redirect.validate"]},
+    {"title": "Encryption", "properties": ["assertion.encryption", "encryption.optional", "sharedkey_algorithm"]},
+    {"title": "Published metadata", "properties": ["OrganizationName", "OrganizationDisplayName", "OrganizationURL", "contacts", "scope", "RegistrationInfo", "UIInfo", "DiscoHints", "EntityAttributes", "metadata.sign.enable", "metadata.sign.algorithm", "metadata_sign_key"]},
+    {"title": "Processing", "properties": ["authproc"]},
+    {"title": "Uncataloged options", "properties": ["extra"]}
+  ],
+  "required": ["host", "auth", "key"],
+  "dependentRequired": {
+    "OrganizationName": ["OrganizationURL"]
+  },
+  "dependentSchemas": {
+    "metadata.sign.algorithm": {
+      "required": ["metadata.sign.enable"],
+      "properties": {"metadata.sign.enable": {"const": true}}
+    },
+    "metadata_sign_key": {
+      "required": ["metadata.sign.enable"],
+      "properties": {"metadata.sign.enable": {"const": true}}
+    }
+  },
+  "properties": {
+    "host": {
+      "title": "Host",
+      "description": "The host name, optionally followed by a path, that this IdP answers on, or __DEFAULT__ for any host no other hosted IdP claims.",
+      "type": "string",
+      "minLength": 1,
+      "x-literal": true,
+      "examples": ["idp.example.org", "__DEFAULT__"]
+    },
+    "auth": {
+      "title": "Authentication source",
+      "type": "string",
+      "minLength": 1,
+      "x-literal": true,
+      "x-authsource-reference": true
+    },
+    "key": {
+      "title": "Signing key",
+      "$ref": "../common.json#/$defs/keySlot",
+      "required": ["privatekey", "certificate"]
+    },
+    "next_key": {
+      "title": "Next key",
+      "description": "Published in the metadata beside the current certificate until it is promoted.",
+      "$ref": "../common.json#/$defs/keySlot",
+      "required": ["privatekey", "certificate"]
+    },
+    "https_certificate": {
+      "title": "Certificate of the HTTPS server",
+      "description": "Published for artifact resolution and holder-of-key.",
+      "$ref": "../common.json#/$defs/certificate"
+    },
+    "SingleSignOnService": {
+      "title": "Single sign-on service",
+      "description": "Not set: the HTTP-Redirect binding at the address SimpleSAMLphp derives.",
+      "$ref": "../common.json#/$defs/hostedEndpoint"
+    },
+    "SingleLogoutService": {
+      "title": "Single logout service",
+      "description": "Not set: the HTTP-Redirect binding at the address SimpleSAMLphp derives.",
+      "$ref": "../common.json#/$defs/hostedEndpoint"
+    },
+    "logouttype": {
+      "title": "Logout type",
+      "type": "string",
+      "enum": ["traditional", "iframe"],
+      "x-widget": "radio",
+      "default": "traditional"
+    },
+    "saml20.ecp": {"title": "Enhanced client or proxy", "type": "boolean", "default": false},
+    "saml20.hok.assertion": {"title": "Holder-of-key assertions", "type": "boolean", "default": false},
+    "saml20.sendartifact": {"title": "Send responses by artifact", "type": "boolean", "default": false},
+    "assertion.lifetime": {
+      "title": "Assertion lifetime in seconds",
+      "description": "The SP's value wins over this one. Not set there or here: 300.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "errorURL": {
+      "title": "Error page URL",
+      "description": "Published as the errorURL of the IdP.",
+      "type": "string",
+      "minLength": 1
+    },
+    "attributes": {
+      "description": "The SP's value wins over this one. Not set there or here: every attribute.",
+      "$ref": "../common.json#/$defs/attributePolicy",
+      "minItems": 1
+    },
+    "attributesRegex": {
+      "title": "Attributes released, as regular expressions",
+      "description": "One per line. Applied only when the core:AttributeLimit filter runs.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "attributeencodings": {
+      "description": "The SP's encodings are merged over these, attribute by attribute.",
+      "$ref": "../common.json#/$defs/attributeencodings",
+      "minItems": 1
+    },
+    "attributes.NameFormat": {
+      "title": "Attribute name format",
+      "description": "The SP's value wins over this one. Not set there or here: the URI format.",
+      "type": "string",
+      "minLength": 1,
+      "examples": ["urn:oasis:names:tc:SAML:2.0:attrname-format:uri"]
+    },
+    "NameIDFormat": {
+      "title": "NameID formats",
+      "description": "One per line; the first is issued when the SP names none. Not set: transient.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "nameid.encryption": {
+      "title": "Encrypt the NameID",
+      "description": "The SP's value wins over this one. Not set there or here: off.",
+      "type": "boolean"
+    },
+    "saml20.sign.assertion": {
+      "title": "Sign the assertion",
+      "description": "The SP's value wins over this one. Not set there or here: on.",
+      "type": "boolean"
+    },
+    "saml20.sign.response": {
+      "title": "Sign the response",
+      "description": "The SP's value wins over this one. Not set there or here: on.",
+      "type": "boolean"
+    },
+    "signature.algorithm": {
+      "title": "Signature algorithm",
+      "description": "The SP's value wins over this one. Not set there or here: RSA-SHA256.",
+      "$ref": "../common.json#/$defs/signatureAlgorithm"
+    },
+    "sign.logout": {
+      "title": "Sign logout messages",
+      "description": "This value wins over the SP's. Not set here or there: the redirect signing option.",
+      "type": "boolean"
+    },
+    "redirect.sign": {
+      "title": "Sign messages sent with the redirect binding",
+      "description": "The SP's value wins over this one. Not set there or here: off.",
+      "type": "boolean"
+    },
+    "validate.authnrequest": {
+      "title": "Validate the signature of authentication requests",
+      "description": "Published as WantAuthnRequestsSigned. The SP's value wins over this one. Not set there or here: redirect validation; a signature that is present is still checked. Off: never checked, even when present.",
+      "type": "boolean"
+    },
+    "validate.logout": {
+      "title": "Validate the signature of logout messages",
+      "description": "The SP's value wins over this one. Not set there or here: redirect validation; a signature that is present is still checked. Off: never checked, even when present.",
+      "type": "boolean"
+    },
+    "redirect.validate": {
+      "title": "Require signatures on the redirect binding",
+      "description": "The SP's value wins over this one. Not set there or here: off.",
+      "type": "boolean"
+    },
+    "assertion.encryption": {
+      "title": "Encrypt assertions",
+      "description": "The SP's value wins over this one. Not set there or here: off.",
+      "type": "boolean"
+    },
+    "encryption.optional": {
+      "title": "Send unencrypted when the SP has no encryption certificate",
+      "type": "boolean",
+      "default": false
+    },
+    "sharedkey_algorithm": {
+      "title": "Shared key algorithm",
+      "description": "Used only for an SP with a shared key. The SP's value wins over this one. Not set there or here: AES128-GCM.",
+      "$ref": "../common.json#/$defs/sharedkeyAlgorithm"
+    },
+    "OrganizationName": {
+      "title": "Organization name",
+      "description": "Requires the organization URL.",
+      "$ref": "../common.json#/$defs/languageMap"
+    },
+    "OrganizationDisplayName": {
+      "title": "Organization display name",
+      "description": "Not set: the organization name.",
+      "$ref": "../common.json#/$defs/languageMap"
+    },
+    "OrganizationURL": {"title": "Organization URL", "$ref": "../common.json#/$defs/languageMap"},
+    "contacts": {
+      "title": "Contacts",
+      "description": "The technical contact of config.php is added to these.",
+      "$ref": "../common.json#/$defs/contacts",
+      "minItems": 1
+    },
+    "scope": {
+      "title": "Scopes",
+      "description": "One per line. A value with any of $ ^ ( ) * | \\ is published as a regular expression.",
+      "$ref": "../common.json#/$defs/stringList",
+      "minItems": 1
+    },
+    "RegistrationInfo": {"title": "Registration information", "$ref": "../common.json#/$defs/RegistrationInfo"},
+    "UIInfo": {"title": "User interface information", "$ref": "../common.json#/$defs/UIInfo"},
+    "DiscoHints": {"title": "Discovery hints", "$ref": "../common.json#/$defs/DiscoHints"},
+    "EntityAttributes": {"title": "Entity attributes", "$ref": "../common.json#/$defs/EntityAttributes", "minItems": 1},
+    "metadata.sign.enable": {
+      "title": "Sign the published metadata",
+      "description": "Not set: metadata.sign.enable of config.php.",
+      "type": "boolean"
+    },
+    "metadata.sign.algorithm": {
+      "title": "Metadata signature algorithm",
+      "description": "Not set: metadata.sign.algorithm of config.php, then RSA-SHA256.",
+      "$ref": "../common.json#/$defs/signatureAlgorithm",
+      "x-when": {"metadata.sign.enable": [true]}
+    },
+    "metadata_sign_key": {
+      "title": "Metadata signing key",
+      "description": "Not set: the metadata signing key of config.php, then the signing key.",
+      "$ref": "../common.json#/$defs/keySlot",
+      "required": ["privatekey", "certificate"],
+      "x-when": {"metadata.sign.enable": [true]}
+    },
+    "authproc": {
+      "title": "Processing filters",
+      "description": "Merged with authproc.idp of config.php and the SP's filters, ordered by priority.",
+      "$ref": "../common.json#/$defs/authproc"
+    },
+    "extra": {"$ref": "../common.json#/$defs/extra"}
+  }
+}
