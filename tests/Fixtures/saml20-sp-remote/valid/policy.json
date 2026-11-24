@@ -1,0 +1,86 @@
+{
+  "AssertionConsumerService": [
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+      "Location": "https://sp.example.org/acs"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "uid"
+    },
+    {
+      "name": "mail",
+      "values": [
+        "a@example.org",
+        "b@example.org"
+      ]
+    },
+    {
+      "name": "cn"
+    }
+  ],
+  "attributesRegex": [
+    "/^eduPerson/"
+  ],
+  "attributes.required": [
+    "uid",
+    "mail"
+  ],
+  "attributes.NameFormat": "urn:oasis:names:tc:SAML:2.0:attrname-format:basic",
+  "attributeencodings": [
+    {
+      "name": "jpegPhoto",
+      "encoding": "base64"
+    },
+    {
+      "name": "objectGUID",
+      "encoding": "raw"
+    }
+  ],
+  "simplesaml.attributes": false,
+  "NameIDFormat": [
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
+  ],
+  "nameid.encryption": true,
+  "SPNameQualifier": "https://sp.example.org/qualifier",
+  "saml20.sign.response": false,
+  "saml20.sign.assertion": true,
+  "signature.algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha512",
+  "sign.logout": true,
+  "redirect.sign": true,
+  "validate.authnrequest": false,
+  "validate.logout": true,
+  "redirect.validate": true,
+  "skipEndpointValidationWhenSigned": true,
+  "assertion.encryption": true,
+  "sharedkey_algorithm": "http://www.w3.org/2009/xmlenc11#aes256-gcm",
+  "audience": [
+    "https://other.example.org"
+  ],
+  "ForceAuthn": true,
+  "IDPList": [
+    "https://idp.example.org"
+  ],
+  "ProxyCount": 2,
+  "assertion.lifetime": 600,
+  "core:statistics-id": "library",
+  "core:logout-timeout": 10,
+  "authproc": [
+    {
+      "priority": 10,
+      "filter": {
+        "class": "core:AttributeMap",
+        "0": "oid2name"
+      }
+    },
+    {
+      "priority": 50,
+      "filter": {
+        "class": "core:AttributeLimit",
+        "default": true
+      }
+    }
+  ]
+}

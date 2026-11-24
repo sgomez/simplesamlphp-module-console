@@ -50,7 +50,7 @@ it('takes the entity ID from the block when the identity field is empty', functi
 it('shows every error at once, linked to its line, keeps what was typed and stores nothing', function (): void {
     [$client, $html] = EntityPages::opened();
     $text = "[\n'AssertionConsumerService' => [['Binding' => 'x y', 'Location' => 'ftp://a']],\n"
-        . "'attributes' => ['uid'],\n]";
+        . "'sharedkey' => 'k',\n]";
 
     $response = EntityPages::submitNew($client, $html, '', $text);
     $page = ConsoleClient::body($response);

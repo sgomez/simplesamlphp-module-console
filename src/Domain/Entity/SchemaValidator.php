@@ -84,7 +84,7 @@ final class SchemaValidator
         $errors = [];
         foreach ($messages as $pointer => $list) {
             foreach (array_unique($list) as $message) {
-                $errors[] = new ValidationError($pointer === '/' ? '' : (string) $pointer, $message);
+                $errors[] = new ValidationError($pointer === '/' ? '' : rawurldecode((string) $pointer), $message);
             }
         }
 
