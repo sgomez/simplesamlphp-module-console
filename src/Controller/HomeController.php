@@ -4,40 +4,21 @@ declare(strict_types=1);
 
 namespace SimpleSAML\Module\console\Controller;
 
-use SimpleSAML\Configuration;
 use SimpleSAML\Module;
-use SimpleSAML\Module\console\Infrastructure\Http\AdminAccess;
-use SimpleSAML\Module\console\Infrastructure\Http\DatabaseGate;
-use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
-use SimpleSAML\XHTML\Template;
+use SimpleSAML\Module\console\Infrastructure\Http\RequestGate;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 final class HomeController
 {
-    public function __construct(
-        private readonly Configuration $config,
-        private readonly AdminAccess $access,
-        private readonly DatabaseGate $gate,
-        private readonly FlashMessage $flash,
-    ) {
+    public function __construct(private readonly RequestGate $gate)
+    {
     }
 
 
-    public function main(): Template
+    public function main(): Response
     {
-        $this->access->requireAdmin();
-        $statePage = $this->gate->blockingPage();
-        if ($statePage !== null) {
-            return $statePage;
-        }
-
-        $template = new Template($this->config, 'console:home.twig');
-        $template->data = [
-            'identity' => $this->access->identity(),
-            'message' => $this->flash->take(),
-            'adminUrl' => Module::getModuleURL('admin/'),
-            'logoutUrl' => $this->access->logoutUrl(),
-        ];
-
-        return $template;
+        return $this->gate->guardGet()
+            ?? new RedirectResponse(Module::getModuleURL('console/entities/saml20-sp-remote'));
     }
 }

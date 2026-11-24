@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 const ROOT_NS = 'SimpleSAML\\Module\\console';
 
-arch('the domain depends on nothing but itself')
+arch('the domain depends on nothing but itself and its two parsing libraries')
     ->expect(ROOT_NS . '\\Domain')
-    ->toOnlyUse(ROOT_NS . '\\Domain');
+    ->toOnlyUse([ROOT_NS . '\\Domain', 'Opis\\JsonSchema', 'PhpParser']);
 
 arch('the application layer depends on the domain only')
     ->expect(ROOT_NS . '\\Application')

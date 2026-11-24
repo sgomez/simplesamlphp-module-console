@@ -1,0 +1,67 @@
+[
+  {
+    "name": "no assertion consumer service",
+    "pointer": "",
+    "document": {"name": {"en": "X"}}
+  },
+  {
+    "name": "an empty list of assertion consumer services",
+    "pointer": "/AssertionConsumerService",
+    "document": {"AssertionConsumerService": []}
+  },
+  {
+    "name": "no assertion consumer service with a binding core uses",
+    "pointer": "/AssertionConsumerService",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect", "Location": "https://sp.example.org/acs"}]}
+  },
+  {
+    "name": "a location that is not http or https",
+    "pointer": "/AssertionConsumerService/0/Location",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "ftp://sp.example.org/acs"}]}
+  },
+  {
+    "name": "a binding that is not a URI",
+    "pointer": "/AssertionConsumerService/0/Binding",
+    "document": {"AssertionConsumerService": [{"Binding": "not a uri", "Location": "https://sp.example.org/acs"}]}
+  },
+  {
+    "name": "an endpoint without location",
+    "pointer": "/SingleLogoutService/0",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "SingleLogoutService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"}]}
+  },
+  {
+    "name": "a discovery response with another binding",
+    "pointer": "/DiscoveryResponse/0/Binding",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "DiscoveryResponse": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/d"}]}
+  },
+  {
+    "name": "a language that is not a code",
+    "pointer": "/name",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "name": {"English!": "X"}}
+  },
+  {
+    "name": "an unknown contact type",
+    "pointer": "/contacts/0/contactType",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "contacts": [{"contactType": "boss"}]}
+  },
+  {
+    "name": "a registration instant that is not a date-time",
+    "pointer": "/RegistrationInfo/instant",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "RegistrationInfo": {"authority": "https://a.example.org", "instant": "yesterday"}}
+  },
+  {
+    "name": "a certificate use outside the list",
+    "pointer": "/certificates/0/use",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "certificates": [{"pem": "x", "use": "always"}]}
+  },
+  {
+    "name": "a boolean option given as text",
+    "pointer": "/hide.from.discovery",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "hide.from.discovery": "yes"}
+  },
+  {
+    "name": "a logo without size",
+    "pointer": "/UIInfo/Logo/0",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "UIInfo": {"Logo": [{"url": "https://sp.example.org/l.png"}]}}
+  }
+]

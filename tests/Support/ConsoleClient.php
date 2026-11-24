@@ -13,10 +13,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class ConsoleClient
 {
-    private const int KNOWN_SCHEMA = 9;
+    public const string BASE = 'http://localhost/simplesaml/module.php/console';
 
 
-    /** @var array<string, mixed> */
     private array $moduleConfig = [];
 
     private string $databaseFile = '';
@@ -31,7 +30,15 @@ final class ConsoleClient
         Configuration::clearInternalState();
         (new \ReflectionProperty(Session::class, 'instance'))->setValue(null, null);
         Session::useTransientSession();
-        $this->withDatabase(range(1, self::KNOWN_SCHEMA));
+        $this->withMigratedDatabase();
+    }
+
+
+    public function withMigratedDatabase(): self
+    {
+        $this->databaseFile = ConsoleDatabase::migrated();
+
+        return $this->withModuleConfig(['database' => ['dsn' => 'sqlite:' . $this->databaseFile]]);
     }
 
 
@@ -115,8 +122,9 @@ final class ConsoleClient
      */
     private function send(string $method, string $path, array $data): Response
     {
+        [$path, $query] = explode('?', $path, 2) + [1 => ''];
         $route = rtrim('/console' . $path, '/');
-        $request = Request::create('/module.php' . $route, $method, $data);
+        $request = Request::create('/module.php' . $route . ($query === '' ? '' : '?' . $query), $method, $data);
         $request->server->set('PATH_INFO', $route);
         $request->server->set('SCRIPT_FILENAME', '/var/www/simplesaml/public/module.php');
         $_SERVER = array_merge($_SERVER, $request->server->all());
@@ -143,7 +151,7 @@ final class ConsoleClient
 
     public function page(string $path = '/'): string
     {
-        return self::body($this->get($path));
+        return self::body(Redirects::follow($this, $this->get($path)));
     }
 
 

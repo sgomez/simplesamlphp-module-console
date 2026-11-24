@@ -13,3 +13,39 @@ console-migrate:
     _controller: 'SimpleSAML\Module\console\Controller\MigrateController::run'
   }
   methods: [POST]
+
+console-entity-list:
+  path: /entities/{set}
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntityListController::list'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [GET]
+
+console-entity-new:
+  path: /entities/{set}/new
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntityEditController::add'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [GET]
+
+console-entity-edit:
+  path: /entities/{set}/edit
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntityEditController::edit'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [GET]
+
+console-entity-save:
+  path: /entities/{set}/save
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\EntitySaveController::save'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [POST]

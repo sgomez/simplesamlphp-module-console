@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
+use SimpleSAML\Module\console\Tests\Support\Redirects;
 
 it('does not render the shell for a visitor without the admin login', function (): void {
     $script = escapeshellarg(__DIR__ . '/../Support/visit-without-login.php');
@@ -15,7 +16,7 @@ it('does not render the shell for a visitor without the admin login', function (
 
 it('renders the shell for an administrator', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
-    $response = $client->get('/');
+    $response = Redirects::follow($client, $client->get('/'));
     $html = ConsoleClient::body($response);
 
     expect($response->getStatusCode())->toBe(200)
@@ -80,7 +81,8 @@ it('falls back to admin when the useridattr attribute is missing or empty', func
 ]);
 
 it('passes the default Content Security Policy', function (): void {
-    $response = (new ConsoleClient())->loginAsAdmin()->get('/');
+    $client = (new ConsoleClient())->loginAsAdmin();
+    $response = Redirects::follow($client, $client->get('/'));
     $html = ConsoleClient::body($response);
 
     expect($response->headers->get('Content-Security-Policy'))->toContain("script-src 'self'")

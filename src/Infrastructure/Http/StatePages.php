@@ -34,6 +34,7 @@ final class StatePages
             'status' => $status,
             'message' => $this->flash->take(),
             'csrfToken' => $this->token->token(),
+            'consoleUrl' => Module::getModuleURL('console/'),
             'migrateUrl' => Module::getModuleURL('console/migrate'),
             'report' => $report?->outcome === MigrationOutcome::Failed ? $report : null,
             'sqliteMinimum' => SqliteVersion::MINIMUM,
