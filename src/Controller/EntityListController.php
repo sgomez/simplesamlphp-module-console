@@ -8,6 +8,7 @@ use SimpleSAML\Module;
 use SimpleSAML\Module\console\Application\EntityPage;
 use SimpleSAML\Module\console\Application\ListEntities;
 use SimpleSAML\Module\console\Domain\Entity\StoredEntity;
+use SimpleSAML\Module\console\Infrastructure\Http\EntityWarnings;
 use SimpleSAML\Module\console\Infrastructure\Http\PageFactory;
 use SimpleSAML\Module\console\Infrastructure\Http\RequestGate;
 use SimpleSAML\Module\console\Infrastructure\Persistence\Repositories;
@@ -20,6 +21,7 @@ final class EntityListController
         private readonly RequestGate $gate,
         private readonly PageFactory $pages,
         private readonly Repositories $repositories,
+        private readonly EntityWarnings $warnings,
     ) {
     }
 
@@ -60,6 +62,9 @@ final class EntityListController
     {
         $labels = [];
         $entity->enabled || $labels[] = ['text' => 'Disabled', 'title' => ''];
+        foreach ($entity->document === null ? [] : $this->warnings->of($entity->entityId, $entity->document) as $w) {
+            $labels[] = ['text' => $w['label'], 'title' => $w['message'], 'kind' => 'warning'];
+        }
 
         return [
             'entityId' => $entity->entityId,

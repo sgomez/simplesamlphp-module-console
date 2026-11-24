@@ -18,6 +18,17 @@
 </p>
 {% endif %}
 
+{% if warnings is defined and warnings %}
+<section class="warnings" data-warnings aria-label="Warnings">
+  <h2>{{ warnings|length == 1 ? '1 warning' : warnings|length ~ ' warnings' }}</h2>
+  <ul>
+    {% for warning in warnings %}
+    <li><strong>{{ warning.label }}</strong>: {{ warning.message }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 {% if errors %}
 <section class="errors" data-errors aria-label="Errors">
   <h2>{{ errors|length == 1 ? '1 error' : errors|length ~ ' errors' }}</h2>

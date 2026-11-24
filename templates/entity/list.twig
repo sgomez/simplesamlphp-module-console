@@ -31,7 +31,7 @@
       <td class="entity-id"><code>{% if row.editUrl %}<a href="{{ row.editUrl }}">{{ row.entityId }}</a>{% else %}{{ row.entityId }}{% endif %}</code></td>
       <td class="state" data-state>{{ row.state }}</td>
       <td class="labels">
-        {% for label in row.labels %}<span class="label" title="{{ label.title }}">{{ label.text }}</span> {% endfor %}
+        {% for label in row.labels %}<span class="label{% if label.kind is defined %} {{ label.kind }}{% endif %}" title="{{ label.title }}">{{ label.text }}</span> {% endfor %}
         {% if row.error %}<span class="load-error">{{ row.error }}</span>{% endif %}
       </td>
       <td class="actions">

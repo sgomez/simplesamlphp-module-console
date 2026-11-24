@@ -17,6 +17,12 @@ final class ModuleConfig
     }
 
 
+    public static function certExpiryWarningDays(): int
+    {
+        return Configuration::getOptionalConfig(self::FILE)->getOptionalInteger('cert_expiry_warning_days', 30);
+    }
+
+
     public static function database(): DatabaseSettings
     {
         $module = Configuration::getOptionalConfig(self::FILE)->getOptionalConfigItem('database', null);
