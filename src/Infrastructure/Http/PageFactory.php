@@ -6,6 +6,7 @@ namespace SimpleSAML\Module\console\Infrastructure\Http;
 
 use SimpleSAML\Configuration;
 use SimpleSAML\Module;
+use SimpleSAML\Module\console\Infrastructure\Persistence\Repositories;
 use SimpleSAML\XHTML\Template;
 
 final class PageFactory
@@ -15,6 +16,7 @@ final class PageFactory
         private readonly AdminAccess $access,
         private readonly CsrfToken $token,
         private readonly FlashMessage $flash,
+        private readonly Repositories $repositories,
     ) {
     }
 
@@ -33,6 +35,7 @@ final class PageFactory
             'notice' => $this->flash->takeNotice(),
             'csrfToken' => $this->token->token(),
             'consoleUrl' => Module::getModuleURL('console/'),
+            'pendingCount' => $this->pendingCount(),
         ];
         $page->setStatusCode($status);
 
@@ -43,5 +46,15 @@ final class PageFactory
     public function notFound(): Template
     {
         return $this->make('not-found.twig', [], 404);
+    }
+
+
+    private function pendingCount(): int
+    {
+        try {
+            return $this->repositories->publication()->pendingCount();
+        } catch (\RuntimeException) {
+            return 0;
+        }
     }
 }

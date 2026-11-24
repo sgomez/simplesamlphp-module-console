@@ -25,6 +25,17 @@ final class AuditTrail
     }
 
 
+    public function recordPublication(string $identity, ?int $from, int $to, ?string $comment): void
+    {
+        $statement = $this->pdo->prepare(
+            'INSERT INTO ' . $this->prefix . 'console_audit '
+            . '(at, identity, action, snapshot_from, snapshot_to, comment) '
+            . "VALUES (?, ?, 'publish', ?, ?, ?)",
+        );
+        $statement->execute([Timestamp::now(), $identity, $from, $to, $comment]);
+    }
+
+
     public function recordEntity(
         string $identity,
         string $action,

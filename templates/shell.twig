@@ -18,7 +18,7 @@
         <p class="nav-group">Entities</p>
         <a class="sidebar-link" data-nav="service-providers" href="{{ consoleUrl }}entities/saml20-sp-remote">Service providers <code>saml20-sp-remote</code></a>
         <p class="nav-group">Changes</p>
-        <a class="sidebar-link" data-nav="publish" href="{{ consoleUrl }}publish">Publish</a>
+        <a class="sidebar-link" data-nav="publish" href="{{ consoleUrl }}publish">Publish{% if pendingCount is defined and pendingCount > 0 %} <span class="badge" data-pending-count>{{ pendingCount }}</span>{% endif %}</a>
         {% endblock %}
       </nav>
       <div class="sidebar-foot">
@@ -36,6 +36,7 @@
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
         <nav class="breadcrumb" aria-label="Breadcrumb">{% block breadcrumb %}Console{% endblock %}</nav>
+        {% block header_pending %}{% if pendingCount is defined and pendingCount > 0 %}<a class="button primary" data-pending-button href="{{ consoleUrl }}publish">Review {{ pendingCount }} change{{ pendingCount == 1 ? '' : 's' }}</a>{% endif %}{% endblock %}
         {% block header_extra %}{% endblock %}
       </header>
       <main class="content">
