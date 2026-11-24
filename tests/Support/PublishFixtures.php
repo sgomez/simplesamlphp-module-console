@@ -43,4 +43,13 @@ final class PublishFixtures
     {
         return EntityPages::count($client, 'console_snapshot');
     }
+
+
+    public static function delete(ConsoleClient $client, string $entityId): void
+    {
+        $client->post('/entities/saml20-sp-remote/delete', [
+            '_token' => EntityPages::field($client->page(EntityPages::LIST), '_token'),
+            'entityid' => $entityId,
+        ]);
+    }
 }
