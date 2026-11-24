@@ -1,0 +1,71 @@
+# Test environment: databases only (default and profiles `postgres`, `mariadb-newest`).
+# Development environment: profile `dev`. See SPEC.md section 12.7.
+name: console
+
+services:
+  mariadb:
+    image: mariadb:10.11
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_USER: console
+      MARIADB_PASSWORD: console
+      MARIADB_DATABASE: console
+    ports:
+      - '3306:3306'
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./docker/mariadb/init-dev-database.sql:/docker-entrypoint-initdb.d/init-dev-database.sql:ro
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  postgres:
+    profiles: [postgres]
+    image: postgres:15
+    environment:
+      POSTGRES_USER: console
+      POSTGRES_PASSWORD: console
+      POSTGRES_DB: console
+    ports:
+      - '5432:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U console -d console']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mariadb-newest:
+    profiles: [mariadb-newest]
+    image: mariadb:11.8
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_USER: console
+      MARIADB_PASSWORD: console
+      MARIADB_DATABASE: console
+    ports:
+      - '3307:3306'
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  simplesamlphp:
+    profiles: [dev]
+    build: ./docker/simplesamlphp
+    ports:
+      - '8080:80'
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    volumes:
+      - .:/var/simplesamlphp/modules/console:ro
+
+volumes:
+  mariadb-data:
