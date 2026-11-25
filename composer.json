@@ -53,6 +53,7 @@
         "stan": "phpstan analyse --memory-limit=1G --no-progress",
         "cs": "phpcs",
         "size": "php tools/check-file-size.php",
+        "parity": "php tools/dump-validation-parity.php",
         "static": [
             "@stan",
             "@cs",
