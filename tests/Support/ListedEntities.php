@@ -6,6 +6,7 @@ namespace SimpleSAML\Module\console\Tests\Support;
 
 use SimpleSAML\Module\console\Application\EntityRepository;
 use SimpleSAML\Module\console\Application\ListEntities;
+use SimpleSAML\Module\console\Application\Publication\EntityWarnings;
 use SimpleSAML\Module\console\Domain\Entity\StoredEntity;
 
 final class ListedEntities implements EntityRepository
@@ -48,13 +49,36 @@ final class ListedEntities implements EntityRepository
 
     public static function listedPage(StoredEntity ...$entities): ListEntities
     {
-        return new ListEntities(new ListedEntities(array_values($entities)));
+        return self::warnedPage([], ...$entities);
     }
 
 
-    public static function listedSp(string $id, mixed $name = null): StoredEntity
+    /**
+     * A list on which the given entity IDs have one warning each.
+     *
+     * @param list<string> $warned
+     */
+    public static function warnedPage(array $warned, StoredEntity ...$entities): ListEntities
     {
-        return new StoredEntity('saml20-sp-remote', $id, true, 1, $name === null ? [] : ['name' => $name]);
+        $warnings = new class ($warned) implements EntityWarnings {
+            public function __construct(private readonly array $warned)
+            {
+            }
+
+
+            public function of(string $set, string $entityId, array $document): array
+            {
+                return in_array($entityId, $this->warned, true) ? ['careful'] : [];
+            }
+        };
+
+        return new ListEntities(new ListedEntities(array_values($entities)), $warnings);
+    }
+
+
+    public static function listedSp(string $id, mixed $name = null, bool $enabled = true): StoredEntity
+    {
+        return new StoredEntity('saml20-sp-remote', $id, $enabled, 1, $name === null ? [] : ['name' => $name]);
     }
 
 

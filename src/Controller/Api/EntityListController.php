@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SimpleSAML\Module\console\Controller\Api;
 
 use SimpleSAML\Module\console\Application\ListEntities;
+use SimpleSAML\Module\console\Application\ListFilter;
 use SimpleSAML\Module\console\Domain\Entity\SpRemote;
 use SimpleSAML\Module\console\Domain\Entity\StoredEntity;
 use SimpleSAML\Module\console\Domain\Entity\ValidationError;
@@ -30,12 +31,18 @@ final class EntityListController
         if ($stopped !== null) {
             return $stopped;
         }
+        $changes = $this->repositories->publication()->states();
         $states = [];
-        foreach ($this->repositories->publication()->states() as $change) {
+        foreach ($changes as $change) {
             $states[$change->set . "\0" . $change->entityId] = $change->state->value;
         }
-        $listing = new ListEntities($this->repositories->entities());
-        $page = $listing->page($set, (string) $request->query->get('q', ''), $request->query->getInt('page', 1));
+        $page = (new ListEntities($this->repositories->entities(), $this->warnings))->page(
+            $set,
+            (string) $request->query->get('q', ''),
+            $request->query->getInt('page', 1),
+            ListFilter::tryFrom((string) $request->query->get('filter', '')) ?? ListFilter::All,
+            $changes,
+        );
 
         return new JsonResponse([
             'rows' => array_map(fn (StoredEntity $entity): array => $this->row($entity, $states), $page->rows),
@@ -44,6 +51,8 @@ final class EntityListController
             'pages' => $page->pages,
             'perPage' => ListEntities::PER_PAGE,
             'query' => $page->query,
+            'filter' => $page->filter->value,
+            'counts' => $page->counts,
         ]);
     }
 
@@ -65,7 +74,8 @@ final class EntityListController
                 $errors,
             )),
         ];
-        foreach ($entity->document === null ? [] : $this->warnings->of($entity->entityId, $entity->document) as $w) {
+        $warnings = $entity->document === null ? [] : $this->warnings->labels($entity->entityId, $entity->document);
+        foreach ($warnings as $w) {
             $labels[] = ['text' => $w['label'], 'kind' => 'warning', 'title' => $w['message']];
         }
 
