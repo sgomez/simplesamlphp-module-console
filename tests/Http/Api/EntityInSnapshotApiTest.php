@@ -24,7 +24,9 @@ it('says a published entity is in the current Snapshot, Unreadable or not', func
     P::seed($client, 'https://a.example.org');
     P::seed($client, 'https://bad.example.org');
     P::publish($client);
-    $client->database()->exec("UPDATE console_entity SET document = '{oops' WHERE entity_id = 'https://bad.example.org'");
+    $client->database()->exec(
+        "UPDATE console_entity SET document = '{oops' WHERE entity_id = 'https://bad.example.org'",
+    );
     P::seed($client, 'https://new.example.org');
 
     $rows = Api::get($client, '/entities/saml20-sp-remote')['rows'];

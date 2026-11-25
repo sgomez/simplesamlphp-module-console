@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { expect, screen, userEvent, within } from 'storybook/test';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 import { memoryEntities } from '../../app/adapters/memory/entities';
 import { MenuButton } from '../../design-system/Menu';
 import { EntitiesPortContext } from './port';
@@ -103,5 +103,7 @@ export const NotDeleted: Story = {
     await userEvent.click(within(await ask(canvasElement)).getByRole('button', { name: 'Delete Moodle' }));
 
     await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent('Not deleted: the server answered 500.');
+    // React Aria's announcement of the pending button outlives the dialog for seven seconds; axe rejects it.
+    await waitFor(() => expect(document.querySelector('[data-live-announcer] [role="img"]')).toBeNull(), { timeout: 8000 });
   },
 };

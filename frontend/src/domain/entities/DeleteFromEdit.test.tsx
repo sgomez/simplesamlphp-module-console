@@ -68,7 +68,7 @@ describe('deleting from the edit screen', () => {
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
   });
 
-  it('names an object without a name by its entity ID, on the button too', async () => {
+  it('names an unnamed object by its entity ID', async () => {
     await openEdit(entity({ name: null }), { [DELETE]: gone });
 
     await chooseDelete();
