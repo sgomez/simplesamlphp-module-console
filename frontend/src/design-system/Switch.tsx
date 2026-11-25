@@ -6,9 +6,11 @@ interface SwitchProps {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  // The label shows beside the switch in place of On and Off.
+  labelled?: boolean;
 }
 
-export function Switch({ label, checked, onChange }: SwitchProps) {
+export function Switch({ label, checked, onChange, labelled }: SwitchProps) {
   const ref = useRef<HTMLInputElement>(null);
   const aria = { 'aria-label': label, isSelected: checked, onChange };
   const { labelProps, inputProps } = useSwitch(aria, useToggleState(aria), ref);
@@ -16,7 +18,7 @@ export function Switch({ label, checked, onChange }: SwitchProps) {
   return (
     <label className="switch-field" {...labelProps}>
       <input className="switch" {...inputProps} ref={ref} />
-      <span>{checked ? 'On' : 'Off'}</span>
+      <span>{labelled ? label : checked ? 'On' : 'Off'}</span>
     </label>
   );
 }

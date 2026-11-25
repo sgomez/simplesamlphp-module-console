@@ -358,6 +358,12 @@ a.row:focus-visible{outline-offset:-2px}
   background:var(--surface);border-top:1px solid var(--border-strong);box-shadow:var(--shadow-2)}
 .save-state{display:flex;flex-direction:column;flex:1 1 200px;min-width:0}
 @media (max-width:600px){.save-bar{padding-inline:16px}}
+.page-head .switch-field{gap:8px;min-height:36px}
+.options{display:flex;flex-direction:column;gap:8px;flex:1 1 320px;max-width:420px;min-width:0}
+.options-list{max-height:620px;overflow-y:auto}
+.option-row{padding:6px 8px 6px 12px;gap:8px}
+.option-main{display:flex;flex-direction:column;flex:1 1 auto;min-width:0}
+.option-at{padding-inline-end:8px}
 
 /* History, Rollback, Audit, Nodes, Compare (HistorySnapshots, Rollback, Audit, Nodes, NodesSingle, Compare) */
 .page-slim{max-width:920px}

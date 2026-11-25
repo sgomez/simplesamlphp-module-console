@@ -1,7 +1,8 @@
 import type { EntitiesPort, EntityPage, EntityRow, ListCounts, ListFilter } from '../../../domain/entities';
 import type { Failed } from '../../../lib/result';
+import { memoryEditing, type MemoryEditing } from './editing';
 
-export interface MemoryEntities {
+export interface MemoryEntities extends MemoryEditing {
   rows?: EntityRow[];
   perPage?: number;
   // The board's counts, in place of the ones the rows give.
@@ -25,10 +26,11 @@ function searched(rows: EntityRow[], q: string): EntityRow[] {
   return rows.filter((row) => row.entityId.toLowerCase().includes(needle) || (row.name ?? '').toLowerCase().includes(needle));
 }
 
-export function memoryEntities({ rows = [], perPage = 12, counts, failure, pending, removal }: MemoryEntities = {}): EntitiesPort {
+export function memoryEntities({ rows = [], perPage = 12, counts, failure, pending, removal, ...editing }: MemoryEntities = {}): EntitiesPort {
   let stored = [...rows];
 
   return {
+    ...memoryEditing(editing),
     list: async ({ q, page, filter }) => {
       if (pending) {
         return new Promise(() => undefined);

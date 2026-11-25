@@ -23,7 +23,7 @@ describe('adding a service provider, saved', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('https://new.example.org');
     expect(editor().value).toBe(TYPED);
     expect(screen.getByText("Did you mean 'SingleLogoutService'?").parentElement?.className).toBe('msg-warning');
-    expect(within(saveBar()).getByText('Unpublished')).toBeDefined();
+    expect(within(saveBar()).getByText('Saved, not live')).toBeDefined();
     expect(fetch.mock.calls.some(([input]) => String(input).startsWith(`${ENTITY}?`))).toBe(false);
   });
 
