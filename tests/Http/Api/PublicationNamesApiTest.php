@@ -32,6 +32,25 @@ it('names each change, a Deleted one by its name in the current Snapshot', funct
     ]);
 });
 
+it('answers the warnings of the Pending changes, each with its object and name', function (): void {
+    $client = (new ConsoleClient())->loginAsAdmin();
+    P::seed($client, 'https://quiet.example.org', P::VALID + ['name' => ['en' => 'Quiet']]);
+    P::publish($client);
+    P::seed($client, 'https://loud.example.org', P::VALID + ['name' => ['en' => 'Loud'], 'sign.logout' => false]);
+    P::seed($client, 'my-sp');
+
+    $warnings = Api::get($client, P::PATH)['warnings'];
+
+    expect($warnings)->toBe([
+        [
+            'entityId' => 'https://loud.example.org',
+            'name' => 'Loud',
+            'message' => 'Signing or signature checking is switched off: sign.logout.',
+        ],
+        ['entityId' => 'my-sp', 'name' => null, 'message' => 'The entity ID is not an absolute URI.'],
+    ]);
+});
+
 it('names the object of each problem, on the screen and in a refused Publication', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
     P::seed($client, 'https://a.example.org', ['bogus' => true, 'name' => ['en' => 'Alpha']]);

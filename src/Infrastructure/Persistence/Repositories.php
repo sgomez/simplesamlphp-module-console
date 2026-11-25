@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace SimpleSAML\Module\console\Infrastructure\Persistence;
 
 use SimpleSAML\Module\console\Application\EntityRepository;
-use SimpleSAML\Module\console\Application\Publication\NoEntityWarnings;
 use SimpleSAML\Module\console\Application\Publication\Publication;
 use SimpleSAML\Module\console\Domain\Entity\SpRemote;
 use SimpleSAML\Module\console\Domain\Publication\StoredSnapshot;
 use SimpleSAML\Module\console\Infrastructure\Config\ModuleConfig;
 use SimpleSAML\Module\console\Infrastructure\Core\CoreCertificateFiles;
 use SimpleSAML\Module\console\Infrastructure\Core\CoreProcessingFilterClasses;
+use SimpleSAML\Module\console\Infrastructure\Http\EntityWarnings;
 
 /**
  * Opens the connection on demand, so that a controller can be built before the database state is checked.
@@ -54,7 +54,7 @@ final class Repositories
             $store,
             new SpRemote(new CoreCertificateFiles()),
             new CoreProcessingFilterClasses(),
-            new NoEntityWarnings(),
+            new EntityWarnings(),
         );
     }
 }
