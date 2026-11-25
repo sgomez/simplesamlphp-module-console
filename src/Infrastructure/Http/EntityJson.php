@@ -36,6 +36,7 @@ final class EntityJson
             return self::respond(['error' => 'not found'], 404);
         }
         $document = $entity->document;
+        $php = $document === null ? null : (new SpRemote())->toText($entityId, $document);
 
         return self::respond([
             'entityId' => $entityId,
@@ -44,10 +45,25 @@ final class EntityJson
             'state' => $this->state($set, $entityId),
             'unreadable' => $document === null,
             'error' => $entity->loadError,
-            'php' => $document === null ? null : (new SpRemote())->toText($entityId, $document),
+            'php' => $php,
             'warnings' => $document === null ? [] : $this->warnings->of($entityId, $document),
-            'notices' => self::notices($notices),
+            'notices' => self::notices(self::relocated((string) $php, $notices)),
         ], $status);
+    }
+
+
+    /**
+     * The notices of a save, moved to the lines of the normalised text it answers; a notice whose option the text
+     * no longer holds keeps no line.
+     *
+     * @param list<\SimpleSAML\Module\console\Domain\Entity\Notice> $notices
+     * @return list<\SimpleSAML\Module\console\Domain\Entity\Notice>
+     */
+    private static function relocated(string $text, array $notices): array
+    {
+        $lines = (new PhpReader())->read($text)->block->lines ?? [];
+
+        return array_map(static fn (Notice $n): Notice => $n->at($lines[$n->option ?? ''] ?? null), $notices);
     }
 
 

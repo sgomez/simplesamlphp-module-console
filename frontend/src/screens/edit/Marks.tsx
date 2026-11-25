@@ -1,7 +1,7 @@
 import { Card } from '../../components/ui/Card';
 import { Row } from '../../components/ui/Row';
 import { TextLink } from '../../components/ui/TextLink';
-import { SP_EDIT } from '../../app/paths';
+import { editPath } from '../../app/paths';
 import type { Mark } from './marks';
 
 interface MarksProps {
@@ -46,7 +46,7 @@ export function Marks({ marks, onLine }: MarksProps) {
               {existing && (
                 <>
                   {' '}
-                  <TextLink to={`${SP_EDIT}?entityid=${encodeURIComponent(existing.entityId)}`}>
+                  <TextLink to={editPath(existing.entityId)}>
                     {`Open ${existing.name ?? existing.entityId}`}
                   </TextLink>
                 </>

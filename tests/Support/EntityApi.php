@@ -73,6 +73,21 @@ final class EntityApi
     }
 
 
+    /**
+     * The number of the first line of the text that holds the needle.
+     */
+    public static function lineOf(string $php, string $needle): int
+    {
+        foreach (explode("\n", $php) as $index => $line) {
+            if (str_contains($line, $needle)) {
+                return $index + 1;
+            }
+        }
+
+        return 0;
+    }
+
+
     public static function noStore(Response $response): bool
     {
         return str_contains((string) $response->headers->get('Cache-Control'), 'no-store');

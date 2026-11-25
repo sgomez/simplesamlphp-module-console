@@ -79,7 +79,7 @@ it('answers 404 to an edit of an entity deleted meanwhile', function (): void {
     expect(EntityApi::save($client, '[' . SpText::ACS . ']')->getStatusCode())->toBe(404);
 });
 
-it('saves an entity that has warnings and answers them with the notices of the text', function (): void {
+it('saves an entity that has warnings and answers its notices at their lines of the returned text', function (): void {
     $client = EntityApi::existing();
 
     $saved = Api::json(EntityApi::save($client, SpText::endpoints(
@@ -91,5 +91,6 @@ it('saves an entity that has warnings and answers them with the notices of the t
         ->and($saved['notices'])->toHaveCount(1)
         ->and($saved['notices'][0]['message'])->toContain('Did you mean')
         ->and($saved['notices'][0]['option'])->toBe('SingleLogoutServices')
-        ->and($saved['notices'][0]['line'])->toBe(3);
+        ->and($saved['notices'][0]['line'])->toBe(EntityApi::lineOf($saved['php'], "'SingleLogoutServices' =>"))
+        ->and($saved['notices'][0]['line'])->not->toBe(3);
 });

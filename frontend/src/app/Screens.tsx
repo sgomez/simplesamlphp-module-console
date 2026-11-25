@@ -5,7 +5,7 @@ import { AddServiceProvider } from '../screens/edit/AddServiceProvider';
 import { EditServiceProvider } from '../screens/edit/EditServiceProvider';
 import { Publish } from '../screens/Publish';
 import { ServiceProviders } from '../screens/ServiceProviders';
-import { PUBLISH, SP_EDIT, SP_LIST, SP_NEW } from './paths';
+import { editPath, PUBLISH, SP_EDIT, SP_LIST, SP_NEW } from './paths';
 import { Unknown } from './Unknown';
 
 interface ScreensProps {
@@ -15,24 +15,26 @@ interface ScreensProps {
   onTitle: (title: string) => void;
 }
 
-// The entity a create answered, from the location it was created at; the next location shows it, leaving that ends it.
+// The entity a create answered: its edit screen, once the create has moved there, shows it; leaving that ends it.
 interface Created {
   entity: EditedEntity;
-  from: string;
   at: string | null;
 }
 
 function useCreated() {
-  const { key } = useLocation();
+  const { key, pathname, search } = useLocation();
   const [created, setCreated] = useState<Created | null>(null);
+  const arrived = created !== null && pathname + search === editPath(created.entity.entityId);
 
   // Adjusted while rendering, so the move that ends it never shows it on the next screen.
-  if (created !== null && created.from !== key && created.at !== key) {
-    setCreated(created.at === null ? { ...created, at: key } : null);
+  if (created !== null && created.at === null && arrived) {
+    setCreated({ ...created, at: key });
+  } else if (created !== null && created.at !== null && created.at !== key) {
+    setCreated(null);
   }
-  const shown = created !== null && created.at === key ? created.entity : null;
+  const shown = created?.at === key ? created.entity : null;
 
-  return [shown, (entity: EditedEntity) => setCreated({ entity, from: key, at: null })] as const;
+  return [shown, (entity: EditedEntity) => setCreated({ entity, at: null })] as const;
 }
 
 export function Screens({ pending, onChange, onTitle }: ScreensProps) {

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router';
 import type { EditedEntity } from '../../api/types';
-import { SP_EDIT, SP_LIST } from '../../app/paths';
+import { editPath, SP_LIST } from '../../app/paths';
 import { useApi } from '../../app/useApi';
 import { EntityEditor } from './EntityEditor';
 
@@ -26,7 +26,7 @@ export function AddServiceProvider({ onCreated, ...props }: AddServiceProviderPr
       onCancel={() => void navigate(SP_LIST)}
       onCreated={(entity) => {
         onCreated(entity);
-        void navigate(`${SP_EDIT}?entityid=${encodeURIComponent(entity.entityId)}`);
+        void navigate(editPath(entity.entityId), { replace: true });
       }}
     />
   );
