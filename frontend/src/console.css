@@ -91,7 +91,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   background:var(--surface);color:var(--text);font-family:var(--sans);font-size:14px}
 textarea.input{height:auto;padding:8px 10px;line-height:1.5;resize:vertical}
 .input:hover{border-color:var(--text-3)}
-.input.is-error{border-color:var(--danger-solid);box-shadow:inset 0 0 0 1px var(--danger-solid)}
+.input.is-error,.input[data-invalid]{border-color:var(--danger-solid);box-shadow:inset 0 0 0 1px var(--danger-solid)}
 .input:disabled{background:var(--surface-2);color:var(--text-3);cursor:not-allowed}
 .input::placeholder{color:var(--text-3)}
 .switch{appearance:none;-webkit-appearance:none;width:36px;height:20px;border-radius:10px;background:var(--text-3);
@@ -160,7 +160,7 @@ a.row:focus-visible{outline-offset:-2px}
   font-family:var(--sans);font-size:13px;background:none;border:0;border-inline-start:1px solid var(--border);cursor:pointer}
 .seg a:first-child,.seg button:first-child{border-inline-start:0}
 .seg a:hover,.seg button:hover{background:var(--hover)}
-.seg a.on,.seg button.on{background:var(--surface-2);color:var(--text);font-weight:600;box-shadow:inset 0 -2px 0 var(--text)}
+.seg a.on,.seg a[data-current],.seg button.on,.seg button[data-selected]{background:var(--surface-2);color:var(--text);font-weight:600;box-shadow:inset 0 -2px 0 var(--text)}
 .seg a:focus-visible,.seg button:focus-visible{outline-offset:-2px}
 
 /* sidebar: full height with the identity pinned to the bottom; static once it collapses */

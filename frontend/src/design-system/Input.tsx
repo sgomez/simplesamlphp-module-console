@@ -1,7 +1,8 @@
+import { Input as AriaInput } from 'react-aria-components';
 import { cx } from './classes';
+import { defined } from './props';
 
 interface InputProps {
-  id?: string;
   name?: string;
   type?: 'text' | 'search' | 'password' | 'url';
   value?: string;
@@ -15,21 +16,22 @@ interface InputProps {
 }
 
 export function Input(props: InputProps) {
-  const { id, name, type = 'text', value, defaultValue, placeholder, label, mono, invalid, disabled, onChange } = props;
+  const { name, type = 'text', value, defaultValue, placeholder, label, mono, invalid, disabled, onChange } = props;
 
   return (
-    <input
-      id={id}
-      name={name}
+    <AriaInput
       type={type}
-      className={cx('input', mono && 'mono', invalid && 'is-error')}
-      value={value}
-      defaultValue={defaultValue}
-      placeholder={placeholder}
-      aria-label={label}
-      aria-invalid={invalid || undefined}
-      disabled={disabled}
-      onChange={onChange && ((event) => onChange(event.target.value))}
+      className={cx('input', mono && 'mono')}
+      {...defined({
+        name,
+        value,
+        defaultValue,
+        placeholder,
+        disabled,
+        'aria-label': label,
+        'aria-invalid': invalid || undefined,
+        onChange: onChange && ((event: { target: { value: string } }) => onChange(event.target.value)),
+      })}
     />
   );
 }

@@ -1,16 +1,18 @@
-import { Link } from 'react-router';
+import { Link, ToggleButton, ToggleButtonGroup, type Key } from 'react-aria-components';
 
-export interface Segment {
+interface SegmentLook {
   key: string;
   label: string;
   count?: number;
-  to?: string;
-  onSelect?: () => void;
 }
 
-interface SegmentedProps {
+export type LinkSegment = SegmentLook & { to: string };
+
+export type ButtonSegment = SegmentLook & { onSelect: () => void };
+
+interface SegmentedProps<S> {
   label: string;
-  segments: readonly Segment[];
+  segments: readonly S[];
   current: string;
 }
 
@@ -18,28 +20,37 @@ function Count({ count }: { count: number | undefined }) {
   return count === undefined ? null : <span className="faint seg-count"> {count}</span>;
 }
 
-export function Segmented({ label, segments, current }: SegmentedProps) {
+export function LinkSegmented({ label, segments, current }: SegmentedProps<LinkSegment>) {
   return (
     <nav className="seg" aria-label={label}>
-      {segments.map(({ key, label: text, count, to, onSelect }) => {
-        const on = key === current;
-        const className = on ? 'on' : undefined;
-        if (to !== undefined) {
-          return (
-            <Link key={key} className={className} to={to} aria-current={on || undefined}>
-              {text}
-              <Count count={count} />
-            </Link>
-          );
-        }
-
-        return (
-          <button key={key} type="button" className={className} aria-pressed={on} onClick={onSelect}>
-            {text}
-            <Count count={count} />
-          </button>
-        );
-      })}
+      {segments.map(({ key, label: text, count, to }) => (
+        <Link key={key} href={to} {...(key === current ? { 'aria-current': 'true' } : {})}>
+          {text}
+          <Count count={count} />
+        </Link>
+      ))}
     </nav>
+  );
+}
+
+export function Segmented({ label, segments, current }: SegmentedProps<ButtonSegment>) {
+  const select = (keys: Set<Key>) => segments.find(({ key }) => key !== current && keys.has(key))?.onSelect();
+
+  return (
+    <ToggleButtonGroup
+      className="seg"
+      aria-label={label}
+      selectionMode="single"
+      disallowEmptySelection
+      selectedKeys={[current]}
+      onSelectionChange={select}
+    >
+      {segments.map(({ key, label: text, count }) => (
+        <ToggleButton key={key} id={key}>
+          {text}
+          <Count count={count} />
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
   );
 }

@@ -3,7 +3,7 @@ import { LinkButton } from '../../design-system/Button';
 import { Card } from '../../design-system/Card';
 import { Empty } from '../../design-system/Empty';
 import { Input } from '../../design-system/Input';
-import { Segmented } from '../../design-system/Segmented';
+import { LinkSegmented } from '../../design-system/Segmented';
 import { EntityListRow } from './EntityListRow';
 import { Pager } from './Pager';
 import { listPath, SP_LIST } from './routes';
@@ -20,7 +20,7 @@ function Filter({ query, filter, counts }: { query: string; filter: ListFilter; 
     to: listPath(query, key),
   }));
 
-  return <Segmented label="Filter" segments={segments} current={filter} />;
+  return <LinkSegmented label="Filter" segments={segments} current={filter} />;
 }
 
 export function ListToolbar({ list }: { list: EntityList }) {

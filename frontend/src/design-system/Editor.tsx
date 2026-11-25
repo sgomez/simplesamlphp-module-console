@@ -1,4 +1,5 @@
 import { useImperativeHandle, useRef, type Ref } from 'react';
+import { TextArea } from 'react-aria-components';
 import { cx } from './classes';
 
 export type LineMark = 'err' | 'warn';
@@ -53,7 +54,7 @@ export function Editor({ label, value, marks = {}, ref, busy, onChange }: Editor
             <div key={number} className={mark} />
           ))}
         </div>
-        <textarea
+        <TextArea
           ref={text}
           className="ed-text"
           aria-label={label}
