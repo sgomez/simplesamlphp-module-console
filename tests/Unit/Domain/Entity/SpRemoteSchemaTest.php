@@ -51,3 +51,22 @@ it('rejects an option the schema does not catalog', function (): void {
 
     expect($pointers)->toContain('');
 });
+
+it('reads an empty array where the schema wants an object as the empty object', function (): void {
+    $acs = ['Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST', 'Location' => 'https://a.example.org'];
+    $document = ['UIInfo' => [], 'AssertionConsumerService' => [$acs]];
+    $errors = SpText::schemaErrors($document);
+
+    expect(array_map(static fn ($error): string => $error->pointer . ' ' . $error->message, $errors))
+        ->toBe(['/UIInfo Object must have at least 1 properties, 0 found']);
+});
+
+it('keeps an empty array where the schema wants an array', function (): void {
+    $errors = SpText::schemaErrors(['AssertionConsumerService' => []]);
+
+    $messages = array_map(static fn ($error): string => $error->message, $errors);
+    $pointers = array_map(static fn ($error): string => $error->pointer, $errors);
+
+    expect($messages)->not->toContain('The data (array) must match the type: object')
+        ->and($pointers)->toContain('/AssertionConsumerService');
+});
