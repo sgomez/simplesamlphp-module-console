@@ -335,6 +335,7 @@ a.row:focus-visible{outline-offset:-2px}
 .nav-item.is-danger{color:var(--danger-text)}
 .dialog{flex-direction:column;gap:12px;padding:20px;box-shadow:var(--shadow-2);max-width:min(460px,calc(100vw - 32px));color:var(--text)}
 .dialog[open]{display:flex}
+.dialog>[role=alertdialog]{display:flex;flex-direction:column;gap:12px}
 .dialog-text{margin:0}
 .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
 .skel-row{display:flex;flex-direction:column;gap:8px;flex:1 1 auto}
