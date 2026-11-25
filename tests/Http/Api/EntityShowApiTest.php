@@ -40,7 +40,26 @@ it('answers the load error of an entity that cannot be read, without a text', fu
     expect($entity['unreadable'])->toBeTrue()
         ->and($entity['error'])->toContain('not valid JSON')
         ->and($entity['php'])->toBeNull()
-        ->and($entity['state'])->toBe('Unreadable');
+        ->and($entity['state'])->toBe('Unreadable')
+        ->and($entity['raw'])->toBe('{oops');
+});
+
+it('answers an entity whose stored bytes are not valid UTF-8 with the bytes substituted', function (): void {
+    $client = (new ConsoleClient())->loginAsAdmin();
+    EntityDb::seedUnreadable($client, "{\xff");
+
+    $response = $client->api('GET', '/entities/saml20-sp-remote/entity?entityid=https%3A%2F%2Fbad.example.org');
+    $entity = json_decode((string) $response->getContent(), true);
+
+    expect($response->getStatusCode())->toBe(200)
+        ->and($entity['unreadable'])->toBeTrue()
+        ->and($entity['raw'])->toBe('{?');
+});
+
+it('answers no stored bytes for an entity that can be read', function (): void {
+    $entity = Api::get(EntityApi::existing(), EntityApi::ENTITY);
+
+    expect($entity['raw'])->toBeNull();
 });
 
 it('answers the warnings of an entity apart from errors', function (): void {
