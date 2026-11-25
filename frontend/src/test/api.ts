@@ -1,14 +1,14 @@
 import { vi } from 'vitest';
-import type { EntityPage, EntityRow, Session } from '../api/types';
+import type { DatabaseRefusal, EntityPage, EntityRow, Session } from '../api/types';
 
 type Answer = { status?: number; body: unknown };
 
-export function stubApi(answers: Record<string, Answer | ((url: URL) => Answer)>) {
-  const fetch = vi.fn(async (input: RequestInfo | URL) => {
+export function stubApi(answers: Record<string, Answer | ((url: URL, init?: RequestInit) => Answer)>) {
+  const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = new URL(String(input), 'http://localhost');
     const key = url.pathname + url.search;
     const entry = answers[key] ?? answers[url.pathname];
-    const answer = typeof entry === 'function' ? entry(url) : entry;
+    const answer = typeof entry === 'function' ? entry(url, init) : entry;
     if (answer === undefined) {
       throw new Error(`Unexpected request ${key}`);
     }
@@ -36,4 +36,20 @@ export function sp(entityId: string, more: Partial<EntityRow> = {}): EntityRow {
 
 export function page(rows: EntityRow[], more: Partial<EntityPage> = {}): EntityPage {
   return { rows, total: rows.length, page: 1, pages: 1, perPage: 25, query: '', ...more };
+}
+
+export function refusal(more: Partial<DatabaseRefusal> = {}): Answer {
+  const body: DatabaseRefusal = {
+    state: 'MigrationsPending',
+    known: 9,
+    highest: 0,
+    missing: [],
+    sqliteVersion: null,
+    sqliteMinimum: '3.24.0',
+    detail: null,
+    session: { identity: session.identity, adminUrl: session.adminUrl, logoutUrl: session.logoutUrl },
+    ...more,
+  };
+
+  return { status: 503, body };
 }

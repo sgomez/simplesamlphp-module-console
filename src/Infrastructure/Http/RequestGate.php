@@ -7,7 +7,9 @@ namespace SimpleSAML\Module\console\Infrastructure\Http;
 use SimpleSAML\Configuration;
 use SimpleSAML\Logger;
 use SimpleSAML\Module;
+use SimpleSAML\Module\console\Domain\DatabaseState;
 use SimpleSAML\XHTML\Template;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -26,24 +28,24 @@ final class RequestGate
 
 
     /**
-     * The state page that stops a GET, or null when it may go on.
+     * The response that stops a GET, or null when it may go on.
      */
     public function guardGet(): ?Response
     {
         $this->access->requireAdmin();
 
-        return $this->database->blockingPage();
+        return $this->toStatePage();
     }
 
 
     /**
-     * The response that stops a POST, or null when it may go on: the admin login, then the database state
-     * (pending migrations let it through for the migration run), then the request-forgery token.
+     * The response that stops a POST, or null when it may go on: the admin login, then the database state,
+     * then the request-forgery token.
      */
-    public function guardPost(Request $request, bool $migrating = false): ?Response
+    public function guardPost(Request $request): ?Response
     {
         $this->access->requireAdmin();
-        $statePage = $this->database->blockingPage($migrating);
+        $statePage = $this->toStatePage();
         if ($statePage !== null) {
             return $statePage;
         }
@@ -56,6 +58,17 @@ final class RequestGate
         );
 
         return $this->forbidden();
+    }
+
+
+    /**
+     * A database that is not ready sends the request to the page shell, whose interface shows the state page.
+     */
+    private function toStatePage(): ?RedirectResponse
+    {
+        return $this->database->reading()->status->state === DatabaseState::Ready
+            ? null
+            : new RedirectResponse(Module::getModuleURL('console/'));
     }
 
 

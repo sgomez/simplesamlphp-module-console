@@ -50,3 +50,15 @@ export async function requestJson<T>(
 export function getJson<T>(path: string): Promise<ApiResult<T>> {
   return requestJson<T>(path);
 }
+
+function token(): string {
+  return document.querySelector<HTMLMetaElement>('meta[name="console-token"]')?.content ?? '';
+}
+
+export function postJson<T>(path: string, body: object): Promise<ApiResult<T>> {
+  return requestJson<T>(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Console-Token': token() },
+    body: JSON.stringify(body),
+  });
+}

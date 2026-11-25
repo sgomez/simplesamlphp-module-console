@@ -17,7 +17,7 @@ it('answers 503 with the state when the database is not ready', function (): voi
     $response = (new ConsoleClient())->withDatabase(null)->loginAsAdmin()->api('GET', '/session');
 
     expect($response->getStatusCode())->toBe(503)
-        ->and(Api::json($response))->toBe(['state' => 'MigrationsPending']);
+        ->and(Api::json($response)['state'])->toBe('MigrationsPending');
 });
 
 it('checks the admin session before the database', function (): void {
