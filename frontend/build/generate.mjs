@@ -113,8 +113,50 @@ async function types() {
   return `${BANNER}${out.join('\n')}\nexport interface Documents {\n${map}\n}\n`;
 }
 
+function resolved(node, path) {
+  if (typeof node.$ref !== 'string') {
+    return node;
+  }
+  const [file, pointer] = node.$ref.split('#');
+  const target = file === '' ? path : join(dirname(path), file).split('\\').join('/');
+  const found = pointer.split('/').slice(1).reduce((at, key) => at[key], byPath.get(target));
+
+  return { ...resolved(found, target), ...node };
+}
+
+// The root options of each document, for the PHP view's Options panel; `extra` holds the uncataloged ones.
+function options() {
+  const sets = documents.map(({ path, schema, set }) => {
+    const list = Object.entries(schema.properties ?? {})
+      .filter(([name]) => name !== 'extra')
+      .map(([name, own]) => {
+        const node = resolved(own, path);
+        const type = [node.type].flat()[0] ?? 'string';
+
+        return { name, title: node.title ?? name, type, ...(node.default === undefined ? {} : { default: node.default }) };
+      });
+
+    return `  ${JSON.stringify(set)}: ${JSON.stringify(list)},`;
+  });
+
+  return `${BANNER}import type { DocumentSet } from './validators';
+
+export interface SchemaOption {
+  name: string;
+  title: string;
+  type: string;
+  default?: unknown;
+}
+
+export const options: Record<DocumentSet, SchemaOption[]> = {
+${sets.join('\n')}
+};
+`;
+}
+
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 writeFileSync(join(OUT, 'validators.js'), validators());
 writeFileSync(join(OUT, 'validators.d.ts'), declarations());
 writeFileSync(join(OUT, 'documents.ts'), await types());
+writeFileSync(join(OUT, 'options.ts'), options());
