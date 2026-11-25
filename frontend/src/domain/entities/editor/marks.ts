@@ -1,5 +1,5 @@
-import type { EditedEntity, EntityError, EntityNotice, EntityWarning, ExistingEntity, Refusal } from '../../domain/entities';
-import type { LineMark } from '../../design-system/Editor';
+import type { LineMark } from '../../../design-system/Editor';
+import type { EditedEntity, EntityError, EntityNotice, EntityWarning, ExistingEntity, Refusal } from '../types';
 
 export interface Mark {
   kind: LineMark;
@@ -7,6 +7,7 @@ export interface Mark {
   option: string | null;
   message: string;
   existing?: ExistingEntity;
+  suggestion?: string;
 }
 
 function ofError({ pointer, message, line, column, existing }: EntityError): Mark {
@@ -19,8 +20,8 @@ function ofError({ pointer, message, line, column, existing }: EntityError): Mar
   };
 }
 
-function ofNotice({ message, option, line }: EntityNotice): Mark {
-  return { kind: 'warn', line, option, message };
+function ofNotice({ message, option, line, suggestion }: EntityNotice): Mark {
+  return { kind: 'warn', line, option, message, ...(suggestion === undefined ? {} : { suggestion }) };
 }
 
 function ofWarning({ message }: EntityWarning): Mark {
@@ -57,7 +58,7 @@ export function lineMarks(marks: readonly Mark[]): Record<number, LineMark> {
 }
 
 // The marks shown belong to the text they were computed for.
-interface Checked {
+export interface Checked {
   text: string;
   marks: Mark[];
 }

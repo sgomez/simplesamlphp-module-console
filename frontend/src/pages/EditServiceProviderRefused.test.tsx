@@ -1,7 +1,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PHP, VALIDATE, posted, saveRefusal, validation } from '../../app/test/api';
-import { EDITED, editor, saveBar, saveWith } from '../../app/test/edit';
+import { PHP, VALIDATE, posted, saveRefusal, validation } from '../app/test/api';
+import { EDITED, editor, saveBar, saveWith } from '../app/test/edit';
 
 describe('a save with errors', () => {
   it('keeps the text and lists every error with its line after a save with errors', async () => {
@@ -20,7 +20,7 @@ describe('a save with errors', () => {
 
     expect(within(callout).getByText('Not saved: 2 errors')).toBeDefined();
     expect(lines).toEqual(['Line 2', 'Line 3']);
-    expect(screen.getByText('AssertionConsumerService').className).toBe('mono');
+    expect(within(document.querySelector('.marks') as HTMLElement).getByText('AssertionConsumerService').className).toBe('mono');
     expect([...document.querySelectorAll('.ed-ln.err')].map((line) => line.textContent)).toEqual(['×2', '×3']);
     expect(editor().value).toBe(EDITED);
     expect(within(saveBar()).getByText('Unsaved edits')).toBeDefined();

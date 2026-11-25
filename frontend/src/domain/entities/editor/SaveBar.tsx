@@ -1,11 +1,8 @@
-import { Button } from '../../design-system/Button';
-import { Status, type StatusMark, type StatusTone } from '../../design-system/Status';
+import { Button } from '../../../design-system/Button';
+import { Status } from '../../../design-system/Status';
 
-const states: Record<string, { tone: StatusTone; mark: StatusMark }> = {
-  Unpublished: { tone: 'pending', mark: 'dot' },
-  Modified: { tone: 'pending', mark: 'half' },
-  'Up to date': { tone: 'live', mark: 'full' },
-};
+// SPEC 10.8, state labels: the save bar's column.
+const PENDING = ['Unpublished', 'Modified', 'To be withdrawn'];
 
 interface SaveBarProps {
   dirty: boolean;
@@ -25,13 +22,19 @@ function SaveState({ dirty, state }: { dirty: boolean; state: string | null }) {
       </Status>
     );
   }
-  const look = state === null ? undefined : states[state];
+  if (state === 'Up to date') {
+    return (
+      <Status tone="live" mark="full">
+        Published
+      </Status>
+    );
+  }
 
-  return look === undefined ? null : (
-    <Status tone={look.tone} mark={look.mark}>
-      {state}
+  return state !== null && PENDING.includes(state) ? (
+    <Status tone="pending" mark="half">
+      Saved, not live
     </Status>
-  );
+  ) : null;
 }
 
 export function SaveBar({ dirty, state, saving, onSave, onDiscard, onCancel }: SaveBarProps) {
@@ -58,7 +61,7 @@ export function SaveBar({ dirty, state, saving, onSave, onDiscard, onCancel }: S
       <div className="save-state">
         <SaveState dirty={dirty} state={state} />
       </div>
-      {dirty && (
+      {(dirty || (state !== null && PENDING.includes(state))) && (
         <Button variant="quiet" onPress={onDiscard}>
           Discard edits
         </Button>

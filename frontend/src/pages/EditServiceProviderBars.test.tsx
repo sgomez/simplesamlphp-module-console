@@ -1,7 +1,7 @@
 import { fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PHP, entity } from '../../app/test/api';
-import { editor, openEdit, saveBar } from '../../app/test/edit';
+import { PHP, entity } from '../app/test/api';
+import { editor, openEdit, saveBar } from '../app/test/edit';
 
 describe('the bars of the edit screen', () => {
   it('copies and downloads what is in the editor', async () => {
@@ -24,23 +24,29 @@ describe('the bars of the edit screen', () => {
     await waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:x'));
   });
 
-  it('shows the state in the save bar and offers no Save before an edit', async () => {
+  it('says Saved, not live for a Pending change, with Discard edits and no Save before an edit', async () => {
     await openEdit(entity({ state: 'Modified' }));
 
-    expect(within(saveBar()).getByText('Modified').parentElement?.className).toBe('status s-pending');
+    expect(within(saveBar()).getByText('Saved, not live').parentElement?.className).toBe('status s-pending');
     expect(within(saveBar()).getByRole('button', { name: 'Save' }).hasAttribute('disabled')).toBe(true);
+    expect(within(saveBar()).getByRole('button', { name: 'Discard edits' })).toBeDefined();
+  });
+
+  it('says Saved, not live for a new object not published yet', async () => {
+    await openEdit(entity({ state: 'Unpublished' }));
+    expect(within(saveBar()).getByText('Saved, not live').parentElement?.className).toBe('status s-pending');
+  });
+
+  it('says Published for an object up to date, without Discard edits', async () => {
+    await openEdit(entity({ state: 'Up to date' }));
+
+    expect(within(saveBar()).getByText('Published').parentElement?.className).toBe('status s-live');
     expect(within(saveBar()).queryByRole('button', { name: 'Discard edits' })).toBeNull();
   });
 
-  it('says Unpublished as the list does', async () => {
-    await openEdit(entity({ state: 'Unpublished' }));
-    expect(within(saveBar()).getByText('Unpublished').parentElement?.className).toBe('status s-pending');
-  });
-
-  it('says Up to date for an entity as published', async () => {
-    await openEdit(entity({ state: 'Up to date' }));
-
-    expect(within(saveBar()).getByText('Up to date').parentElement?.className).toBe('status s-live');
+  it('shows no state for an object that is not live', async () => {
+    await openEdit(entity({ state: 'Not live' }));
+    expect(saveBar().querySelector('.status')).toBeNull();
   });
 
   it('marks edits as unsaved and discards them back to the saved text', async () => {

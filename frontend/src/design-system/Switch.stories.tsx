@@ -5,12 +5,13 @@ import { Switch } from './Switch';
 
 const change = fn();
 
-function Enabled({ checked }: { checked: boolean }) {
+function Enabled({ checked, labelled = false }: { checked: boolean; labelled?: boolean }) {
   const [on, setOn] = useState(checked);
 
   return (
     <Switch
       label="Enabled"
+      labelled={labelled}
       checked={on}
       onChange={(next) => {
         change(next);
@@ -71,5 +72,17 @@ export const Keyboard: Story = {
     await userEvent.keyboard(' ');
     await expect(change).toHaveBeenCalledWith(false);
     await expect(control).toHaveFocus();
+  },
+};
+
+export const Labelled: Story = {
+  args: { labelled: true },
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement);
+
+    await expect(page.getByText('Enabled')).toBeVisible();
+    await expect(page.queryByText('On')).toBeNull();
+    await userEvent.click(page.getByText('Enabled'));
+    await expect(change).toHaveBeenCalledWith(false);
   },
 };

@@ -8,6 +8,9 @@ const markers: Record<LineMark, string> = { err: '×', warn: '!' };
 
 export interface EditorHandle {
   goToLine: (line: number) => void;
+  // The offset of the cursor in the text; null before the text was first focused.
+  cursor: () => number | null;
+  focusAt: (offset: number) => void;
 }
 
 interface EditorProps {
@@ -24,6 +27,7 @@ export function Editor({ label, value, marks = {}, ref, busy, onChange }: Editor
   const lines = value.split('\n').map((_, index) => ({ number: index + 1, mark: marks[index + 1] }));
   const text = useRef<HTMLTextAreaElement>(null);
   const gutter = useRef<HTMLDivElement>(null);
+  const focused = useRef(false);
 
   useImperativeHandle(ref, () => ({
     goToLine(line: number) {
@@ -35,6 +39,11 @@ export function Editor({ label, value, marks = {}, ref, busy, onChange }: Editor
       area.focus();
       area.setSelectionRange(start, start);
       gutter.current?.children[line - 1]?.scrollIntoView?.({ block: 'center' });
+    },
+    cursor: () => (focused.current ? (text.current?.selectionStart ?? null) : null),
+    focusAt(offset: number) {
+      text.current?.focus();
+      text.current?.setSelectionRange(offset, offset);
     },
   }));
 
@@ -65,6 +74,9 @@ export function Editor({ label, value, marks = {}, ref, busy, onChange }: Editor
           aria-busy={busy || undefined}
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          onFocus={() => {
+            focused.current = true;
+          }}
         />
       </div>
     </div>

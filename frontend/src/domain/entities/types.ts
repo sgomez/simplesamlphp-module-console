@@ -38,6 +38,8 @@ export interface EntityNotice {
   message: string;
   option: string | null;
   line: number | null;
+  // The cataloged option an unknown one is close to; the API does not send it yet.
+  suggestion?: string;
 }
 
 export interface ExistingEntity {
@@ -70,6 +72,9 @@ export interface EditedEntity {
   errors: EntityError[];
   warnings: EntityWarning[];
   notices: EntityNotice[];
+  // Not served by the API yet: the enabled flag, and whether a next key waits to be promoted.
+  enabled?: boolean;
+  nextKey?: boolean;
 }
 
 export interface Refusal {

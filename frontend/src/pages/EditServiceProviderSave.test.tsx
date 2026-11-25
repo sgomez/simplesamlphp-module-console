@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { SAVE, entity, posted } from '../../app/test/api';
-import { EDITED, editor, saveBar, saveWith } from '../../app/test/edit';
+import { SAVE, entity, posted } from '../app/test/api';
+import { EDITED, editor, saveBar, saveWith } from '../app/test/edit';
 
 describe('saving the edit screen', () => {
   it('sends the entity ID, the version it was loaded with and the text', async () => {
@@ -22,7 +22,7 @@ describe('saving the edit screen', () => {
     expect(review.getAttribute('href')).toBe('/publish');
     expect(editor().value).toBe('normalised');
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Renamed');
-    expect(within(saveBar()).getByText('Modified')).toBeDefined();
+    expect(within(saveBar()).getByText('Saved, not live')).toBeDefined();
   });
 
   it('saves the next edit on the version the last save answered', async () => {
