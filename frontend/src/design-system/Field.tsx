@@ -1,19 +1,22 @@
 import type { ReactNode } from 'react';
+import { FieldError, Label, Text, TextField } from 'react-aria-components';
 import { ErrorIcon } from './icons';
+import { defined } from './props';
 
 interface FieldProps {
-  id: string;
   label: string;
+  value?: string;
   help?: string;
   error?: string;
   optional?: boolean;
+  onChange?: (value: string) => void;
   children: ReactNode;
 }
 
-export function Field({ id, label, help, error, optional, children }: FieldProps) {
+export function Field({ label, value, help, error, optional, onChange, children }: FieldProps) {
   return (
-    <div className="field">
-      <label className="label" htmlFor={id}>
+    <TextField className="field" isInvalid={error !== undefined} validationBehavior="aria" {...defined({ value, onChange })}>
+      <Label className="label">
         {label}
         {optional && (
           <>
@@ -21,15 +24,17 @@ export function Field({ id, label, help, error, optional, children }: FieldProps
             <span className="faint label-optional">(optional)</span>
           </>
         )}
-      </label>
+      </Label>
       {children}
-      {help && <span className="help">{help}</span>}
-      {error && (
-        <div className="msg-error" role="alert">
-          <ErrorIcon />
-          <span>{error}</span>
-        </div>
+      {help && (
+        <Text slot="description" className="help">
+          {help}
+        </Text>
       )}
-    </div>
+      <FieldError elementType="div" className="msg-error">
+        <ErrorIcon />
+        <span role="alert">{error}</span>
+      </FieldError>
+    </TextField>
   );
 }

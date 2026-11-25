@@ -1,21 +1,21 @@
+import { useRef } from 'react';
+import { useCheckbox } from 'react-aria';
+import { useToggleState } from 'react-stately';
+
 interface CheckProps {
   label: string;
   checked: boolean;
-  type?: 'checkbox' | 'radio';
-  name?: string;
   onChange: (checked: boolean) => void;
 }
 
-export function Check({ label, checked, type = 'checkbox', name, onChange }: CheckProps) {
+export function Check({ label, checked, onChange }: CheckProps) {
+  const ref = useRef<HTMLInputElement>(null);
+  const aria = { children: label, isSelected: checked, onChange };
+  const { labelProps, inputProps } = useCheckbox(aria, useToggleState(aria), ref);
+
   return (
-    <label className="check-field">
-      <input
-        className="check"
-        type={type}
-        name={name}
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-      />
+    <label className="check-field" {...labelProps}>
+      <input className="check" {...inputProps} ref={ref} />
       <span>{label}</span>
     </label>
   );

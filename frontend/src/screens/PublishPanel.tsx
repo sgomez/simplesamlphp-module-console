@@ -20,8 +20,8 @@ export function PublishPanel({ review, comment, sending, onComment, onPublish }:
     <aside className="card publish-panel" aria-label="This Publication">
       <h2 className="h2">This Publication</h2>
       <Facts facts={[{ term: 'Becomes', value: `Snapshot #${review.nextNumber}`, className: 'is-strong' }]} />
-      <Field id="publish-comment" label="Comment" optional>
-        <TextArea id="publish-comment" rows={3} value={comment} onChange={onComment} />
+      <Field label="Comment" optional value={comment} onChange={onComment}>
+        <TextArea rows={3} />
       </Field>
       <Button variant="primary" disabled={!review.canPublish || sending} loading={sending} onPress={onPublish}>
         {`Publish ${plural(changeCount(review), 'change', 'changes')}`}
