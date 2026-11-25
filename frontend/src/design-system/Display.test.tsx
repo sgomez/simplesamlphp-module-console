@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Eid } from './Eid';
-import { Pre } from './Code';
+import { Code, Pre } from './Code';
 import { Disclosure } from './Disclosure';
 import { Empty } from './Empty';
 import { Skeleton } from './Skeleton';
@@ -19,6 +19,12 @@ describe('Eid', () => {
     render(<Eid id="my-sp" />);
 
     expect(screen.getByTitle('my-sp').querySelector('.eid-b')?.textContent).toBe('my-sp');
+  });
+
+  it('wraps whole on its own page', () => {
+    render(<Eid wrap id="https://hr.example.edu/sp" />);
+
+    expect(screen.getByText('https://hr.example.edu/sp').className).toBe('mono wrap-any');
   });
 });
 
@@ -102,13 +108,25 @@ describe('Pre', () => {
     expect(pre.tabIndex).toBe(0);
     expect(pre.textContent).toBe('SQLSTATE[HY000]');
   });
+
+  it('heads a block with its label and an action', () => {
+    const { container } = render(
+      <Code label="PHP" action={<b>Copy</b>}>
+        x
+      </Code>,
+    );
+
+    expect(container.firstElementChild?.className).toBe('code-block');
+    expect([...(container.querySelector('.code-head')?.children ?? [])].map((el) => el.textContent)).toEqual(['PHP', 'Copy']);
+    expect(screen.getByLabelText('PHP').textContent).toBe('x');
+  });
 });
 
 describe('Skeleton', () => {
   it('renders two busy rows of bars', () => {
     render(<Skeleton />);
 
-    const busy = screen.getByLabelText('Loading');
+    const busy = screen.getByRole('status', { name: 'Loading' });
     expect(busy.getAttribute('aria-busy')).toBe('true');
     expect([...busy.querySelectorAll('.skel')].map((bar) => bar.className)).toEqual([
       'skel skel-34',

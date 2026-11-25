@@ -8,3 +8,21 @@ export function Pre({ label, children }: { label: string; children: ReactNode })
     </pre>
   );
 }
+
+interface CodeProps {
+  label: string;
+  action?: ReactNode;
+  children: ReactNode;
+}
+
+export function Code({ label, action, children }: CodeProps) {
+  return (
+    <div className="code-block">
+      <div className="code-head">
+        <span className="xs muted code-label">{label}</span>
+        {action}
+      </div>
+      <Pre label={label}>{children}</Pre>
+    </div>
+  );
+}

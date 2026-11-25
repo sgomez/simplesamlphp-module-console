@@ -5,7 +5,7 @@ const rows = [
 
 export function Skeleton() {
   return (
-    <div className="card card-list" aria-busy="true" aria-label="Loading">
+    <div className="card card-list" role="status" aria-busy="true" aria-label="Loading">
       {rows.map((widths) => (
         <div key={widths[0]} className="row">
           <div className="skel-row">
