@@ -1,7 +1,12 @@
 import type { EntityLabel, EntityRow } from '../../../domain/entities';
 
+// An object Modified or Up to date is in the current Snapshot; a fixture says so for any other.
+export function inSnapshot(state: string | null = 'Up to date'): boolean {
+  return state === 'Up to date' || state === 'Modified';
+}
+
 export function row(entityId: string, more: Partial<EntityRow> = {}): EntityRow {
-  return { entityId, name: null, state: 'Up to date', labels: [], unreadable: false, error: null, ...more };
+  return { entityId, name: null, state: 'Up to date', labels: [], unreadable: false, inSnapshot: inSnapshot(more.state), error: null, ...more };
 }
 
 export const disabled: EntityLabel = { text: 'Disabled', kind: 'disabled', title: null };

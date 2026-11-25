@@ -49,6 +49,7 @@ final class EntityJson
             'version' => $entity->version,
             'state' => $this->state($set, $entityId),
             'unreadable' => $document === null,
+            'inSnapshot' => $this->repositories->currentContent()->document($set, $entityId) !== null,
             'error' => $entity->loadError,
             'php' => $php,
             'raw' => $entity->raw === null ? null : mb_scrub($entity->raw, 'UTF-8'),

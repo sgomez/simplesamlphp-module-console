@@ -55,6 +55,17 @@ final class PublicationReader
     }
 
 
+    public function currentDocument(): ?string
+    {
+        $rows = $this->rows(
+            'SELECT s.document FROM ' . $this->table('pointer') . ' p JOIN ' . $this->table('snapshot')
+            . ' s ON s.number = p.current_number',
+        );
+
+        return self::text($rows[0]['document'] ?? null);
+    }
+
+
     /**
      * @return list<array<array-key, mixed>>
      */

@@ -7,6 +7,7 @@ namespace SimpleSAML\Module\console\Infrastructure\Persistence;
 use SimpleSAML\Module\console\Application\EntityRepository;
 use SimpleSAML\Module\console\Application\Publication\Publication;
 use SimpleSAML\Module\console\Domain\Entity\SpRemote;
+use SimpleSAML\Module\console\Domain\Publication\SnapshotContent;
 use SimpleSAML\Module\console\Domain\Publication\StoredSnapshot;
 use SimpleSAML\Module\console\Infrastructure\Config\ModuleConfig;
 use SimpleSAML\Module\console\Infrastructure\Core\CoreCertificateFiles;
@@ -42,6 +43,16 @@ final class Repositories
         $settings = ModuleConfig::database();
 
         return (new PublicationReader((new ConnectionFactory())->open($settings), $settings->prefix))->current();
+    }
+
+
+    public function currentContent(): SnapshotContent
+    {
+        $settings = ModuleConfig::database();
+
+        return SnapshotContent::parse(
+            (new PublicationReader((new ConnectionFactory())->open($settings), $settings->prefix))->currentDocument(),
+        );
     }
 
 

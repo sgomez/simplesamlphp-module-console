@@ -9,6 +9,8 @@ export interface MemoryEntities {
   failure?: Failed;
   // The list never answers.
   pending?: boolean;
+  // What a delete answers in place of success; 'pending' never answers.
+  removal?: Failed | 'pending';
 }
 
 const MATCHES: Record<ListFilter, (row: EntityRow) => boolean> = {
@@ -23,7 +25,7 @@ function searched(rows: EntityRow[], q: string): EntityRow[] {
   return rows.filter((row) => row.entityId.toLowerCase().includes(needle) || (row.name ?? '').toLowerCase().includes(needle));
 }
 
-export function memoryEntities({ rows = [], perPage = 12, counts, failure, pending }: MemoryEntities = {}): EntitiesPort {
+export function memoryEntities({ rows = [], perPage = 12, counts, failure, pending, removal }: MemoryEntities = {}): EntitiesPort {
   let stored = [...rows];
 
   return {
@@ -55,6 +57,12 @@ export function memoryEntities({ rows = [], perPage = 12, counts, failure, pendi
       return { ok: true, data };
     },
     remove: async (entityId) => {
+      if (removal === 'pending') {
+        return new Promise(() => undefined);
+      }
+      if (removal) {
+        return { ok: false, ...removal };
+      }
       stored = stored.filter((row) => row.entityId !== entityId);
 
       return { ok: true, data: {} };

@@ -1824,8 +1824,8 @@ A path the router does not know shows "Not found".
 | --- | --- | --- |
 | GET | `/api/session` | Identity, the links to core, the counts of the sidebar, the number of Pending changes and the current Snapshot (sections 10.2 and 10.3) |
 | GET | `/api/overview` | Section 10.7 |
-| GET | `/api/entities/{set}` | A page of the entity list and the count of each filter; `q`, filters and `page` in the query string |
-| GET | `/api/entities/{set}/entity?entityid=…` | The object of the edit screen: document, PHP text, `version`, state, notices and warnings; an Unreadable row's stored bytes. Without `entityid`, the starter text of a new object, its entity ID left empty in the `$metadata[...]` line |
+| GET | `/api/entities/{set}` | A page of the entity list, each row saying whether it is in the current Snapshot, and the count of each filter; `q`, filters and `page` in the query string |
+| GET | `/api/entities/{set}/entity?entityid=…` | The object of the edit screen: document, PHP text, `version`, state, whether it is in the current Snapshot, notices and warnings; an Unreadable row's stored bytes. Without `entityid`, the starter text of a new object, its entity ID left empty in the `$metadata[...]` line |
 | POST | `/api/entities/{set}/read` | Reads pasted entity configuration: the editor's content unsaved with its report, or the selectable list of several entities (section 9.6) |
 | POST | `/api/entities/{set}/create` | Saves the selected entities and returns the report (section 9.6) |
 | POST | `/api/entities/{set}/save` | Create or edit, from the form or the PHP view; an edit sends the `version` it was loaded with, a create sends none |

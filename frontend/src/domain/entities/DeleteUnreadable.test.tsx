@@ -1,9 +1,9 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { EDIT, ENTITY, entity, page, posted, session, sp, stubApi } from '../app/test/api';
-import { BAD, DELETE, ID, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from '../app/test/delete';
-import { location, renderAt } from '../app/test/render';
-import { LIST, withToken } from '../app/test/states';
+import { EDIT, ENTITY, entity, page, posted, session, sp, stubApi } from '../../app/test/api';
+import { BAD, DELETE, ID, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from '../../app/test/delete';
+import { location, renderAt } from '../../app/test/render';
+import { LIST, withToken } from '../../app/test/states';
 
 describe('deleting an Unreadable object', () => {
   withToken();
@@ -20,7 +20,7 @@ describe('deleting an Unreadable object', () => {
     await screen.findByRole('alert');
 
     await chooseDelete();
-    confirmDelete(null);
+    confirmDelete(ID);
 
     await deletedMessage();
     expect(posted(fetch, DELETE)).toEqual({ entityid: ID });
@@ -48,7 +48,7 @@ describe('deleting an Unreadable object', () => {
 
     fireEvent.click(offer);
     const dialog = screen.getByRole('dialog', { name: `Delete ${BAD}?` });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: `Delete ${BAD}` }));
 
     await deletedMessage();
     expect(posted(fetch, DELETE)).toEqual({ entityid: BAD });
@@ -72,7 +72,7 @@ describe('deleting an Unreadable object', () => {
     expect(row.querySelector('.row-slot button')?.textContent).toBe('Delete…');
 
     fireEvent.click(within(row).getByRole('button', { name: 'Delete…' }));
-    confirmDelete(null);
+    confirmDelete(BAD);
 
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toBe('Not deleted: the server answered 500.');

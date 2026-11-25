@@ -5,9 +5,6 @@ import { failureText } from '../../lib/failureText';
 import { ReportMessage, useSettle } from '../session';
 import { useEntitiesPort } from './port';
 
-// An Unpublished object is in no Snapshot, so no node serves it; whether an Unreadable one is live is unknown.
-const SERVED = ' Nodes keep serving it until the next Publication, which withdraws it.';
-
 interface Deletion {
   ask: () => void;
   // The confirmation dialog, and what went wrong with the last attempt.
@@ -17,23 +14,29 @@ interface Deletion {
 interface Deleted {
   entityId: string;
   name: string | null;
-  state: string | null;
-  unreadable: boolean;
+  inSnapshot: boolean;
+}
+
+// SPEC 10.9: nodes serve an object until a Publication withdraws it, so only one in the current Snapshot says so.
+function deleteTexts({ entityId, name, inSnapshot }: Deleted): { title: string; text: string; confirm: string } {
+  const label = name ?? entityId;
+  const served = inSnapshot ? ' Nodes keep serving it until the next Publication, which withdraws it.' : '';
+
+  return { title: `Delete ${label}?`, text: `${label} is removed from the Console.${served}`, confirm: `Delete ${label}` };
 }
 
 // Deleting asks first; once done the interface moves to `then` with the one-shot message.
-export function useDeleteEntity({ entityId, name, state, unreadable }: Deleted, then: string): Deletion {
+export function useDeleteEntity(deleted: Deleted, then: string): Deletion {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<number | null>(null);
   const settle = useSettle();
   const announce = useContext(ReportMessage);
   const port = useEntitiesPort();
-  const label = name ?? entityId;
 
   const confirm = async () => {
     setBusy(true);
-    const result = await port.remove(entityId);
+    const result = await port.remove(deleted.entityId);
     setBusy(false);
     setOpen(false);
     if (result.ok) {
@@ -49,10 +52,8 @@ export function useDeleteEntity({ entityId, name, state, unreadable }: Deleted, 
       {failed !== null && <Callout kind="error" title={failureText('Not deleted', failed)} />}
       <ConfirmDialog
         open={open}
-        title={`Delete ${label}?`}
-        text={`${label} is removed from the Console.${unreadable || state === 'Unpublished' ? '' : SERVED}`}
+        {...deleteTexts(deleted)}
         cancel="Cancel"
-        confirm={name === null ? 'Delete' : `Delete ${name}`}
         busy={busy}
         onCancel={() => setOpen(false)}
         onConfirm={() => void confirm()}

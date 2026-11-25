@@ -10,6 +10,7 @@ export interface EntityRow {
   state: string | null;
   labels: EntityLabel[];
   unreadable: boolean;
+  inSnapshot: boolean;
   error: string | null;
 }
 
@@ -60,6 +61,7 @@ export interface EditedEntity {
   version: number;
   state: string | null;
   unreadable: boolean;
+  inSnapshot: boolean;
   error: string | null;
   php: string | null;
   // The stored bytes of an Unreadable row.
