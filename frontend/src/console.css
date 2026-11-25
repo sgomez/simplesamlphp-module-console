@@ -463,6 +463,8 @@ a.row:focus-visible{outline-offset:-2px}
 .index-link{display:flex;align-items:baseline;gap:8px;padding:3px 0;font-size:13px}
 .index-note{color:var(--danger-text);font-weight:600}
 .index-count{margin-inline-start:auto;font-variant-numeric:tabular-nums}
+.view-switch{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}
+.seg button[data-disabled]{color:var(--text-3);cursor:not-allowed}
 
 /* Add (AddEntity) */
 .page-add{max-width:920px;gap:16px}

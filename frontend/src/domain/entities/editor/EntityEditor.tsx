@@ -1,21 +1,19 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import type { EditorHandle } from '../../../design-system/Editor';
+import { useEffect, type ReactNode } from 'react';
 import { Page } from '../../../design-system/Page';
-import type { SchemaOption } from '../../documents';
 import { useEntitiesPort } from '../port';
 import { SP_LIST } from '../routes';
 import type { EditedEntity } from '../types';
 import { useDeleteEntity } from '../useDeleteEntity';
 import { EditHeader } from './EditHeader';
-import { lineMarks } from './marks';
-import { Marks } from './Marks';
-import { OptionsPanel } from './OptionsPanel';
+import { errorLinks } from './ErrorLinks';
 import { Outcome } from './Outcome';
-import { PhpCard } from './PhpCard';
-import { insertOption, replaceKey } from './phpText';
+import { PhpView } from './PhpView';
 import { SaveBar } from './SaveBar';
+import { SettingsView } from './SettingsView';
 import { useActions } from './useActions';
 import { useEditor } from './useEditor';
+import { useSettings } from './useSettings';
+import { ViewSwitch } from './ViewSwitch';
 
 export const ADD_TITLE = 'Add service provider';
 
@@ -35,39 +33,26 @@ export interface EntityEditorProps {
 export function EntityEditor({ initial, review, onSaved, onTitle, onCreated, onCancel, saved }: EntityEditorProps) {
   const port = useEntitiesPort();
   const edit = useEditor(initial, { onCreated, saved, onSaved });
-  const { view, text, setText } = edit;
-  const editor = useRef<EditorHandle>(null);
-  const cursor = useRef<number | null>(null);
+  const settings = useSettings(edit, onCreated !== undefined);
+  const { view, text, setText, outcome } = edit;
   const title = onCreated ? ADD_TITLE : (view.name ?? view.entityId);
   const deletion = useDeleteEntity(view, SP_LIST);
   const actions = useActions(view, text, edit.replace, deletion.ask);
   const { hideTidied } = port;
+  const unreadable = settings.blocked || (outcome?.kind === 'invalid' && !outcome.readable);
 
   useEffect(() => onTitle(title), [title, onTitle]);
-
-  useEffect(() => {
-    if (cursor.current !== null) {
-      editor.current?.focusAt(cursor.current);
-      cursor.current = null;
-    }
-  }, [text]);
-
-  const insert = (option: SchemaOption) => {
-    const next = insertOption(text, editor.current?.cursor() ?? text.length, option);
-    cursor.current = next.at;
-    setText(next.text);
-  };
 
   return (
     <Page
       width="wide"
       bar={
         <SaveBar
-          dirty={edit.dirty}
+          dirty={settings.dirty}
           state={view.state}
           saving={edit.saving}
-          onSave={() => void edit.save()}
-          onDiscard={edit.discard}
+          onSave={() => void settings.save()}
+          onDiscard={settings.discard}
           onCancel={onCancel}
         />
       }
@@ -80,10 +65,11 @@ export function EntityEditor({ initial, review, onSaved, onTitle, onCreated, onC
       {deletion.element}
       {actions.element}
       <Outcome
-        outcome={edit.outcome}
+        outcome={outcome}
         title={title}
         state={view.state}
         review={review}
+        {...(settings.settings && { items: errorLinks(edit.checked.marks) })}
         onHideTidied={
           hideTidied &&
           (() => {
@@ -92,17 +78,19 @@ export function EntityEditor({ initial, review, onSaved, onTitle, onCreated, onC
           })
         }
       />
-      <div className="cols">
-        <div className="col-main">
-          <Marks
-            marks={edit.checked.marks}
-            onLine={(line) => editor.current?.goToLine(line)}
-            onSuggest={(line, from, to) => setText(replaceKey(text, line, from, to))}
-          />
-          <PhpCard value={text} marks={lineMarks(edit.checked.marks)} editor={editor} busy={edit.saving} onChange={setText} />
-        </div>
-        <OptionsPanel text={text} onInsert={insert} />
-      </div>
+      {settings.offered && <ViewSwitch settings={settings.settings} unreadable={unreadable} onSelect={(next) => void settings.select(next)} />}
+      {settings.settings ? (
+        <SettingsView
+          doc={settings.doc}
+          stored={settings.stored}
+          marks={edit.checked.marks}
+          text={text}
+          onChange={settings.change}
+          onEdit={() => void settings.select('php')}
+        />
+      ) : (
+        <PhpView text={text} marks={edit.checked.marks} busy={edit.saving} onChange={setText} />
+      )}
     </Page>
   );
 }

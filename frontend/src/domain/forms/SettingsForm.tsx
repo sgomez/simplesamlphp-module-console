@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ErrorIcon } from '../../design-system/icons';
+import { ErrorIcon, WarningIcon } from '../../design-system/icons';
 import { PageIndex } from '../../design-system/PageIndex';
 import { forms, type DocumentSet } from '../documents';
 import { FormContext, type FormCapabilities } from './context';
@@ -52,16 +52,16 @@ export function SettingsForm({ set, document: doc, onChange, issues = [], saved,
     open(schema.groups.findIndex(({ properties }) => properties.includes(name)), true);
     focus.current = name;
   };
-  const general = all.filter(({ pointer, kind }) => pointer === '' && kind === 'error');
+  const general = all.filter(({ pointer }) => pointer === '');
 
   return (
     <FormContext value={{ issues: all, capabilities }}>
       <div className="cols">
         <div className="col-main">
           <Finder schema={schema} doc={doc} onPick={add} />
-          {general.map(({ message }, index) => (
-            <div key={index} className="msg-error">
-              <ErrorIcon />
+          {general.map(({ message, kind }, index) => (
+            <div key={index} className={kind === 'error' ? 'msg-error' : 'msg-warning'}>
+              {kind === 'error' ? <ErrorIcon /> : <WarningIcon />}
               <span>{message}</span>
             </div>
           ))}

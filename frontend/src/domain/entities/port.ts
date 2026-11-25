@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { Failed, Result } from '../../lib/result';
+import type { Doc, FormCapabilities } from '../forms';
 import type { EditedEntity, EntityPage, ListFilter, Refusal, Validation } from './types';
 
 export interface ListQuery {
@@ -26,6 +27,14 @@ export type SaveResult =
   | { kind: 'invalid'; refusal: Refusal }
   | { kind: 'failed'; failed: Failed };
 
+// The editor's content, to be given in the other view; nothing is saved.
+export type ViewRequest = { entityId: string | null } & ({ php: string } | { document: Doc });
+
+export interface EntityView {
+  php: string;
+  document: Doc;
+}
+
 export interface EntitiesPort {
   list(query: ListQuery): Promise<Result<EntityPage>>;
   remove(entityId: string): Promise<Result<unknown>>;
@@ -43,6 +52,9 @@ export interface EntitiesPort {
   readPasted?: (text: string, format: PastedFormat) => Promise<Result<EditedEntity>>;
   // Stops the notice that a save tidied the text.
   hideTidied?(): void;
+  // The Settings view: translates between the views (a 422 carries the Refusal of unreadable text), and what the form may offer.
+  view?(request: ViewRequest): Promise<Result<EntityView>>;
+  form?: FormCapabilities;
 }
 
 const unset = async () => ({ ok: false, status: 0, body: null }) as const;

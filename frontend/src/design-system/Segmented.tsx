@@ -8,7 +8,7 @@ interface SegmentLook {
 
 export type LinkSegment = SegmentLook & { to: string };
 
-export type ButtonSegment = SegmentLook & { onSelect: () => void };
+export type ButtonSegment = SegmentLook & { onSelect: () => void; disabled?: boolean };
 
 interface SegmentedProps<S> {
   label: string;
@@ -45,8 +45,8 @@ export function Segmented({ label, segments, current }: SegmentedProps<ButtonSeg
       selectedKeys={[current]}
       onSelectionChange={select}
     >
-      {segments.map(({ key, label: text, count }) => (
-        <ToggleButton key={key} id={key}>
+      {segments.map(({ key, label: text, count, disabled }) => (
+        <ToggleButton key={key} id={key} isDisabled={disabled ?? false}>
           {text}
           <Count count={count} />
         </ToggleButton>

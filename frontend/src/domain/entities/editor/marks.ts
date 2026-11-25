@@ -5,6 +5,8 @@ export interface Mark {
   kind: LineMark;
   line: number | null;
   option: string | null;
+  // Where the value sits in the document, for the Settings view.
+  pointer: string | null;
   message: string;
   existing?: ExistingEntity;
   suggestion?: string;
@@ -15,17 +17,18 @@ function ofError({ pointer, message, line, column, existing }: EntityError): Mar
     kind: 'err',
     line,
     option: pointer.split('/')[1] || null,
+    pointer,
     message: column === null ? message : `Column ${column}: ${message}`,
     ...(existing && { existing }),
   };
 }
 
 function ofNotice({ message, option, line, suggestion }: EntityNotice): Mark {
-  return { kind: 'warn', line, option, message, ...(suggestion === undefined ? {} : { suggestion }) };
+  return { kind: 'warn', line, option, pointer: option === null ? null : `/${option}`, message, ...(suggestion === undefined ? {} : { suggestion }) };
 }
 
 function ofWarning({ message }: EntityWarning): Mark {
-  return { kind: 'warn', line: null, option: null, message };
+  return { kind: 'warn', line: null, option: null, pointer: null, message };
 }
 
 // In line order; what has no line goes last.

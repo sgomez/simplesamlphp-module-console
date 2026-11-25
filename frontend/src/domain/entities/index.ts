@@ -11,6 +11,8 @@ export {
   type PastedFormat,
   type SaveResult,
   type SavedBy,
+  type EntityView,
+  type ViewRequest,
 } from './port';
 export { editPath, listRoute, newRoute, SP_EDIT, SP_LIST, SP_NEW } from './routes';
 export { SET_WORDS, type EntitySet, type SetWords } from './sets';

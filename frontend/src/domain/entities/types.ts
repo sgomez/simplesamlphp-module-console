@@ -75,6 +75,9 @@ export interface EditedEntity {
   // Not served by the API yet: the enabled flag, and whether a next key waits to be promoted.
   enabled?: boolean;
   nextKey?: boolean;
+  // Not served yet: the document of the Settings view, and the view last used.
+  document?: Record<string, unknown>;
+  view?: 'settings' | 'php';
 }
 
 export interface Refusal {
