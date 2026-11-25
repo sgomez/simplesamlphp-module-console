@@ -75,7 +75,7 @@ describe('deleting from the edit screen', () => {
 
     const dialog = screen.getByRole('dialog', { name: `Delete ${ID}?` });
     expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeDefined();
-    expect(within(dialog).getByText(new RegExp(`^${ID} is removed from the Console\\.`))).toBeDefined();
+    expect(within(dialog).getByText(`${ID} is removed from the Console.`)).toBeDefined();
   });
 
   it('stays on the screen and says so when the delete fails', async () => {

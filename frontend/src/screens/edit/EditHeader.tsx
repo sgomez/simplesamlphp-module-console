@@ -6,7 +6,7 @@ export function EditHeader({ title, entityId, onDelete }: { title: string; entit
     <div className="page-head">
       <div className="title-block">
         <div className="title">
-          <h1 className="h1">{title}</h1>
+          <h1 className="h1 wrap-any">{title}</h1>
           <span className="small muted">Service provider</span>
           <span className="mono faint">saml20-sp-remote</span>
         </div>

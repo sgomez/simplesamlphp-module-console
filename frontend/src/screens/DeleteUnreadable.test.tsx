@@ -65,7 +65,7 @@ describe('deleting an Unreadable object', () => {
     });
     renderAt(LIST);
     const row = (await screen.findByText('Unreadable')).closest('.row') as HTMLElement;
-    const readable = screen.getByRole('link', { name: new RegExp(ID) });
+    const readable = screen.getByRole('link', { name: (name) => name.includes(ID) });
 
     expect(row.lastElementChild?.className).toBe('row-slot');
     expect(readable.lastElementChild?.className).toBe('row-slot');
