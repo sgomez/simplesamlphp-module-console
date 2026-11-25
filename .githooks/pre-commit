@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Rebuilds the committed front-end bundle when a commit touches its sources, so CI's
+# "committed build is up to date" check cannot fail.
+set -euo pipefail
+
+sources='^(frontend/|vite\.config\.ts$|tsconfig\.json$|package(-lock)?\.json$)'
+git diff --cached --name-only --diff-filter=ACMRD | grep -Eq "$sources" || exit 0
+
+run() {
+  if command -v npm >/dev/null; then "$@"
+  elif command -v mise >/dev/null; then mise exec -- "$@"
+  elif [ -x "$HOME/.local/bin/mise" ]; then "$HOME/.local/bin/mise" exec -- "$@"
+  else echo "pre-commit: npm not found; cannot rebuild public/assets/app" >&2; exit 1
+  fi
+}
+
+[ -d node_modules ] || run npm ci --ignore-scripts --silent
+run npm run build --silent >/dev/null
+git add -A public/assets/app
