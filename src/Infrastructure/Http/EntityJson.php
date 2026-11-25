@@ -51,6 +51,7 @@ final class EntityJson
             'unreadable' => $document === null,
             'error' => $entity->loadError,
             'php' => $php,
+            'raw' => $entity->raw,
             'errors' => self::errors($errors),
             'warnings' => $document === null ? [] : $this->warnings->of($entityId, $document),
             'notices' => self::notices(NoticeLines::relocated((string) $php, $notices)),

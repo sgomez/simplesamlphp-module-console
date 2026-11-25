@@ -16,7 +16,8 @@ final class EntityRow
      */
     public static function hydrate(array $row): StoredEntity
     {
-        $decoded = json_decode(self::text($row['document'] ?? ''), true);
+        $stored = self::text($row['document'] ?? '');
+        $decoded = json_decode($stored, true);
         $loadable = is_array($decoded) && json_last_error() === JSON_ERROR_NONE;
         /** @var array<string, mixed>|null $document */
         $document = $loadable ? $decoded : null;
@@ -28,6 +29,7 @@ final class EntityRow
             (int) self::text($row['version'] ?? 0),
             $document,
             $loadable ? null : 'The stored document is not valid JSON: ' . json_last_error_msg() . '.',
+            $loadable ? null : $stored,
         );
     }
 

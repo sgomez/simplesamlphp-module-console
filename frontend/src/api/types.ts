@@ -126,7 +126,7 @@ export interface EntityError {
   existing?: ExistingEntity;
 }
 
-// The object of the edit screen; an Unreadable row has no text.
+// The object of the edit screen; an Unreadable row has no text, only its stored bytes.
 export interface EditedEntity {
   entityId: string;
   name: string | null;
@@ -135,6 +135,8 @@ export interface EditedEntity {
   unreadable: boolean;
   error: string | null;
   php: string | null;
+  // The stored bytes of an Unreadable row.
+  raw: string | null;
   // What the current schema rejects in the stored document.
   errors: EntityError[];
   warnings: EntityWarning[];

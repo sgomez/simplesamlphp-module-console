@@ -92,6 +92,7 @@ export function entity(more: Partial<EditedEntity> = {}): EditedEntity {
     unreadable: false,
     error: null,
     php: PHP,
+    raw: null,
     errors: [],
     warnings: [],
     notices: [],

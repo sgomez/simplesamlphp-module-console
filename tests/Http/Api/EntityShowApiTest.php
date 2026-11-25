@@ -40,7 +40,14 @@ it('answers the load error of an entity that cannot be read, without a text', fu
     expect($entity['unreadable'])->toBeTrue()
         ->and($entity['error'])->toContain('not valid JSON')
         ->and($entity['php'])->toBeNull()
-        ->and($entity['state'])->toBe('Unreadable');
+        ->and($entity['state'])->toBe('Unreadable')
+        ->and($entity['raw'])->toBe('{oops');
+});
+
+it('answers no stored bytes for an entity that can be read', function (): void {
+    $entity = Api::get(EntityApi::existing(), EntityApi::ENTITY);
+
+    expect($entity['raw'])->toBeNull();
 });
 
 it('answers the warnings of an entity apart from errors', function (): void {

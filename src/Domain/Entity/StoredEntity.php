@@ -8,6 +8,7 @@ final readonly class StoredEntity
 {
     /**
      * @param array<string, mixed>|null $document null when the stored document cannot be loaded
+     * @param string|null $raw the stored bytes, kept only when the document cannot be loaded
      */
     public function __construct(
         public string $set,
@@ -16,6 +17,7 @@ final readonly class StoredEntity
         public int $version,
         public ?array $document,
         public ?string $loadError = null,
+        public ?string $raw = null,
     ) {
     }
 
