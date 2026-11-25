@@ -227,12 +227,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
         with:
           persist-credentials: false
           fetch-depth: 2
       - name: A change to a reference screenshot carries the visual-change label
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
         env:
           APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'visual-change') }}
         run: |

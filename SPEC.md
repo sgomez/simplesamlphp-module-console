@@ -2388,7 +2388,7 @@ The matrix is not the full product of PHP versions and engines. The SQL does not
 | `composer audit --locked` | 8.4 | None |
 | Front end, on the Node version of `mise.toml`: `npm ci --ignore-scripts`, ESLint, `tsc`, Vitest in jsdom and in Chromium with its coverage threshold, generated types up to date, `vite build` with no difference from the committed `public/assets/app/` | | None |
 | Visual: the page screenshots of section 12.2, with the browser in the pinned Playwright image; on a failure the diffs are uploaded as a workflow artefact | | None |
-| Visual gate: fails when a pull request adds, changes or deletes a reference screenshot and does not carry the `visual-change` label. Only the maintainer applies the label | | None |
+| Visual gate: fails when a pull request into `main` adds, changes or deletes a reference screenshot and does not carry the `visual-change` label. Only the maintainer applies the label | | None |
 | Package contents: `git archive` holds `public/assets/app/` with its manifest and `docs/spec/schemas/`, and none of `frontend/`, `package.json`, `package-lock.json` or `node_modules` | | None |
 | `npm audit --omit=dev` | | None |
 | CodeQL on the workflows and on `javascript-typescript` (section 14.5) | | None |
