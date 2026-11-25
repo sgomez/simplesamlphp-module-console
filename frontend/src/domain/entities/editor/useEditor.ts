@@ -13,14 +13,15 @@ interface EditorOptions {
   saved?: boolean | undefined;
   // A save changed what the session answers.
   onSaved: () => void;
+  text?: string | undefined;
 }
 
 // The text on screen, the object it was loaded from, and what the last save came to.
-export function useEditor(initial: EditedEntity, { onCreated, saved, onSaved }: EditorOptions) {
+export function useEditor(initial: EditedEntity, { onCreated, saved, onSaved, text: opened }: EditorOptions) {
   const port = useEntitiesPort();
   const settle = useSettle();
   const [view, setView] = useState(initial);
-  const [text, setText] = useState(initial.php ?? '');
+  const [text, setText] = useState(opened ?? initial.php ?? '');
   // An outcome stands for the text it was reached with, and clears once that text changes.
   const [outcome, setOutcome] = useState<{ text: string; shown: SaveOutcome } | null>(
     saved ? { text: initial.php ?? '', shown: { kind: 'saved' } } : null,

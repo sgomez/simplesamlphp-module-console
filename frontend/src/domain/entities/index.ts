@@ -1,10 +1,13 @@
 export { AddEntity } from './add/AddEntity';
+export { FilledEntity } from './editor/FilledEntity';
+export { NewEntity } from './editor/NewEntity';
 export { StoredEntity } from './editor/StoredEntity';
 export { Listing, ListToolbar } from './EntityList';
 export { RowNote } from './EntityListRow';
 export { isDisabled, type Labelled } from './notes';
 export {
   EntitiesPortContext,
+  useEntitiesPort,
   type Draft,
   type EntitiesPort,
   type ListQuery,

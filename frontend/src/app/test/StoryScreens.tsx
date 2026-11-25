@@ -6,6 +6,7 @@ import type { EntitySet } from '../../domain/entities';
 import { NodesPortContext, type NodeList } from '../../domain/nodes';
 import { OverridesPortContext } from '../../domain/overrides';
 import { OverviewPortContext } from '../../domain/overview';
+import { PastedHold, PastedPortContext, type Held } from '../../domain/pasted';
 import { HistoryPortContext } from '../../domain/publication';
 import type { Counts } from '../../domain/session';
 import type { Failed } from '../../lib/result';
@@ -18,6 +19,7 @@ import { hostedRows, idpRows } from '../adapters/memory/idps';
 import { memoryNodes } from '../adapters/memory/nodes';
 import { memoryOverrides, type MemoryOverrides } from '../adapters/memory/overrides';
 import { memoryOverview, type MemoryOverview } from '../adapters/memory/overview';
+import { memoryPasted, type MemoryPasted } from '../adapters/memory/pasted';
 import { boardList } from '../adapters/memory/rows';
 import { StoryFrame } from './StoryFrame';
 import { StoryMessages } from './StoryMessages';
@@ -30,6 +32,9 @@ export interface ScreenPorts {
   overrides?: MemoryOverrides;
   overview?: MemoryOverview;
   authsources?: MemoryAuthsources;
+  pasted?: MemoryPasted;
+  // What an earlier step read.
+  held?: Held | null;
   sets?: Partial<Record<EntitySet, MemoryEntities>>;
   pending?: number;
   counts?: Counts;
@@ -43,7 +48,7 @@ const SET_ROWS: Record<EntitySet, MemoryEntities> = {
 
 type Ports = ReturnType<typeof portsOf>;
 
-function portsOf({ history, nodes, audit, overrides, overview, authsources, sets }: ScreenPorts) {
+function portsOf({ history, nodes, audit, overrides, overview, authsources, pasted, sets }: ScreenPorts) {
   return {
     history: memoryHistory(history),
     nodes: memoryNodes(nodes),
@@ -51,6 +56,7 @@ function portsOf({ history, nodes, audit, overrides, overview, authsources, sets
     overrides: memoryOverrides(overrides),
     overview: memoryOverview(overview),
     authsources: memoryAuthsources(authsources),
+    pasted: memoryPasted(pasted),
     sets: {
       'saml20-sp-remote': memoryEntities({ ...SET_ROWS['saml20-sp-remote'], ...sets?.['saml20-sp-remote'] }),
       'saml20-idp-remote': memoryEntities({ ...SET_ROWS['saml20-idp-remote'], ...sets?.['saml20-idp-remote'] }),
@@ -87,13 +93,17 @@ export function StoryScreens({ pending = 7, counts, ...more }: ScreenPorts) {
           <OverridesPortContext value={ports.overrides}>
             <OverviewPortContext value={ports.overview}>
               <AuthsourcesPortContext value={ports.authsources}>
-                <StoryMessages>
-                  <Routes>
-                    {routes.map((route) => (
-                      <Route key={route.path} path={route.path} element={<Screen route={route} ports={ports} pending={pending} counts={counts} />} />
-                    ))}
-                  </Routes>
-                </StoryMessages>
+                <PastedPortContext value={ports.pasted}>
+                  <PastedHold initial={more.held ?? null}>
+                    <StoryMessages>
+                      <Routes>
+                        {routes.map((route) => (
+                          <Route key={route.path} path={route.path} element={<Screen route={route} ports={ports} pending={pending} counts={counts} />} />
+                        ))}
+                      </Routes>
+                    </StoryMessages>
+                  </PastedHold>
+                </PastedPortContext>
               </AuthsourcesPortContext>
             </OverviewPortContext>
           </OverridesPortContext>

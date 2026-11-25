@@ -18,6 +18,7 @@ import { RollbackPage } from '../../pages/RollbackPage';
 import { copiesOf, type SourceFixture } from '../adapters/memory/external';
 import { boardComparison } from '../adapters/memory/overrides';
 import type { Crumb } from '../Shell';
+import { pastedRoutes } from './pastedRoutes';
 
 export interface StoryRoute {
   path: string;
@@ -55,5 +56,6 @@ export function storyRoutes(sources: SourceFixture[]): StoryRoute[] {
       crumbs: at({ label: 'Service providers', to: SP_LIST }, { label: compared, to: editPath(boardComparison.entityId) }, { label: 'Compare' }),
       page: <OverridePage />,
     },
+    ...pastedRoutes(external),
   ];
 }
