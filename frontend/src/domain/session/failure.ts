@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext } from 'react';
+import { createContext, useCallback, useContext, type ReactNode } from 'react';
 import { refusalOf, ReportRefusal } from '../database';
 import type { Failed } from '../../lib/result';
 
@@ -45,5 +45,5 @@ export function useSettle(): (failed: Failed, show: (status: number) => void, en
   );
 }
 
-// Shows a message such as "Deleted." at the top of the next page, at `to` when given.
-export const ReportMessage = createContext<(text: string, to?: string) => void>(() => undefined);
+// Shows a message such as "Deleted." at the top of the next page, at `to` when given; `shown` stands for it whole, as a report.
+export const ReportMessage = createContext<(text: string, to?: string, shown?: ReactNode) => void>(() => undefined);

@@ -474,6 +474,25 @@ textarea.input-code{line-height:1.65;white-space:pre;overflow-x:auto}
 .add-detected{display:flex;align-items:center;gap:8px;flex:1 1 auto}
 .add-detected .input{width:auto;height:32px;font-size:13px}
 
+/* Pasted configuration and Import (AddEmpty, AddUnreadable, AddWrongKind, AddReview, ReviewNeeds, AddSeveral, ReplaceFrom, ImportResult) */
+.add-link{align-self:flex-start}
+.examples{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px}
+.grp-body:has(>.examples){padding:0 16px 16px}
+.example{display:flex;flex-direction:column;gap:6px;min-width:0}
+.example-title{font-weight:600}
+.rev{display:flex;flex-wrap:wrap;align-items:flex-start;gap:24px 32px}
+.rep-groups{display:flex;flex-direction:column;gap:12px;flex:1 1 380px;min-width:0}
+.rev-php{display:flex;flex-direction:column;gap:8px;flex:1 1 460px;min-width:0}
+.rep{overflow:hidden}
+.rep-warn{border-color:var(--warning-border)}
+.rep-head{display:flex;align-items:baseline;gap:8px;padding:12px 16px}
+.rep-row{padding:8px 16px;gap:12px;align-items:baseline;flex-wrap:wrap}
+.rep-name{flex:0 1 230px;overflow-wrap:anywhere}
+.rep-note{flex:1 1 160px}
+.rep-id{display:block;overflow-wrap:anywhere}
+.pick-row{flex-wrap:wrap;gap:4px 24px}
+.bar-start{margin-inline-end:auto}
+
 /* last, so it wins over .input's font */
 .mono{font-family:var(--mono);font-size:12.5px}
 .input.mono{font-size:13px}

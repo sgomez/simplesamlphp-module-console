@@ -1,12 +1,10 @@
-import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Button } from '../../design-system/Button';
 import { Card } from '../../design-system/Card';
 import { FileButton } from '../../design-system/FileButton';
 import { ChevronIcon } from '../../design-system/icons';
 import { Row } from '../../design-system/Row';
 import { LinkSegmented } from '../../design-system/Segmented';
-import { TextArea } from '../../design-system/TextArea';
+import { AUTHSOURCE_REVIEW, PasteArea, usePaste, usePastedPort } from '../pasted';
 import { AUTHSOURCE_NEW, startPath } from './port';
 
 // SPEC 6.5: the five Authsource types, each with what it is for.
@@ -45,9 +43,15 @@ export function AddAuthsource() {
   const navigate = useNavigate();
   const wanted = useSearchParams()[0].get('source');
   const source = SOURCES.find(({ key }) => key === wanted)?.key ?? 'paste';
-  const [text, setText] = useState('');
+  const port = usePastedPort();
+  const paste = usePaste({
+    at: AUTHSOURCE_NEW,
+    read: (text, format) => port.read({ kind: 'authsource' }, text, format),
+    next: (reading) => (reading.kind === 'one' ? AUTHSOURCE_REVIEW : null),
+    formats: ['php'],
+  });
   const loaded = (read: string) => {
-    setText(read);
+    paste.setText(read);
     void navigate(AUTHSOURCE_NEW);
   };
 
@@ -60,16 +64,7 @@ export function AddAuthsource() {
           <FileButton label="Choose file" onText={loaded} />
         </div>
       )}
-      {source === 'paste' && (
-        <>
-          <TextArea label="PHP array" placeholder="PHP array" mono rows={12} value={text} onChange={setText} />
-          <div className="add-actions">
-            <Button variant="primary" disabled>
-              Review
-            </Button>
-          </div>
-        </>
-      )}
+      {source === 'paste' && <PasteArea paste={paste} label="PHP array" formats={['php']} />}
     </>
   );
 }

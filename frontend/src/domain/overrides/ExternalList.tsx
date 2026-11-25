@@ -7,6 +7,7 @@ import { Select } from '../../design-system/Select';
 import { SET_WORDS } from '../entities';
 import { EXTERNAL_SETS, externalPath } from './external';
 import { ExternalSourceSection } from './ExternalSource';
+import { importPath } from './selection';
 import type { ExternalList } from './useExternalList';
 
 const number = new Intl.NumberFormat('en');
@@ -86,7 +87,7 @@ export function ImportBar({ list }: { list: ExternalList }) {
       <Button variant="quiet" onPress={list.clear}>
         Clear
       </Button>
-      <Button variant="primary">{`Import ${count}`}</Button>
+      <LinkButton variant="primary" to={importPath(list.selection)}>{`Import ${count}`}</LinkButton>
     </div>
   );
 }
