@@ -3,8 +3,10 @@ import { postJson } from '../../api/client';
 import type { EditedEntity, Refusal, Validation } from '../../api/types';
 import { useFailure } from '../../app/failure';
 import { Page } from '../../app/Page';
+import { SP_LIST } from '../../app/paths';
 import { refusalOf, ReportRefusal } from '../../app/refusals';
 import type { EditorHandle } from '../../components/ui/Editor';
+import { useDeleteEntity } from '../DeleteEntity';
 import { EditHeader } from './EditHeader';
 import { Marks } from './Marks';
 import { entityMarks, lineMarks, marksOf, type Mark } from './marks';
@@ -45,6 +47,7 @@ export function EntityEditor({ initial, pending, onSaved, onTitle }: EntityEdito
   const refuse = useContext(ReportRefusal);
   const title = view.name ?? view.entityId;
   const dirty = text !== (view.php ?? '');
+  const deletion = useDeleteEntity(view.entityId, view.name, SP_LIST);
 
   useEffect(() => onTitle(title), [title, onTitle]);
 
@@ -117,7 +120,8 @@ export function EntityEditor({ initial, pending, onSaved, onTitle }: EntityEdito
       wide
       bar={<SaveBar dirty={dirty} state={view.state} saving={saving} onSave={() => void save()} onDiscard={discard} />}
     >
-      <EditHeader title={title} entityId={view.entityId} />
+      <EditHeader title={title} entityId={view.entityId} onDelete={deletion.ask} />
+      {deletion.element}
       <Outcome outcome={outcome?.text === text ? outcome.shown : null} title={title} state={view.state} pending={pending} />
       <div className="cols">
         <div className="col-main">

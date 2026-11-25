@@ -21,13 +21,15 @@ interface ButtonProps extends Look {
   disabled?: boolean;
   loading?: boolean;
   menu?: boolean;
+  // Opens a menu.
+  popup?: boolean;
   controls?: string;
   expanded?: boolean;
   onClick?: () => void;
 }
 
 export function Button(props: ButtonProps) {
-  const { type = 'button', disabled, loading, menu, controls, expanded, onClick, label, children } = props;
+  const { type = 'button', disabled, loading, menu, popup, controls, expanded, onClick, label, children } = props;
 
   return (
     <button
@@ -35,6 +37,7 @@ export function Button(props: ButtonProps) {
       className={buttonClass(props, loading && 'is-loading', menu && 'menu-btn')}
       disabled={disabled}
       aria-label={label}
+      aria-haspopup={popup ? 'menu' : undefined}
       aria-controls={controls}
       aria-expanded={expanded}
       onClick={onClick}

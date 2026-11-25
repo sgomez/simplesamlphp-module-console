@@ -7,6 +7,8 @@ use SimpleSAML\Module\console\Infrastructure\Http\CsrfToken;
 use SimpleSAML\Module\console\Tests\Support\Api;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\Db;
+use SimpleSAML\Module\console\Tests\Support\EntityApi;
+use SimpleSAML\Module\console\Tests\Support\EntityPages;
 use SimpleSAML\Session;
 
 it('answers a request without a valid token with 403, a log warning and no Audit trail row', function (
@@ -30,6 +32,19 @@ it('answers a request without a valid token with 403, a log warning and no Audit
     'empty' => [['HTTP_X_CONSOLE_TOKEN' => '']],
 ]);
 
+it('deletes nothing and writes no Audit trail row on a forged delete', function (): void {
+    $client = EntityApi::existing();
+
+    $response = $client->api('POST', EntityApi::DELETE, [
+        'HTTP_X_CONSOLE_TOKEN' => 'forged',
+        'CONTENT_TYPE' => 'application/json',
+    ], json_encode(['entityid' => EntityApi::ID], JSON_THROW_ON_ERROR));
+
+    expect($response->getStatusCode())->toBe(403)
+        ->and(EntityPages::count($client, 'console_entity'))->toBe(1)
+        ->and(EntityPages::count($client, 'console_audit', "action = 'delete'"))->toBe(0);
+});
+
 it('keeps one token for the whole session and compares it in constant time', function (): void {
     (new ConsoleClient())->loginAsAdmin();
     $tokens = new CsrfToken(Session::getSessionFromRequest());
@@ -40,7 +55,7 @@ it('keeps one token for the whole session and compares it in constant time', fun
         ->and($tokens->isValid($token))->toBeTrue()
         ->and($tokens->isValid($token . 'x'))->toBeFalse()
         ->and($tokens->isValid(null))->toBeFalse()
-        ->and(file_get_contents(dirname(__DIR__, 2) . '/src/Infrastructure/Http/CsrfToken.php'))
+        ->and(file_get_contents(dirname(__DIR__, 3) . '/src/Infrastructure/Http/CsrfToken.php'))
             ->toContain('hash_equals(');
 });
 

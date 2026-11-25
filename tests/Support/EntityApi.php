@@ -18,6 +18,8 @@ final class EntityApi
 
     public const string VALIDATE = '/entities/saml20-sp-remote/validate';
 
+    public const string DELETE = '/entities/saml20-sp-remote/delete';
+
 
     /**
      * A logged-in client holding the service provider "Example" at version 1.
@@ -53,6 +55,12 @@ final class EntityApi
     public static function validate(ConsoleClient $client, string $php, string $id = self::ID): Response
     {
         return self::post($client, self::VALIDATE, ['entityid' => $id, 'php' => $php]);
+    }
+
+
+    public static function delete(ConsoleClient $client, string $id): Response
+    {
+        return self::post($client, self::DELETE, ['entityid' => $id]);
     }
 
 

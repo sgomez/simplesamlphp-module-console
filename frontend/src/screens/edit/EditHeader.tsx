@@ -1,6 +1,7 @@
 import { Button } from '../../components/ui/Button';
+import { MenuButton } from '../../components/ui/Menu';
 
-export function EditHeader({ title, entityId }: { title: string; entityId: string }) {
+export function EditHeader({ title, entityId, onDelete }: { title: string; entityId: string; onDelete: () => void }) {
   return (
     <div className="page-head">
       <div className="title-block">
@@ -16,6 +17,7 @@ export function EditHeader({ title, entityId }: { title: string; entityId: strin
           </Button>
         </div>
       </div>
+      <MenuButton label="More actions" entries={[{ label: 'Delete…', onSelect: onDelete, danger: true }]} />
     </div>
   );
 }

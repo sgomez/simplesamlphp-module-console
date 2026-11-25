@@ -22,3 +22,8 @@ export function RunMessage({ run }: { run: MigrationRun }) {
       );
   }
 }
+
+// The one-shot message of a POST: the outcome of Run migrations, or a text such as "Deleted.".
+export function OutcomeMessage({ said }: { said: MigrationRun | string }) {
+  return typeof said === 'string' ? <Callout kind="success" title={said} /> : <RunMessage run={said} />;
+}

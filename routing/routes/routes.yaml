@@ -57,6 +57,15 @@ console-api-publication-confirm:
   }
   methods: [POST]
 
+console-api-entity-delete:
+  path: /api/entities/{set}/delete
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\Api\EntityDeleteController::delete'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [POST]
+
 console-api-migrate:
   path: /api/migrate
   defaults: {
@@ -77,15 +86,6 @@ console-entity-save:
   path: /entities/{set}/save
   defaults: {
     _controller: 'SimpleSAML\Module\console\Controller\EntitySaveController::save'
-  }
-  requirements:
-    set: saml20-sp-remote
-  methods: [POST]
-
-console-entity-delete:
-  path: /entities/{set}/delete
-  defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\EntityDeleteController::delete'
   }
   requirements:
     set: saml20-sp-remote

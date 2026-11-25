@@ -60,9 +60,6 @@ final class PublishFixtures
 
     public static function delete(ConsoleClient $client, string $entityId): void
     {
-        $client->post('/entities/saml20-sp-remote/delete', [
-            '_token' => EntityPages::field($client->page(EntityPages::NEW), '_token'),
-            'entityid' => $entityId,
-        ]);
+        EntityApi::delete($client, $entityId);
     }
 }
