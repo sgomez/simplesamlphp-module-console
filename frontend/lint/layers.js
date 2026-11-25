@@ -37,7 +37,7 @@ export function layers(src) {
       'boundaries/files': [
         // The entry keeps its path: the PHP side names it.
         { pattern: `${src}/main.tsx`, category: 'entry' },
-        { pattern: `${src}/**/*.{test,stories,visual}.{ts,tsx}`, category: 'spec' },
+        { pattern: `${src}/**/*.{test,stories}.{ts,tsx}`, category: 'spec' },
         { pattern: [`${src}/app/adapters/memory/**`, `${src}/app/test/**`], category: 'double' },
       ],
     },

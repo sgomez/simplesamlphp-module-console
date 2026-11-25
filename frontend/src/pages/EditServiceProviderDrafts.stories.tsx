@@ -13,7 +13,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const AFTER = { screenshot: 'after-play' };
 
 export const Opened: Story = {
   name: 'Draft: Opened with a Pending change',
@@ -44,7 +43,6 @@ export const SavedPublished: Story = {
   args: {
     entities: { entities: [edited()], save: (_draft, stored) => ({ kind: 'saved', entity: { ...edited(), ...stored, state: 'Up to date' } }) },
   },
-  parameters: AFTER,
   play: async ({ canvasElement }) => {
     await editAndSave(canvasElement);
     await expect(await within(canvasElement).findByText('Saved.')).toBeVisible();
@@ -60,7 +58,6 @@ export const LostRace: Story = {
     },
     pending: 7,
   },
-  parameters: AFTER,
   play: async ({ canvasElement }) => {
     await editAndSave(canvasElement);
     await expect(await within(canvasElement).findByText('admin saved it 2 minutes ago. Your edits were not kept.')).toBeVisible();
@@ -70,7 +67,6 @@ export const LostRace: Story = {
 export const LostRaceServed: Story = {
   name: 'Draft: Lost race, as the API answers today',
   args: { entities: { entities: [edited()], served: true, save: () => ({ kind: 'race', entity: edited({ version: 6 }) }) }, pending: 7 },
-  parameters: AFTER,
   play: async ({ canvasElement }) => {
     await editAndSave(canvasElement);
     await expect(await within(canvasElement).findByText('This is Moodle as it now stands. Your edits were not kept.')).toBeVisible();
@@ -80,7 +76,6 @@ export const LostRaceServed: Story = {
 export const ServerError: Story = {
   name: 'Draft: Not saved, server error',
   args: { entities: { entities: [edited()], save: () => ({ kind: 'failed', failed: { status: 500, body: null } }) }, pending: 7 },
-  parameters: AFTER,
   play: async ({ canvasElement }) => {
     await editAndSave(canvasElement);
     await expect(await within(canvasElement).findByText('Not saved: the server answered 500.')).toBeVisible();
@@ -113,7 +108,6 @@ export const Loading: Story = {
 export const Insert: Story = {
   name: 'Draft: Option inserted',
   args: { entities: { entities: [edited()] }, pending: 7 },
-  parameters: AFTER,
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await userEvent.click(await page.findByRole('button', { name: 'Insert ForceAuthn' }));

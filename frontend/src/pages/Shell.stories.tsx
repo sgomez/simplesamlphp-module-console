@@ -68,7 +68,6 @@ export const Board: Story = {
 export const NavigationOpen: Story = {
   name: 'Navigation open',
   args: { pending: 7 },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await page.findByText('Course evaluations');

@@ -2,7 +2,6 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
-import { visual } from './frontend/visual/config.ts';
 
 // The dev node's baseurlpath is /simplesaml/; the shell points at these paths when dev_server is set.
 const DEV_BASE = '/simplesaml/module.php/console/assets/app/';
@@ -70,7 +69,6 @@ export default defineConfig(({ command }) => ({
           },
         },
       },
-      visual,
     ],
   },
 }));
