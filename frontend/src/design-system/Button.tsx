@@ -1,6 +1,7 @@
 import type { ReactNode, Ref } from 'react';
 import { Button as AriaButton, Link } from 'react-aria-components';
 import { cx } from './classes';
+import { defined } from './props';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'quiet' | 'danger' | 'danger-solid' | 'global';
 
@@ -25,11 +26,6 @@ interface ButtonProps extends Look {
   controls?: string;
   expanded?: boolean;
   onPress?: () => void;
-}
-
-// Props left undefined are not passed, so a trigger's context (a MenuTrigger's aria-expanded) is not overridden.
-function defined<T extends object>(props: T): Partial<T> {
-  return Object.fromEntries(Object.entries(props).filter(([, value]) => value !== undefined)) as Partial<T>;
 }
 
 export function Button(props: ButtonProps) {
