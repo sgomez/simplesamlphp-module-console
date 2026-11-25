@@ -103,36 +103,22 @@ final class ConsoleClient
 
     public function get(string $path): Response
     {
-        return $this->send('GET', $path, []);
-    }
-
-
-    public function post(string $path, array $data = []): Response
-    {
-        return $this->send('POST', $path, $data);
+        return $this->send('GET', $path);
     }
 
 
     public function api(string $method, string $path, array $server = [], ?string $content = null): Response
     {
-        return $this->send($method, '/api' . $path, [], $server, $content);
+        return $this->send($method, '/api' . $path, $server, $content);
     }
 
 
-    public static function tokenIn(string $html): string
-    {
-        preg_match('/name="_token" value="([0-9a-f]+)"/', $html, $matches);
-
-        return $matches[1] ?? '';
-    }
-
-
-    private function send(string $method, string $path, array $data, array $server = [], ?string $body = null): Response
+    private function send(string $method, string $path, array $server = [], ?string $body = null): Response
     {
         [$path, $query] = explode('?', $path, 2) + [1 => ''];
         $route = rtrim('/console' . $path, '/');
         $uri = '/module.php' . $route . ($query === '' ? '' : '?' . $query);
-        $request = Request::create($uri, $method, $data, [], [], $server, $body);
+        $request = Request::create($uri, $method, [], [], [], $server, $body);
         $request->server->set('PATH_INFO', $route);
         $request->server->set('SCRIPT_FILENAME', '/var/www/simplesaml/public/module.php');
         $_SERVER = array_merge($_SERVER, $request->server->all());
@@ -162,7 +148,7 @@ final class ConsoleClient
 
     public function page(string $path = '/'): string
     {
-        return self::body(Redirects::follow($this, $this->get($path)));
+        return self::body($this->get($path));
     }
 
 
