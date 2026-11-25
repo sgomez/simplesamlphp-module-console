@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
-import { session } from '../test/api';
+import { session } from './test/api';
 import { Shell } from './Shell';
 
 describe('the breadcrumb', () => {

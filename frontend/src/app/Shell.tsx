@@ -1,9 +1,9 @@
-import { Fragment, useState, type ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
-import type { SessionLinks } from '../api/types';
-import { Button } from '../components/ui/Button';
-import { MenuIcon } from '../components/ui/icons';
-import { ReviewChanges } from './ReviewChanges';
+import type { SessionLinks } from '../domain/database';
+import { Shell as Layout } from '../design-system/Shell';
+import { ReviewChanges } from '../domain/publication';
+import type { Counts } from '../domain/session';
 import { Sidebar } from './Sidebar';
 
 export interface Crumb {
@@ -14,52 +14,51 @@ export interface Crumb {
 interface ShellProps {
   session: SessionLinks | null;
   pending: number;
+  counts?: Counts;
   crumbs: readonly Crumb[];
   // The end of the header; the Review button when not given.
   end?: ReactNode;
   children: ReactNode;
 }
 
-export function Shell({ session, pending, crumbs, end, children }: ShellProps) {
+function Crumbs({ crumbs }: { crumbs: readonly Crumb[] }) {
+  return (
+    <nav className="crumbs" aria-label="Breadcrumb">
+      <Link className="crumb" to="/">
+        Console
+      </Link>
+      {crumbs.map(({ label, to }, index) => (
+        <Fragment key={index}>
+          <span aria-hidden="true" className="faint">
+            /
+          </span>
+          {to === undefined ? (
+            <span aria-current="page" className="crumb-current wrap-any">
+              {label}
+            </span>
+          ) : (
+            <Link className="crumb" to={to}>
+              {label}
+            </Link>
+          )}
+        </Fragment>
+      ))}
+    </nav>
+  );
+}
+
+export function Shell({ session, pending, counts = {}, crumbs, end, children }: ShellProps) {
   const { key } = useLocation();
-  const [openAt, setOpenAt] = useState<string | null>(null);
-  const open = openAt === key;
+  const head = (
+    <>
+      <Crumbs crumbs={crumbs} />
+      {end === undefined ? pending > 0 && <ReviewChanges count={pending} variant="global" /> : end}
+    </>
+  );
 
   return (
-    <div className="shell">
-      <div id="nav" className={open ? 'shell-side is-open' : 'shell-side'}>
-        <Sidebar session={session} pending={pending} />
-      </div>
-      <div className="shell-main">
-        <header className="shell-head">
-          <Button menu iconOnly label="Menu" controls="nav" expanded={open} onClick={() => setOpenAt(open ? null : key)}>
-            <MenuIcon />
-          </Button>
-          <nav className="crumbs" aria-label="Breadcrumb">
-            <Link className="crumb" to="/">
-              Console
-            </Link>
-            {crumbs.map(({ label, to }, index) => (
-              <Fragment key={index}>
-                <span aria-hidden="true" className="faint">
-                  /
-                </span>
-                {to === undefined ? (
-                  <span aria-current="page" className="crumb-current wrap-any">
-                    {label}
-                  </span>
-                ) : (
-                  <Link className="crumb" to={to}>
-                    {label}
-                  </Link>
-                )}
-              </Fragment>
-            ))}
-          </nav>
-          {end === undefined ? pending > 0 && <ReviewChanges count={pending} variant="global" /> : end}
-        </header>
-        {children}
-      </div>
-    </div>
+    <Layout side={<Sidebar session={session} pending={pending} counts={counts} />} head={head} navKey={key}>
+      {children}
+    </Layout>
   );
 }

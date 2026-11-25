@@ -1,10 +1,8 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext } from 'react';
 import { useLocation, useNavigationType } from 'react-router';
-import type { EditedEntity, MigrationRun } from '../api/types';
-import { cx } from '../components/ui/classes';
-
-// A message the Console shows at the top of whatever page comes next, such as the outcome of Run migrations.
-export const PageNotice = createContext<ReactNode>(null);
+import { Callout } from '../design-system/Callout';
+import { RunMessage, type MigrationRun } from '../domain/database';
+import type { EditedEntity } from '../domain/entities';
 
 // A one-shot message: the outcome of Run migrations, a text such as "Deleted.", or the entity a create answered,
 // which its edit screen shows as saved.
@@ -23,24 +21,16 @@ export function useCarried(): boolean {
   return useNavigationType() === 'REPLACE' && typeof state === 'object' && state !== null && 'carry' in state;
 }
 
-interface PageProps {
-  // narrow: a state or failure page; publish: the width and spacing of the Publish boards.
-  width?: 'wide' | 'narrow' | 'publish' | undefined;
-  bar?: ReactNode;
-  children: ReactNode;
+export function runOf(said: Said | null): MigrationRun | null {
+  return said === null || typeof said === 'string' || 'created' in said ? null : said;
 }
 
-// The content of a screen, and the bar that sticks below it.
-export function Page({ width, bar, children }: PageProps) {
-  const notice = useContext(PageNotice);
+// The one-shot message of a POST at the top of the page; a created entity's edit screen says it is saved itself.
+export function OutcomeMessage({ said }: { said: Said }) {
+  if (typeof said === 'string') {
+    return <Callout kind="success" title={said} />;
+  }
+  const run = runOf(said);
 
-  return (
-    <>
-      <main className={cx('page', width && `page-${width}`)}>
-        {notice}
-        {children}
-      </main>
-      {bar}
-    </>
-  );
+  return run && <RunMessage run={run} />;
 }

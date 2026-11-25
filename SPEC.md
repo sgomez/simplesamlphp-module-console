@@ -92,7 +92,7 @@ The Console does none of the following in v1.
 
 The module is the Composer package `sgomez/simplesamlphp-module-console` and installs as the SimpleSAMLphp module `console`. Its production dependencies beyond SimpleSAMLphp 2.5 are listed in section 3.7.
 
-The package ships the built front end under `public/assets/app/`, with Vite's manifest, and the JSON Schemas under `docs/spec/schemas/`. The front-end sources with their stories and reference screenshots, the Storybook configuration, `package.json`, `package-lock.json` and the Node tooling are `export-ignore`. Installing the module needs no Node.
+The package ships the built front end under `public/assets/app/`, with Vite's manifest, and the JSON Schemas under `docs/spec/schemas/`. The front-end sources with their stories, the Storybook configuration, `package.json`, `package-lock.json` and the Node tooling are `export-ignore`. Installing the module needs no Node.
 
 ### 2.2 Installation steps
 
@@ -336,11 +336,12 @@ The front end has a build step (section 10.17). Its npm dependencies are pinned 
 | `react`, `react-dom` | Components |
 | `react-router` | Client routing over the Console's paths |
 | `react-aria-components` | Keyboard, focus, ARIA and press behaviour of the design-system primitives |
+| `react-aria`, `react-stately` | The hooks behind the switch and the check, which keep their visible native input |
 | `ajv` | Compiling the schemas into standalone JSON Schema 2020-12 validators at build time. Only the compiled validators ship; the `format` rules they call are implemented in the front end to match opis |
 | `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`, `@types/react-dom` | Build and type checking |
 | `eslint`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, `eslint-plugin-boundaries`, `eslint-import-resolver-typescript` | Lint, including the rules of section 12.4 |
 | `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/dom`, `jsdom` | Unit tests in jsdom and the coverage of every test project |
-| `@vitest/browser`, `@vitest/browser-playwright`, `playwright` | Story tests and page screenshots in Chromium |
+| `@vitest/browser`, `@vitest/browser-playwright`, `playwright` | Story tests in Chromium |
 | `storybook`, `@storybook/react-vite`, `@storybook/addon-vitest`, `@storybook/addon-a11y`, `@storybook/addon-docs` | Stories, Foundations docs, and the axe check on every story |
 | `json-schema-to-typescript` | Types generated from the schemas |
 
@@ -1823,8 +1824,8 @@ A path the router does not know shows "Not found".
 | --- | --- | --- |
 | GET | `/api/session` | Identity, the links to core, the counts of the sidebar, the number of Pending changes and the current Snapshot (sections 10.2 and 10.3) |
 | GET | `/api/overview` | Section 10.7 |
-| GET | `/api/entities/{set}` | A page of the entity list and the count of each filter; `q`, filters and `page` in the query string |
-| GET | `/api/entities/{set}/entity?entityid=…` | The object of the edit screen: document, PHP text, `version`, state, notices and warnings; an Unreadable row's stored bytes. Without `entityid`, the starter text of a new object, its entity ID left empty in the `$metadata[...]` line |
+| GET | `/api/entities/{set}` | A page of the entity list, each row saying whether it is in the current Snapshot, and the count of each filter; `q`, filters and `page` in the query string |
+| GET | `/api/entities/{set}/entity?entityid=…` | The object of the edit screen: document, PHP text, `version`, state, whether it is in the current Snapshot, notices and warnings; an Unreadable row's stored bytes. Without `entityid`, the starter text of a new object, its entity ID left empty in the `$metadata[...]` line |
 | POST | `/api/entities/{set}/read` | Reads pasted entity configuration: the editor's content unsaved with its report, or the selectable list of several entities (section 9.6) |
 | POST | `/api/entities/{set}/create` | Saves the selected entities and returns the report (section 9.6) |
 | POST | `/api/entities/{set}/save` | Create or edit, from the form or the PHP view; an edit sends the `version` it was loaded with, a create sends none |
@@ -1917,7 +1918,7 @@ States: first run, with nothing managed and nothing published, leading to the Ad
 - One row per managed entity of the set: its name and its entity ID, or the entity ID alone when the document has no name; its state of section 8.2 by the labels below; and labels for disabled, Override, Shadowed, "external source changed", "external source not reviewed", errors against the current schema (section 5.8), warnings (section 5.9), certificates that expire ("Certificate expires in 12 days") or have expired, and Unreadable. A row shows one label, Unreadable and "Errors" first, then the state, then warnings, and counts the rest as "+N more". "Errors" lists the errors in its tooltip. A disabled object's name is struck through. An Up to date object shows no label.
 - Rows are ordered by name, or by entity ID where there is no name, 12 to a page at every width.
 - Search by entity ID and name. Beside it, a segmented filter "All", "Not live" (Unpublished, To be withdrawn and Not live, section 8.2) and "With warnings", each with its count of matching rows. At phone width the filter is hidden.
-- Search, filters and pagination run on the server. The pager shows the range and the total, with thousands separators: "1 to 12 of 42 service providers", Previous, "Page 1 of 4", Next; at phone width "1 to 6 of 42" and "1 of 7".
+- Search, filters and pagination run on the server. The pager shows the range and the total, with thousands separators: "1 to 12 of 42 service providers", Previous, "Page 1 of 4", Next; at phone width "1 to 12 of 42" and "1 of 4".
 - When `console:Snapshot` is missing from the `metadata.sources` of the node serving the page, the list carries the warning of section 10.7.
 - The primary action is "Add service provider", "Add identity provider" or "Add hosted IdP" (section 10.12), "Add" at phone width. A row opens the edit screen.
 - With no object at all, the list shows only "No service providers yet" (or the set's equivalent), without search. A search that matches nothing shows "No service provider matches “zoom”" with "Clear search" and "Search External entities", which runs the same search there.
@@ -2252,7 +2253,6 @@ The Console's link on core's Configuration tab never queries the database, so no
 | ESLint with `typescript-eslint` and the React plugins | Front-end lint and the rules of section 12.4 |
 | Vitest with Testing Library and jsdom, coverage through V8 | Unit tests of domain logic and the API client |
 | Vitest browser mode on Playwright's Chromium, through Storybook's Vitest addon, with axe | Every story as a test, its `play` function and its accessibility check |
-| Vitest `toMatchScreenshot`, with the browser in the official Playwright Docker image pinned by digest | Screenshots of page stories |
 
 There are no end-to-end tests against a running SimpleSAMLphp in v1: no Pest browser plugin, and stories run over the in-memory adapters. Node runs only in development and CI. Mago is not used. PHP test files are not under static analysis.
 
@@ -2277,7 +2277,7 @@ There are no end-to-end tests against a running SimpleSAMLphp in v1: no Pest bro
 
 **Story tests** cover every primitive, domain component and page. Every story renders in Chromium and passes axe with no violation; interactive stories drive the keyboard and check focus in a `play` function. Domain logic (the form engine's presence, `x-groups` counts, `x-when`, list rows and finder, and the use cases of each slice) has unit tests in jsdom. The HTTP adapters are tested against a stubbed `fetch`.
 
-**Page screenshots.** Every page story is compared with its committed reference screenshot, light and dark, at desktop width and at 400 px. The browser runs in the Playwright Docker image, locally and in CI, so that a reference taken on one machine matches on another. `npm run test:visual` runs it locally and `npm run test:visual -- --update` writes new references. Primitives and domain components have no screenshots.
+**No screenshot comparison.** The look of a page is reviewed by a person, against its board, in Storybook.
 
 ### 12.3 Thresholds
 
@@ -2297,7 +2297,7 @@ Every threshold blocks.
 
 Line coverage is measured in one process that runs the persistence, migration and Publication tests on every engine whose DSN is set (section 12.6), so the code of every engine counts towards the 90 %, engine-only branches included, with no exclusion and no merging of reports. The threshold binds in CI, where every engine runs (section 13.2). Locally it is reached only with every engine that has its own implementation running, which means the `postgres` profile next to the default MariaDB (section 12.7).
 
-The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, the page shell template, the stylesheet, generated types, the built output, lock files, fixtures and reference screenshots are exempt.
+The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, the page shell template, the stylesheet, generated types, the built output, lock files, and fixtures are exempt.
 
 PHP coverage thresholds are enforced by Pest, front-end ones by Vitest. No external coverage service is used.
 
@@ -2387,8 +2387,6 @@ The matrix is not the full product of PHP versions and engines. The SQL does not
 | Lowest dependencies: `composer update --prefer-lowest`, full suite | 8.4 | SQLite |
 | `composer audit --locked` | 8.4 | None |
 | Front end, on the Node version of `mise.toml`: `npm ci --ignore-scripts`, ESLint, `tsc`, Vitest in jsdom and in Chromium with its coverage threshold, generated types up to date, `vite build` with no difference from the committed `public/assets/app/` | | None |
-| Visual: the page screenshots of section 12.2, with the browser in the pinned Playwright image; on a failure the diffs are uploaded as a workflow artefact | | None |
-| Visual gate: fails when a pull request adds, changes or deletes a reference screenshot and does not carry the `visual-change` label. Only the maintainer applies the label | | None |
 | Package contents: `git archive` holds `public/assets/app/` with its manifest and `docs/spec/schemas/`, and none of `frontend/`, `package.json`, `package-lock.json` or `node_modules` | | None |
 | `npm audit --omit=dev` | | None |
 | CodeQL on the workflows and on `javascript-typescript` (section 14.5) | | None |

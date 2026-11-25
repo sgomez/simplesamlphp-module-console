@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
   push:
     branches: [main]
 
@@ -187,16 +188,19 @@ jobs:
       - run: npm run generate
       - name: The generated types and validators are up to date
         run: |
-          git status --porcelain -- frontend/src/generated
-          test -z "$(git status --porcelain -- frontend/src/generated)"
+          git status --porcelain -- frontend/src/domain/documents/generated
+          test -z "$(git status --porcelain -- frontend/src/domain/documents/generated)"
       - run: npm run lint
       - run: npm run typecheck
+      - name: Chromium for the story tests, at the version the lock file pins
+        run: npx playwright install --with-deps chromium
       - run: npm test
       - run: npm run build
       - name: The committed build is up to date
         run: |
           git status --porcelain -- public/assets/app
           test -z "$(git status --porcelain -- public/assets/app)"
+
 
   package-contents:
     name: Package contents
@@ -211,7 +215,7 @@ jobs:
           grep -qx 'public/assets/app/.vite/manifest.json' "$RUNNER_TEMP/contents.txt"
           grep -q '^public/assets/app/assets/' "$RUNNER_TEMP/contents.txt"
           grep -q '^docs/spec/schemas/' "$RUNNER_TEMP/contents.txt"
-          if grep -E '^(frontend/|node_modules/|package\.json$|package-lock\.json$)' "$RUNNER_TEMP/contents.txt"; then
+          if grep -E '^(frontend/|\.storybook/|node_modules/|package\.json$|package-lock\.json$)' "$RUNNER_TEMP/contents.txt"; then
             exit 1
           fi
 

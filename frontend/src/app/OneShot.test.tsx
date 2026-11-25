@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { entity, page } from '../test/api';
-import { DELETE, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from '../test/delete';
-import { openEdit } from '../test/edit';
-import { location, renderAt } from '../test/render';
-import { LIST, serveRun, update, withToken } from '../test/states';
+import { entity, page } from './test/api';
+import { DELETE, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from './test/delete';
+import { openEdit } from './test/edit';
+import { location, renderAt } from './test/render';
+import { LIST, serveRun, update, withToken } from './test/states';
 
 function openListFromSidebar() {
   fireEvent.click(within(screen.getByRole('navigation', { name: 'Main' })).getByRole('link', { name: /Service providers/ }));
@@ -29,7 +29,7 @@ describe('a one-shot message', () => {
 
   it('ends Deleted when the list it landed on is opened again', async () => {
     await openEdit(entity(), { [DELETE]: gone, [`/api${LIST}`]: { body: page([]) } });
-    chooseDelete();
+    await chooseDelete();
     confirmDelete('Example');
     await deletedMessage();
 

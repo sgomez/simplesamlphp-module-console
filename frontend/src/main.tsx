@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
-import { consoleBase } from './api/client';
+import { consoleBase } from './app/http/client';
 import { ConsoleRoutes } from './app/ConsoleRoutes';
 
 const mount = document.createElement('div');

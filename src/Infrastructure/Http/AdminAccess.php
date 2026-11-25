@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SimpleSAML\Module\console\Infrastructure\Http;
 
+use SimpleSAML\Module;
 use SimpleSAML\Module\console\Domain\Identity;
 use SimpleSAML\Module\console\Infrastructure\Config\ModuleConfig;
 use SimpleSAML\Session;
@@ -39,9 +40,26 @@ final class AdminAccess
     }
 
 
-    public function logoutUrl(string $returnTo): string
+    /**
+     * The sidebar's identity, its links to core's admin pages and logout, which returns to the Console.
+     *
+     * @return array{
+     *     identity: string,
+     *     core: array{configuration: string, test: string, federation: string},
+     *     logoutUrl: string,
+     * }
+     */
+    public function links(): array
     {
-        return $this->auth->getAdminLogoutURL($returnTo);
+        return [
+            'identity' => $this->identity(),
+            'core' => [
+                'configuration' => Module::getModuleURL('admin/'),
+                'test' => Module::getModuleURL('admin/test'),
+                'federation' => Module::getModuleURL('admin/federation'),
+            ],
+            'logoutUrl' => $this->auth->getAdminLogoutURL(Module::getModuleURL('console/')),
+        ];
     }
 
 

@@ -14,12 +14,12 @@ it('answers every API route with 503 while the database is not ready', function 
     expect($body['state'])->toBe('Unreachable');
 })->with(['/session', '/entities/saml20-sp-remote']);
 
-it('carries the identity and the two links to core, but no count', function (): void {
+it('carries the identity, logout and the links to core, but no count', function (): void {
     $body = Api::refusal((new ConsoleClient())->withModuleConfig(['useridattr' => 'uid'])->withDatabase(null)
         ->loginAsAdmin(['uid' => ['alice']]));
 
     expect($body['session']['identity'])->toBe('alice')
-        ->and($body['session']['adminUrl'])->toBe('http://localhost/simplesaml/module.php/admin/')
+        ->and($body['session']['core']['federation'])->toBe('http://localhost/simplesaml/module.php/admin/federation')
         ->and($body['session']['logoutUrl'])->toContain('/module.php/core/logout/admin')
         ->and($body['session'])->not->toHaveKey('pendingCount');
 });

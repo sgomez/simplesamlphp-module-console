@@ -33,10 +33,10 @@ it('finds by entity ID or by any name, ignoring case and surrounding spaces', fu
         ->and(L::listedIds($list->page('saml20-sp-remote', 'library', 1)->rows))->toBe(['https://b.example.org']);
 });
 
-it('pages by 25 and keeps the page asked for within the pages there are', function (): void {
+it('pages by 12 and keeps the page asked for within the pages there are', function (): void {
     $entities = array_map(
         static fn (int $i): StoredEntity => L::listedSp(sprintf('https://%02d.example.org', $i)),
-        range(1, 51),
+        range(1, 37),
     );
     $list = L::listedPage(...$entities);
 
@@ -44,14 +44,14 @@ it('pages by 25 and keeps the page asked for within the pages there are', functi
     $last = $list->page('saml20-sp-remote', '', 9);
     $first = $list->page('saml20-sp-remote', '', 0);
 
-    expect($second->pages)->toBe(3)
-        ->and($second->total)->toBe(51)
-        ->and(L::listedIds($second->rows))->toHaveCount(25)
-        ->and($second->rows[0]->entityId)->toBe('https://26.example.org')
-        ->and($last->page)->toBe(3)
-        ->and(L::listedIds($last->rows))->toBe(['https://51.example.org'])
+    expect($second->pages)->toBe(4)
+        ->and($second->total)->toBe(37)
+        ->and(L::listedIds($second->rows))->toHaveCount(12)
+        ->and($second->rows[0]->entityId)->toBe('https://13.example.org')
+        ->and($last->page)->toBe(4)
+        ->and(L::listedIds($last->rows))->toBe(['https://37.example.org'])
         ->and($first->page)->toBe(1)
         ->and($first->rows[0]->entityId)->toBe('https://01.example.org')
-        ->and(L::listedPage(...array_slice($entities, 0, 25))->page('saml20-sp-remote', '', 2)->pages)->toBe(1)
+        ->and(L::listedPage(...array_slice($entities, 0, 12))->page('saml20-sp-remote', '', 2)->pages)->toBe(1)
         ->and(L::listedPage()->page('saml20-sp-remote', '', 1)->pages)->toBe(1);
 });

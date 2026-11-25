@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace SimpleSAML\Module\console\Controller\Api;
 
-use SimpleSAML\Module;
 use SimpleSAML\Module\console\Infrastructure\Http\AdminAccess;
 use SimpleSAML\Module\console\Infrastructure\Http\ApiGate;
 use SimpleSAML\Module\console\Infrastructure\Persistence\Repositories;
@@ -24,11 +23,10 @@ final class SessionController
     public function show(Request $request): JsonResponse
     {
         return $this->gate->guard($request) ?? new JsonResponse([
-            'identity' => $this->access->identity(),
-            'adminUrl' => Module::getModuleURL('admin/'),
-            'logoutUrl' => $this->access->logoutUrl(Module::getModuleURL('console/')),
+            ...$this->access->links(),
             'pendingCount' => $this->repositories->publication()->pendingCount(),
             'current' => $this->repositories->currentSnapshot(),
+            'counts' => ['saml20-sp-remote' => count($this->repositories->entities()->all('saml20-sp-remote'))],
         ]);
     }
 }

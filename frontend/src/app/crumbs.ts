@@ -1,3 +1,4 @@
+import type { Failure } from '../domain/session';
 import { PUBLISH, SP_EDIT, SP_LIST, SP_NEW } from './paths';
 import type { Crumb } from './Shell';
 
@@ -11,8 +12,19 @@ export function crumbsOf(pathname: string, title: string): Crumb[] {
     case SP_EDIT:
       return [{ label: 'Service providers', to: SP_LIST }, { label: title }];
     case SP_NEW:
-      return [{ label: 'Service providers', to: SP_LIST }, { label: 'New' }];
+      return [{ label: 'Service providers', to: SP_LIST }, { label: 'Add' }];
     default:
       return [];
   }
+}
+
+// A missing object keeps the list it belongs to in the trail.
+export function failureCrumbs(failure: Failure): Crumb[] {
+  if (failure.status === 403) {
+    return [{ label: 'Request refused' }];
+  }
+
+  return failure.entityId === undefined
+    ? [{ label: 'Not found' }]
+    : [{ label: 'Service providers', to: SP_LIST }, { label: 'Not found' }];
 }

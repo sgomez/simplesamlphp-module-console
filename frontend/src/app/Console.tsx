@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
-import type { DatabaseRefusal, Session } from '../api/types';
-import { OutcomeMessage, runOf } from '../screens/RunMessage';
-import { StatePage, stateCrumb } from '../screens/StatePage';
-import { FailurePage, failureTrail, ReportFailure, type Failure } from './failure';
-import { LiveSnapshot } from './LiveSnapshot';
-import { Page, PageNotice, ReportOutcome, useCarried, type Said } from './Page';
-import { crumbsOf } from './crumbs';
+import { refusalOf, ReportRefusal, stateCrumb, type DatabaseRefusal } from '../domain/database';
+import { ReportFailure, type Failure, type Session } from '../domain/session';
+import { LiveSnapshot } from '../domain/publication';
+import { PageNotice } from '../design-system/Page';
+import { DatabaseStatePage } from '../pages/DatabaseStatePage';
+import { NotFoundPage } from '../pages/NotFoundPage';
+import { RequestRefusedPage } from '../pages/RequestRefusedPage';
+import { OutcomeMessage, runOf, useCarried, type Said } from './Page';
+import { Ports } from './Ports';
+import { crumbsOf, failureCrumbs } from './crumbs';
 import { PUBLISH } from './paths';
-import { refusalOf, ReportRefusal } from './refusals';
 import { Screens } from './Screens';
 import { Shell } from './Shell';
 import type { ApiState } from './useApi';
@@ -60,33 +62,24 @@ export function Console({ session: latest, outcome, onOutcome, onChange, onMove 
   const message = said && <OutcomeMessage said={said} />;
 
   if (failure !== null) {
-    const { crumb, parent } = failureTrail(failure);
-
     return (
-      <Shell session={refusal?.session ?? session} pending={pending} crumbs={[...(parent ? [parent] : []), { label: crumb }]}>
-        <Page width="narrow">
-          {message}
-          <FailurePage failure={failure} />
-        </Page>
+      <Shell session={refusal?.session ?? session} pending={pending} crumbs={failureCrumbs(failure)}>
+        <PageNotice value={message}>
+          {failure.status === 403 ? <RequestRefusedPage /> : <NotFoundPage entityId={failure.entityId} />}
+        </PageNotice>
       </Shell>
     );
   }
   if (refusal) {
     return (
       <Shell session={refusal.session} pending={0} crumbs={[{ label: stateCrumb(refusal) }]}>
-        <Page width="narrow">
-          {message}
+        <PageNotice value={message}>
           <ReportRefusal value={setReported}>
             <ReportFailure value={report}>
-              <StatePage
-                refusal={refusal}
-                flush={run !== null}
-                failedAt={run?.outcome === 'Failed' ? (run.failed?.number ?? null) : null}
-                onRun={announce}
-              />
+              <DatabaseStatePage refusal={refusal} run={run} onRun={announce} />
             </ReportFailure>
           </ReportRefusal>
-        </Page>
+        </PageNotice>
       </Shell>
     );
   }
@@ -99,6 +92,7 @@ export function Console({ session: latest, outcome, onOutcome, onChange, onMove 
     <Shell
       session={session}
       pending={pending}
+      counts={session?.counts ?? {}}
       crumbs={crumbsOf(pathname, shown)}
       {...(pathname === PUBLISH ? { end: live } : {})}
     >
@@ -106,9 +100,9 @@ export function Console({ session: latest, outcome, onOutcome, onChange, onMove 
         <PageNotice value={message}>
           <ReportRefusal value={setReported}>
             <ReportFailure value={report}>
-              <ReportOutcome value={announce}>
+              <Ports announce={announce}>
                 <Screens pending={pending} onChange={onChange} onTitle={onTitle} created={created} />
-              </ReportOutcome>
+              </Ports>
             </ReportFailure>
           </ReportRefusal>
         </PageNotice>

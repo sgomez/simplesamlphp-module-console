@@ -49,11 +49,12 @@ final class EntityJson
             'version' => $entity->version,
             'state' => $this->state($set, $entityId),
             'unreadable' => $document === null,
+            'inSnapshot' => $this->repositories->currentContent()->document($set, $entityId) !== null,
             'error' => $entity->loadError,
             'php' => $php,
             'raw' => $entity->raw === null ? null : mb_scrub($entity->raw, 'UTF-8'),
             'errors' => self::errors($errors),
-            'warnings' => $document === null ? [] : $this->warnings->of($entityId, $document),
+            'warnings' => $document === null ? [] : $this->warnings->labels($entityId, $document),
             'notices' => self::notices(NoticeLines::relocated((string) $php, $notices)),
         ], $status);
     }

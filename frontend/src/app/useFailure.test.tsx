@@ -1,8 +1,8 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { stubApi } from '../test/api';
-import { ReportFailure, useFailure, type Failure } from './failure';
+import { stubApi } from './test/api';
+import { ReportFailure, useFailure, type Failure } from '../domain/session';
 import { useApi } from './useApi';
 
 function withReport(report: (failure: Failure) => void) {
