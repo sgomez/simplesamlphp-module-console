@@ -26,6 +26,9 @@ export interface DatabaseRefusal {
   sqliteMinimum: string;
   detail: string | null;
   session: SessionLinks;
+  // SPEC 10.5; the 503 body does not carry them yet.
+  moduleVersion?: string;
+  snapshot?: number;
 }
 
 export interface MigrationRun {

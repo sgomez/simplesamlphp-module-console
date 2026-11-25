@@ -12,8 +12,9 @@ describe('the pending migrations page', () => {
 
     await screen.findByRole('heading', { name: 'The database needs an update' });
     expect(crumb().textContent).toBe('Database update');
-    const warning = 'A migration cannot be undone without restoring a backup. Sign-in is not affected.';
-    expect(screen.getByText(warning).className).toBe('muted empty-text');
+    const warning = 'A migration cannot be undone without restoring a backup.';
+    expect(screen.getByText(warning).className).toBe('muted state-text');
+    expect(screen.getByText('3 steps').className).toBe('small muted');
     expect(screen.getByRole('button', { name: 'Update database' }).className).toBe('btn btn-primary');
     expect(within(screen.getByRole('main')).getByRole('heading', { level: 2 }).textContent).toBe('3 migrations to apply');
     expect([...container.querySelectorAll('.card-list .row')].map((row) => row.textContent)).toEqual([
