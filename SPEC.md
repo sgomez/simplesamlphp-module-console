@@ -1915,7 +1915,7 @@ States: first run, with nothing managed and nothing published, leading to the Ad
 **Entity list**, one per set.
 
 - One row per managed entity of the set: its name and its entity ID, or the entity ID alone when the document has no name; its state of section 8.2 by the labels below; and labels for disabled, Override, Shadowed, "external source changed", "external source not reviewed", errors against the current schema (section 5.8), warnings (section 5.9), certificates that expire ("Certificate expires in 12 days") or have expired, and Unreadable. A row shows one label, Unreadable and "Errors" first, then the state, then warnings, and counts the rest as "+N more". "Errors" lists the errors in its tooltip. A disabled object's name is struck through. An Up to date object shows no label.
-- Rows are ordered by name, or by entity ID where there is no name, 12 to a page, 6 at phone width.
+- Rows are ordered by name, or by entity ID where there is no name, 12 to a page at every width.
 - Search by entity ID and name. Beside it, a segmented filter "All", "Not live" (Unpublished, To be withdrawn and Not live, section 8.2) and "With warnings", each with its count of matching rows. At phone width the filter is hidden.
 - Search, filters and pagination run on the server. The pager shows the range and the total, with thousands separators: "1 to 12 of 42 service providers", Previous, "Page 1 of 4", Next; at phone width "1 to 6 of 42" and "1 of 7".
 - When `console:Snapshot` is missing from the `metadata.sources` of the node serving the page, the list carries the warning of section 10.7.
