@@ -7,7 +7,7 @@ import { ADD_ROUTE, AddFrame, paste } from '../app/test/AddFrame';
 const meta = {
   title: 'Pages/Add service provider',
   component: AddFrame,
-  parameters: { route: ADD_ROUTE, screenshot: 'after-play' },
+  parameters: { route: ADD_ROUTE },
 } satisfies Meta<typeof AddFrame>;
 
 export default meta;
