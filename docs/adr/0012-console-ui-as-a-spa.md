@@ -42,8 +42,8 @@ The shell contains no chrome. It references the entry script and its stylesheet 
 - **Styling.** Styles come from one stylesheet: the prototype's `console.css`, with layout classes for what the boards write inline. It is linked as a file, never imported into a component. There are no CSS modules, no CSS-in-JS and no `style` prop.
 - **Tokens and fonts.** No colour, size or font is written outside the token definitions, and fonts are system stacks.
 - **Dependencies.** The npm set is pinned exactly and kept small:
-  - at runtime: React, React DOM, a router, and Ajv (with `ajv-formats` if the schemas use `format`);
-  - at build and test time: Vite with its React plugin, TypeScript, ESLint with its TypeScript and React plugins, Vitest with Testing Library and jsdom, and a JSON-Schema-to-TypeScript generator.
+  - at runtime: React, React DOM and a router;
+  - at build and test time: Vite with its React plugin, TypeScript, ESLint with its TypeScript and React plugins, Vitest with Testing Library and jsdom, Ajv, and a JSON-Schema-to-TypeScript generator.
 
 ## Build and development
 
@@ -62,7 +62,8 @@ All of these are same-origin paths in place of the manifest. Page, scripts, API 
 
 Both sides read the same files in `docs/spec/schemas`.
 
-- **Client.** At build time the schemas are compiled with Ajv's 2020-12 build into standalone validator modules. The client never compiles a schema at runtime, because Ajv's runtime compilation uses `new Function`, which `script-src 'self'` forbids.
+- **Client.** At build time the schemas are compiled with Ajv's 2020-12 build into standalone validator modules. The client never compiles a schema at runtime, because Ajv's runtime compilation uses `new Function`, which `script-src 'self'` forbids. Ajv is a build-time dependency: only the compiled validators and a small runtime of the module ship, and nothing of Ajv itself.
+  - The `format` rules the schemas use are implemented in the client to match opis, so that both sides accept the same values.
   - `$error` and `x-when` are declared once as Ajv keywords. `$error` supplies the message of a failed `pattern`; `x-when` is read by the form engine. Defaults are never applied.
   - TypeScript types for the documents are generated from the same schemas.
   - The client's per-keyword error texts are the module's texts. A shared fixture suite checks that Ajv and opis agree on the verdict, the pointer and the message.
