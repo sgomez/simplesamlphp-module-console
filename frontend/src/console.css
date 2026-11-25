@@ -80,7 +80,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 .btn-global:hover{border-color:var(--accent-text)}
 .btn-sm{height:28px;padding:0 10px;font-size:13px}
 .btn-icon{width:28px;height:28px;padding:0}
-.btn[disabled],.btn.is-disabled{opacity:.5;cursor:not-allowed}
+.btn[disabled],.btn[data-disabled]{opacity:.5;cursor:not-allowed}
 .btn[data-pending]::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid currentColor;
   border-inline-end-color:transparent;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}

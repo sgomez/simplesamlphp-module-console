@@ -1,6 +1,5 @@
 import type { ReactNode, Ref } from 'react';
-import { Button as AriaButton } from 'react-aria-components';
-import { Link } from 'react-router';
+import { Button as AriaButton, Link } from 'react-aria-components';
 import { cx } from './classes';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'quiet' | 'danger' | 'danger-solid' | 'global';
@@ -55,29 +54,31 @@ export function Button(props: ButtonProps) {
   );
 }
 
+// to: a Console route, followed in the page; href: any other address, which the browser loads.
 export type LinkTarget = { to: string; href?: never } | { href: string; to?: never };
 
 type LinkButtonProps = Look & LinkTarget & { disabled?: boolean };
 
 export function LinkButton(props: LinkButtonProps) {
   const { disabled, label, children } = props;
+  const look = { className: buttonClass(props), ...defined({ 'aria-label': label }) };
   if (disabled) {
     return (
-      <a className={buttonClass(props, 'is-disabled')} aria-disabled="true">
+      <Link {...look} isDisabled>
         {children}
-      </a>
+      </Link>
     );
   }
   if (props.to !== undefined) {
     return (
-      <Link className={buttonClass(props)} to={props.to} aria-label={label}>
+      <Link {...look} href={props.to}>
         {children}
       </Link>
     );
   }
 
   return (
-    <a className={buttonClass(props)} href={props.href} aria-label={label}>
+    <a {...look} href={props.href}>
       {children}
     </a>
   );

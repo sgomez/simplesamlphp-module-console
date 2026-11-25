@@ -28,7 +28,8 @@ describe('the pagination of the list', () => {
     expect(screen.getByText('Page 1 of 2').parentElement?.className).toBe('small muted');
     expect(screen.getByText('1 of 2').className).toBe('at-narrow');
     expect(screen.getByText('Previous').getAttribute('aria-disabled')).toBe('true');
-    expect(screen.getByText('Previous').className).toBe('btn btn-secondary btn-sm is-disabled');
+    expect(screen.getByText('Previous').className).toBe('btn btn-secondary btn-sm');
+    expect(screen.getByText('Previous').hasAttribute('data-disabled')).toBe(true);
     expect(screen.getByRole('link', { name: 'Next' }).getAttribute('href')).toBe(`${LIST}?q=example&page=2`);
   });
 

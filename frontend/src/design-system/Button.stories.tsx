@@ -111,8 +111,11 @@ export const Links: Story = {
 
     await expect(page.getByRole('link', { name: 'Next' })).toHaveAttribute('href', '/entities');
     await expect(page.getByRole('link', { name: 'Review' })).toHaveClass('btn btn-secondary');
-    const previous = page.getByText('Previous');
+    const previous = page.getByRole('link', { name: 'Previous' });
     await expect(previous).toHaveAttribute('aria-disabled', 'true');
+    await expect(previous).toHaveAttribute('data-disabled', 'true');
+    await expect(previous).toHaveClass('btn btn-secondary btn-sm');
     await expect(previous).not.toHaveAttribute('href');
+    await expect(window.getComputedStyle(previous).opacity).toBe('0.5');
   },
 };
