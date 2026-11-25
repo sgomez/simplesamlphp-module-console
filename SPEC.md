@@ -551,7 +551,7 @@ The other tables are used by the edit side only, which requires the schema to ma
 - On PostgreSQL and SQLite a migration and its version row share a transaction. On MariaDB and MySQL the statement runs first and the version row is written second.
 - Two concurrent runs are settled by the primary key of `console_schema_version` or, on MariaDB and MySQL, by the statement itself failing for the loser. The loser gets a clear message. No advisory locks are used.
 - Migrations are applied only when the administrator presses the button on the pending migrations page. They are never applied lazily by a request, nor by a node on its own.
-- A run is recorded in the Audit trail as described in section 4.4.
+- A run is recorded in the Audit trail as described in section 4.4. A run that applies nothing leaves no row.
 
 v1 ships nine migrations:
 
@@ -573,7 +573,7 @@ A later migration may transform stored documents only mechanically. A document t
 
 The schema matches the code when the numbers in `console_schema_version` are exactly 1 to N, for the N the code knows.
 
-After `requireAdmin()` and before doing anything else, every Console route establishes which of these states the database is in. Only the first lets the request proceed, except Run migrations (`POST /api/migrate`), which proceeds in the two pending migrations states and in no other; each of the others has a page of its own and is an ordinary state, not an exception.
+After `requireAdmin()` and before doing anything else, every Console route establishes which of these states the database is in. Only the first lets the request proceed, except Run migrations (`POST /api/migrate`), which also proceeds in the two pending migrations states and in no other; each of the others has a page of its own and is an ordinary state, not an exception. When the schema already matches the code, as after another administrator's run, Run migrations applies nothing and answers that the schema is already up to date.
 
 | State | Page |
 | --- | --- |
@@ -586,7 +586,7 @@ After `requireAdmin()` and before doing anything else, every Console route estab
 
 The states are checked in this order. Any applied number above N means "Console older than the database" even when lower numbers are also missing, because older code never runs migrations. This happens during a rolling upgrade, when a node that has not been updated serves the Console.
 
-The pending migrations page takes the whole content area, warns that a migration cannot be undone without restoring a backup, and carries the button that runs the migrations.
+The pending migrations page takes the whole content area, warns that a migration cannot be undone without restoring a backup, and carries the button that runs the migrations (section 10.5).
 
 The "Console older than the database" page blocks the whole Console, reads included, since code that does not know the schema must not use it. It has no button, shows the schema version the code knows next to the one the database holds, and asks for the package to be updated on this node.
 
@@ -1568,7 +1568,7 @@ Warnings need no separate acknowledgement. Publication is not offered when there
 **The confirming request** runs the transaction of section 4.8: it compares the hash, revalidates, takes the next number, stores the Snapshot with its format version, checksum, comment, time and identity, makes it current, and writes the `publish` row of the Audit trail. It then purges Snapshots beyond retention (section 4.10).
 
 - A hash mismatch, a lost race or a new blocking problem shows the confirmation screen again with the current state. Nothing is written and nothing is recorded in the Audit trail.
-- After the commit, the node serving the request builds the new Snapshot within that request (section 3.5). The other nodes fetch it on their next `cron` check. The interface moves to Nodes with the message "Snapshot N published", where each node's progress is read from the Node table (section 10.16).
+- After the commit, the node serving the request builds the new Snapshot within that request (section 3.5). The other nodes fetch it on their next `cron` check. The interface stays on Publish and shows "Snapshot #N is published", the number of changes it carried and the nodes as read from the Node table (section 10.14).
 
 ### 8.5 Rollback
 
@@ -1698,11 +1698,11 @@ File authsources cannot be imported (section 6.3).
 
 ### 9.6 Creating from pasted configuration
 
-"Add" on the list of each entity set, and "Add authsource", start from one text area:
+The Add action of each entity list ("Add service provider" and the like) and "Add authsource" start from one text area:
 
 - metadata XML or PHP for an entity, PHP for an authsource. The format is detected and the administrator can correct it;
 - "Start empty" beside it, and for entities a link to External entities;
-- "Choose file" reads a local file into the text area in the browser. The server never receives an upload;
+- "Upload" reads a local file into the text area in the browser. The server never receives an upload;
 - the input is capped at 1 MiB; the error points to `metarefresh` for federation aggregates.
 
 There is no fetch from a URL and no export format. PHP is the interchange format between Consoles: Download `.php` in one, paste in the other. The enabled flag does not travel.
@@ -1741,7 +1741,9 @@ This section specifies what the administrator sees and the requests behind it. T
 - The interface is a single-page application in React and TypeScript, built with Vite. One page shell serves it on every Console path, and every screen gets its data from the JSON API of section 10.4. See [ADR 0012](docs/adr/0012-console-ui-as-a-spa.md).
 - JavaScript is required. The front end is specified in section 10.17.
 - Every page passes core's default Content Security Policy (section 3.8): no inline scripts or styles, no `style` attributes, no inline event handlers, nothing from another origin, no `eval`. Icons are inline SVG.
-- A state-changing request is an API POST. When it succeeds, the interface moves to the screen that follows, with no exception, and that screen shows the outcome as a one-shot message. A result, such as the report of an Import, is that message; there are no result screens. When it is rejected, the screen stays as it was, with what the administrator entered, and shows the errors.
+- A state-changing request is an API POST. When it succeeds, the interface moves to the screen that follows, with no exception, and that screen shows the outcome as a one-shot message. A result, such as the report of an Import, is that message; there are no result screens. After a Publication, the screen that follows is Publish itself (section 10.14). When it is rejected, the screen stays as it was, with what the administrator entered, and shows the errors.
+- A request that gets no answer, or an answer the screen does not expect, such as a 500, leaves the screen as it was with an error callout that names what did not happen: "Not saved: the Console could not be reached." or "Not saved: the server answered 500.", and likewise "Not deleted", "Not published" and "Migrations not run".
+- While a screen's data loads, its content shows the skeleton of the design system: a card of placeholder rows that does not animate.
 - Some API POSTs save nothing: translating between the form and the PHP view, validating while editing, Reveal, reading pasted configuration or "Replace from…", and the Import confirmation step. They leave no row in the Audit trail.
 - The Console is English only. It has no translations, and option titles, help texts and error messages are written in the module.
 
@@ -1754,9 +1756,9 @@ Console pages are served by one shell template of the module that does not exten
 - It loads the entry script and the stylesheet named by Vite's manifest only: not core's stylesheet, not core's script, not the deployer's `_head.twig`. It carries the request-forgery token in a `<meta>` element and holds no other markup.
 - Fonts are system font stacks, a sans-serif for the interface and a monospace for entity IDs, authsource ids, option names, URLs, file paths and PHP. The module ships no font files.
 - Colours follow the system's light or dark setting through CSS custom properties.
-- The layout is a sidebar on the left, a header and one content column. Below a width of 900 px the sidebar becomes an overlay opened from a button in the header.
+- The layout is a sidebar on the left, a header and one content column. Below a width of 900 px the sidebar becomes an overlay opened from a button in the header. At 600 px and below, phone width, some screens shorten their labels, as stated where they apply.
 - The header holds a breadcrumb and the Pending changes indicator (section 10.3).
-- The foot of the sidebar shows the identity of the session (section 10.6) and two fixed links to core: its admin front page and logout, through `Utils\Auth::getAdminLogoutURL()`. Admin entries of other modules are not listed; `Menu::insert()` is not used.
+- The foot of the sidebar shows the identity of the session (section 10.6) and logout, through `Utils\Auth::getAdminLogoutURL()`. The sidebar's System group links to three pages of core's admin module (section 10.3). Admin entries of other modules are not listed; `Menu::insert()` is not used. There is no language selector (section 1.2).
 - The Console renders the same under any installed theme.
 
 The Console is reached from core through a link "Console" on core's Configuration tab, added by a `ConfigPageEvent` listener (section 3.2). That listener never queries the database.
@@ -1776,12 +1778,17 @@ The sidebar has these entries, in this order:
 | Changes | Publish | Section 10.14 |
 | | History | Section 10.15 |
 | | Nodes | Section 10.16 |
+| System | Configuration | Core's Configuration page |
+| | Test authentication | Core's Test authentication page |
+| | Federation | Core's Federation page |
+
+Service providers, Identity providers, External entities and Authsources carry the number of objects they list, and Nodes the number of nodes. The System entries leave the Console.
 
 Screens without an entry of their own: the edit screen, the Add screens, the detail of an External entity, the Override comparison, the Import confirmation and result, the Rollback confirmation and the state pages of section 10.5.
 
-**Pending changes indicator.** The header of every screen carries a button "Review N changes" leading to Publish, where N is the number of Pending changes (section 8.2), and the Publish entry of the sidebar carries the same count. With no Pending changes the button is not shown. On the Publish screen the header shows the current Snapshot, its number and when it was published, instead of the button.
+**Pending changes indicator.** The header of every screen carries a button "Review N changes" leading to Publish, where N is the number of Pending changes (section 8.2), and the Publish entry of the sidebar carries the same count as a badge. At phone width the button shows the count only. With no Pending changes the button is not shown. On the Publish screen the header shows "Live: Snapshot #N", the current Snapshot's number without its time, instead of the button; before the first Publication it shows nothing.
 
-The set of an entity is always shown by its friendly name with the set name beside it in monospace: Service providers (`saml20-sp-remote`), Identity providers (`saml20-idp-remote`), Hosted IdP (`saml20-idp-hosted`).
+The set of an entity is shown by its friendly name with the set name beside it in monospace: Service providers (`saml20-sp-remote`), Identity providers (`saml20-idp-remote`), Hosted IdP (`saml20-idp-hosted`). At phone width the set name is hidden.
 
 ### 10.4 Routes
 
@@ -1814,9 +1821,9 @@ A path the router does not know shows "Not found".
 
 | Method | Path | Does |
 | --- | --- | --- |
-| GET | `/api/session` | Identity, the two links to core, the number of Pending changes and the current Snapshot (sections 10.2 and 10.3) |
+| GET | `/api/session` | Identity, the links to core, the counts of the sidebar, the number of Pending changes and the current Snapshot (sections 10.2 and 10.3) |
 | GET | `/api/overview` | Section 10.7 |
-| GET | `/api/entities/{set}` | A page of the entity list; `q`, filters and `page` in the query string |
+| GET | `/api/entities/{set}` | A page of the entity list and the count of each filter; `q`, filters and `page` in the query string |
 | GET | `/api/entities/{set}/entity?entityid=…` | The object of the edit screen: document, PHP text, `version`, state, notices and warnings; an Unreadable row's stored bytes. Without `entityid`, the starter text of a new object, its entity ID left empty in the `$metadata[...]` line |
 | POST | `/api/entities/{set}/read` | Reads pasted entity configuration: the editor's content unsaved with its report, or the selectable list of several entities (section 9.6) |
 | POST | `/api/entities/{set}/create` | Saves the selected entities and returns the report (section 9.6) |
@@ -1863,9 +1870,18 @@ After `requireAdmin()` and before anything else, every API route establishes the
 | Database unreachable | "Database unreachable": the Console cannot reach its database; nodes keep serving their local Snapshot. |
 | SQLite older than 3.24.0 | "SQLite too old": the version found and the minimum. |
 | Console older than the database | "Console older than the database": the schema version the code knows and the one the database holds, and a request to update the package on this node. No button. |
-| Schema does not match the code | Pending migrations: the migrations to apply, the warning that a migration cannot be undone without restoring a backup, the statement that SSO is unaffected, and the button that runs them. A failed run stops at that migration and says which one and why (section 4.6). |
+| Schema does not match the code | Pending migrations, below |
 
 A state page takes the whole content area. The sidebar is shown, but neither the Pending changes indicator nor any count, which cannot be computed in these states. The Pending migrations page is the only one that offers an action.
+
+**Pending migrations.** The header's crumb reads "Database update". A card titled "The database needs an update" names the module version ("The module was upgraded to 1.4."), says, when there is a current Snapshot, that nodes keep serving it ("Nodes keep serving Snapshot #41 meanwhile."), and warns that a migration cannot be undone without restoring a backup. Under it come the button "Update database" and the number of steps ("3 steps"), and below the card the list "N migrations to apply", each with its number and title.
+
+| Run | Shows |
+| --- | --- |
+| Applied | The requested screen, with the one-shot message "Migrations applied: 1, 2." |
+| Already up to date (section 4.7) | The requested screen, with the one-shot message "The database schema is already up to date." |
+| Lost to a concurrent run (section 4.6) | The one-shot warning with the server's message, on the page the database's state then calls for |
+| Failed | The page again, with the error callout "Migration N failed: <title>" and the reason in monospace; the migration it stopped at is marked "Failed" in the list, and those applied before it stay applied |
 
 ### 10.6 Access, identity and request forgery
 
@@ -1892,17 +1908,33 @@ The landing page. It answers whether anything needs the administrator.
 - The current Snapshot: its number, when and by whom it was published, and its comment.
 - The number of managed entities per set and of managed authsources.
 
-States: first run, with nothing managed and nothing published, leading to "Add" for each set, "Add authsource" and External entities; all clear, with nothing in the list; and things to do.
+States: first run, with nothing managed and nothing published, leading to the Add action of each set, "Add authsource" and External entities; all clear, with nothing in the list; and things to do.
 
 ### 10.8 Lists of managed objects
 
 **Entity list**, one per set.
 
-- One row per managed entity of the set: its name when the document has one, its entity ID, its state of section 8.2, and labels for disabled, Override, Shadowed, "external source changed", "external source not reviewed", errors against the current schema (section 5.8), warnings (section 5.9), certificates that expire or have expired, and Unreadable.
-- Search by entity ID and name. Filters "Not live" (Unpublished, To be withdrawn and Not live, section 8.2) and "With warnings".
-- Search, filters and pagination run on the server; the page shows the total.
+- One row per managed entity of the set: its name and its entity ID, or the entity ID alone when the document has no name; its state of section 8.2 by the labels below; and labels for disabled, Override, Shadowed, "external source changed", "external source not reviewed", errors against the current schema (section 5.8), warnings (section 5.9), certificates that expire ("Certificate expires in 12 days") or have expired, and Unreadable. A row shows one label, Unreadable and "Errors" first, then the state, then warnings, and counts the rest as "+N more". "Errors" lists the errors in its tooltip. A disabled object's name is struck through. An Up to date object shows no label.
+- Rows are ordered by name, or by entity ID where there is no name, 12 to a page, 6 at phone width.
+- Search by entity ID and name. Beside it, a segmented filter "All", "Not live" (Unpublished, To be withdrawn and Not live, section 8.2) and "With warnings", each with its count of matching rows. At phone width the filter is hidden.
+- Search, filters and pagination run on the server. The pager shows the range and the total, with thousands separators: "1 to 12 of 42 service providers", Previous, "Page 1 of 4", Next; at phone width "1 to 6 of 42" and "1 of 7".
 - When `console:Snapshot` is missing from the `metadata.sources` of the node serving the page, the list carries the warning of section 10.7.
-- The primary action is "Add" (section 10.12). A row opens the edit screen.
+- The primary action is "Add service provider", "Add identity provider" or "Add hosted IdP" (section 10.12), "Add" at phone width. A row opens the edit screen.
+- With no object at all, the list shows only "No service providers yet" (or the set's equivalent), without search. A search that matches nothing shows "No service provider matches “zoom”" with "Clear search" and "Search External entities", which runs the same search there.
+
+**State labels.** The states of section 8.2 read as follows wherever the interface shows them:
+
+| State | List row | Save bar (section 10.9) | Publish (section 10.14) |
+| --- | --- | --- | --- |
+| Unpublished | "New, not published" | "Saved, not live" | "Added" |
+| Modified | "Modified, not live" | "Saved, not live" | "Modified" |
+| To be withdrawn | "Disabled, not published" | "Saved, not live" | "Withdrawn" |
+| Not live | "Disabled" | None | Not listed |
+| Up to date | None | "Published" | Not listed |
+| Deleted | No row | No edit screen | "Deleted" |
+| Unreadable | "Unreadable" | No save bar | "Unreadable" |
+
+Unsaved edits on the edit screen read "Unsaved edits" in the save bar, whatever the state.
 
 **Authsource list.**
 
@@ -1910,29 +1942,31 @@ States: first run, with nothing managed and nothing published, leading to "Add" 
 - Then, under "From authsources.php", the File authsources of the node serving the page, read-only, with id and type only. A File authsource whose id is also a managed authsource is marked as the one that shadows it, and the list says that the file wins (section 6.4).
 - The primary action is "Add authsource".
 
-**Unreadable rows.** A row whose `document` is not valid JSON, or that the edit side cannot load for another reason, is listed with the label "Unreadable" and the load error. Enabled, it is a Pending change; disabled, it is Not live or To be withdrawn (section 8.2). Opening it shows its stored bytes as they are, read-only, sensitive literals included, with no form and no PHP view; the page is served with `Cache-Control: no-store` (section 7.3). It offers Disable, Delete and Discard; Discard rewrites it from the current Snapshot, or disables it when the object is not in that Snapshot. It blocks Publication until it is disabled, deleted or discarded.
+**Unreadable rows.** A row whose `document` is not valid JSON, or that the edit side cannot load for another reason, is listed with the label "Unreadable" and the load error on the line below it, and carries "Delete…" in place of the chevron. Enabled, it is a Pending change; disabled, it is Not live or To be withdrawn (section 8.2). Opening it shows the edit screen's header, an error callout "Unreadable" with the load error, and its stored bytes as they are, read-only, sensitive literals included, with no form and no PHP view; the page is served with `Cache-Control: no-store` (section 7.3). It offers Disable, Delete and Discard; Discard rewrites it from the current Snapshot, or disables it when the object is not in that Snapshot. It blocks Publication until it is disabled, deleted or discarded.
 
 ### 10.9 The edit screen
 
 One edit screen serves managed entities of the three sets and managed authsources of the five types.
 
-**Header.** The object's name, its kind (set or Authsource type), its identifier (entity ID or authsource id), which cannot be edited, and the enabled switch. Switching it is the enable or disable operation of section 8.1, a request of its own.
+**Header.** The object's name (its identifier when it has none), its kind (set or Authsource type), its identifier (entity ID or authsource id) with Copy, which cannot be edited, the switch "Enabled" and "More actions". Switching "Enabled" is the enable or disable operation of section 8.1, a request of its own.
 
 **Notices**, above the content, when they apply: the object is disabled; it is an Override, with a link to the comparison of section 10.13; its external source changed or was not reviewed; it is Shadowed, by an External entity or by a File authsource; it has warnings.
 
 **Two views** of the same object: Settings, the form of section 10.10, and PHP, the editor of section 10.11. Switching sends the editor's content to the API, which returns the other view without saving. Text in the PHP view that cannot be read blocks the switch. A new object opens in the PHP view with its required options; otherwise the editor opens in the view last used, which the switch records in the SimpleSAMLphp session and which is lost on logout.
 
-**Save bar.** Fixed at the bottom of the content, with Save and the object's state: unsaved edits on the page, saved but not published (one of the states of section 8.2), or up to date.
+**Save bar.** Fixed at the bottom of the content, with the object's state by the labels of section 10.8 ("Unsaved edits", "Saved, not live" or "Published"), "Discard edits" and Save. Save is enabled only with unsaved edits. "Discard edits" is shown with unsaved edits and on an object with a Pending change, and not on a Published one. A new object, never saved, shows "Unsaved", Cancel, which leaves it, and Save.
 
-**Secondary actions**, grouped apart from Save: Discard this change, offered when the object has a Pending change (section 8.3); Delete; Promote, on an object whose `next_key` is set (section 7.7); "Replace from…", on a managed entity (section 9.7). Delete, Discard and Promote ask for confirmation in the dialog component (section 10.17), saying what will happen. Promote says that the previous key leaves the configuration and that messages encrypted to the old certificate will no longer decrypt. Disabling or deleting an Override warns that nodes will serve the External entity again after the next Publication.
+**More actions**, a menu apart from Save: "Replace from…", on a managed entity (section 9.7); Download; "Discard changes…", offered when the object has a Pending change (section 8.3); Promote, on an object whose `next_key` is set (section 7.7); and, last and set apart, "Delete…". Delete, Discard and Promote ask for confirmation in the dialog component (section 10.17), saying what will happen. Promote says that the previous key leaves the configuration and that messages encrypted to the old certificate will no longer decrypt. Disabling or deleting an Override warns that nodes will serve the External entity again after the next Publication.
+
+**Delete dialog.** Titled "Delete <name>?", with "Cancel" and "Delete <name>", the identifier standing for the name when there is none. Its text is "<name> is removed from the Console. Nodes keep serving it until the next Publication, which withdraws it." for an object in the current Snapshot, and "<name> is removed from the Console." for one that is not, such as an Unpublished object or an Unreadable one never published. A delete moves to the list with the one-shot message "Deleted."; a delete from an Unreadable row keeps the list's page and search.
 
 **Saving.**
 
 - A save sends the `version` the object was loaded with (section 4.8).
 - While editing, the interface validates the content against the schema in the browser and, debounced, through the API's validate route (section 10.10). Save is never blocked by them; the server decides.
-- A valid save shows the saved object on the edit screen with a message.
-- A save with errors writes nothing and keeps the content on screen: a list of every error at the top, each linked to its field or line, and each error at its field or line. Errors are those of sections 5.7 and 6.8, each located by the JSON pointer of the value it concerns.
-- A save that loses a race (section 4.8) shows the object as it now stands and says that it changed meanwhile. The unsaved edits are not kept.
+- A valid save shows the saved object on the edit screen with a success callout: "Saved. Not live yet." with "Review N changes" when the object has a Pending change, "Saved." when the save left it Published.
+- A save with errors writes nothing and keeps the content on screen: the error callout "Not saved: N errors", or "Not saved: the text could not be read" with "Nothing else is checked until this is fixed." when the PHP text cannot be read, and each error at its field or line. In the Settings view a list of every error, each linked to its field, sits under the callout. Errors are those of sections 5.7 and 6.8, each located by the JSON pointer of the value it concerns.
+- A save that loses a race (section 4.8) shows the object as it now stands with the error callout "Not saved: <name> changed meanwhile", which says who saved it and when ("admin saved it 2 minutes ago.") and that the unsaved edits were not kept.
 - Warnings (sections 5.9, 6.8 and 7.5) look different from errors and never block. They are shown after a save and whenever the object is opened.
 
 ### 10.10 The form
@@ -2003,9 +2037,9 @@ A select whose values come from the same document, such as the database of a que
 
 The PHP view shows the object as the PHP an administrator would write: `$metadata['<entity ID>'] = [...];` for an entity, `'<id>' => [...],` with the type at key `0` for an authsource. It is produced by the translator with Secret references unresolved and is never stored. See [ADR 0010](docs/adr/0010-php-view-through-inverse-translators.md); what is specific to entities and to authsources is in sections 5.14 and 6.16.
 
-**The editor** is a plain text area with line numbers and error marks. It has no syntax colouring and no side-by-side layout. Beside it:
+**The editor** is a plain text area with line numbers and error marks. It has no syntax colouring and no side-by-side layout. Above it, a list of the errors and warnings of the text, each with a link to its line ("Line 7"), its kind, its option and its message. Beside it:
 
-- a reference panel listing the options of the schema, each with "Insert" at the cursor;
+- the "Options" panel: a search field and the options of the schema, each with its name in monospace and its title; a set option shows the line it is on ("Line 13"), one not set offers "Insert", at the cursor;
 - Copy and Download as `.php`, which give what is on screen;
 - Reveal, an API request that returns the view again with the stored sensitive values in place of their sentinels. Text that cannot be read blocks it.
 
@@ -2014,10 +2048,10 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 - Accepted: one block, with its wrapper or as a bare array, made of literals and of the `SAML2\Constants::*` constants of a fixed list, which are written back as literals.
 - Text that cannot be read, a syntax error or a value that is not a literal, is an error with its line and column. It blocks saving, Reveal and the switch to Settings.
 - A block whose entity ID, authsource id or type differs from the object's is rejected.
-- An uncataloged key goes to `extra` for an entity, with a warning and a suggestion when it is close to a cataloged option; for an authsource it is an error naming the key.
+- An uncataloged key goes to `extra` for an entity, with the warning "`sing.logout` is not a known option.", followed, when the key is close to a cataloged option, by "Did you mean `sign.logout`?" with the suggestion as a link that puts it in place of the key; for an authsource it is an error naming the key.
 - Validation errors of the document are tied to the line of the root option they come from.
 
-**Normalisation.** On every save the text comes back with its keys in schema order and its comments dropped, without a notice.
+**Normalisation.** On every save the text comes back with its keys in schema order and its comments dropped. When that changed the text, an info callout says so, "Formatting was tidied and 2 comments were removed", with "This happens on every save." and "Do not show again", which stops the callout for later saves.
 
 **Sensitive values.** The view opens with a fixed sentinel in place of each stored sensitive literal. Saving the sentinel unchanged keeps the stored value. The sentinel stands only for a stored value: in an unsaved object (a managed copy, "Add" from pasted configuration) sensitive literals appear as they are, and after "Replace from…" a sentinel stands for each stored value the merge leaves unchanged. The sentinel is tied to its option and is an error anywhere else. In `exampleauth:UserPass` the password is part of the key, so renaming a user in the text means typing the password again. A Secret reference is a plain string and always visible.
 
@@ -2031,7 +2065,13 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 
 ### 10.12 Adding objects
 
-"Add" on each entity list and "Add authsource" open the paste area of section 9.6: one text area, with the detected format (XML or PHP for an entity, PHP for an authsource) that the administrator can correct, "Choose file" read into the text area in the browser, "Start empty", and for entities a link to External entities. Input is capped at 1 MiB.
+The Add action of each entity list and "Add authsource" open the paste area of section 9.6, titled "Add service provider" and the like, under the crumb "Add":
+
+- a segmented control "Paste", "Upload" and "Start empty". Upload reads a local file into the text area in the browser;
+- the text area, labelled "Metadata XML or PHP array" for an entity and capped at 1 MiB, and under it "Detected", a select showing the detected format, such as "SAML metadata · 1 entity" or "PHP array", that the administrator can correct, and the primary button "Review", which reads the input;
+- for entities, the link "Copy from External entities".
+
+What follows:
 
 - "Start empty" for an entity opens the editor of the set with the required options only. For an authsource it first asks for the Authsource type, among the five, each with one line on what it is for.
 - Reading pasted configuration is an API request that opens the editor filled and unsaved, with a report panel above it listing what was converted, what was moved to `extra` and what was ignored. What needs the administrator shows as validation errors. Nothing is saved until the administrator saves.
@@ -2054,24 +2094,26 @@ The PHP view shows the object as the PHP an administrator would write: `$metadat
 
 ### 10.14 Publish
 
-The confirmation screen of section 8.4.
+The confirmation screen of section 8.4. The header shows "Live: Snapshot #N" (section 10.3).
 
-- Every Pending change as a row with its state (section 8.2), the kind of object and its identifier, grouped by state. Each row expands to the line diff of its PHP text against the current Snapshot (section 10.11), or to its load error when Unreadable, and offers "Discard this change".
-- The problems that block, first, each naming its object and linking to it.
-- The warnings, below, collapsed.
-- A panel with the number the new Snapshot will take, an optional comment and the Publish button. When Publication is not offered, the panel says why.
-- "Discard all", which asks for confirmation in the dialog component (section 10.17).
+- "N changes", "against Snapshot #N", then every Pending change as a row: its sign and verb, the labels of section 10.8 (`~` Modified, `+` Added, `−` Withdrawn, `×` Deleted, `!` Unreadable), the object's name, or its identifier when it has none, its kind ("Service provider", "Authsource · saml:SP") and a summary: the options changed for Modified ("2 options", "1 option, 1 secret"), "New, 9 options" for Added, "Disabled" for Withdrawn, "Removed everywhere" for Deleted. Rows are grouped in the order Modified, Added, Withdrawn, Deleted, Unreadable.
+- Each row expands to the line diff of its PHP text against the current Snapshot (section 10.11), with "Open", leading to the edit screen, and "Discard this change". An Unreadable row shows its load error at the row's end and expands to it. A Deleted row has no "Open".
+- The problems that block, first, in the error callout "N problems block publishing", each naming its object and linking to it.
+- "Ready to publish", a success callout, when nothing blocks.
+- The warnings, collapsed under "N warnings", each naming its object and linking to it.
+- A panel, "This Publication": "Becomes Snapshot #N", "Nodes" with the number of nodes, an optional comment and "Publish N changes", which reads "Publishing" while it runs. When Publication is not offered, the panel says why ("Fix 1 problem to publish."). Below a divider, "Discard all N changes…", which asks for confirmation in the dialog component (section 10.17): "Discard all N changes?", "Every saved change since Snapshot #41 is removed: 3 modified, 2 new, 1 withdrawn and 1 deleted object go back to what is live. This cannot be undone.", with "Keep changes" and "Discard N changes".
+
+Warnings and problems name objects as the rows do. Before the first Publication there is no "against Snapshot #N" and the header shows no Snapshot.
 
 States:
 
 | State | Shows |
 | --- | --- |
-| Nothing to publish | The current Snapshot and that there are no Pending changes |
+| Nothing to publish | "Nothing to publish", "Everything saved is live in Snapshot #N." and "History"; before the first Publication, the heading alone |
 | Ready | The above, Publish enabled |
 | Blocked | The problems; Publish disabled |
-| Moved | The confirming request found a hash mismatch, a lost race or a new problem (section 8.4): the screen with the current state and a message saying it changed |
-
-A successful Publication moves to Nodes (section 8.4); reloading Nodes shows the progress.
+| Moved | The confirming request found a hash mismatch, a lost race or a new problem (section 8.4): the screen with the current state under the warning callout "The changes moved while this page was open", which names the object saved last and when ("Moodle was saved again 1 minute ago.") and says "This is the current list." |
+| Published | After a successful Publication, on the same screen: the success callout "Snapshot #N is published" with "N changes." and "History", and below it "Nodes", one row per node of the Node table with its identifier, "This node" on the node serving the page, "Serves #42" or "Still on #41", and its last check ("8 s ago"). When the node serving the page could not build the new Snapshot, the callout is a warning carrying the build problem. Reloading Publish leaves this state; Nodes (section 10.16) keeps showing the progress |
 
 ### 10.15 History
 
@@ -2111,9 +2153,9 @@ Domain slices import each other without cycles and only through their `index.ts`
 
 - One stylesheet: the `console.css` of `prototype/console-ui`, with its tokens and component classes, plus layout classes for what the boards write inline and `[data-…]` selectors for the states React Aria exposes, with the values of the class selectors they mirror. It is linked by the shell, never imported into a component. There are no CSS modules, no CSS-in-JS and no `style` prop.
 - No colour, size or font is written outside the token definitions.
-- The primitives map to the component classes of `console.css`: button, field, select, text area, switch, check, segmented control, callout, status, chip, row, card, tabs, menu, code, diff, editor, empty state and the confirmation dialog. Those with behaviour build on `react-aria-components`; the rest are plain markup. Only the design system renders `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, `<a>`, `<dl>`, `<details>` and `<summary>`; every page composes primitives and domain components.
+- The primitives map to the component classes of `console.css`: button, field, select, text area, switch, check, segmented control, callout, status, chip, row, card, tabs, menu, code, diff, editor, empty state and the confirmation dialog. Those with behaviour build on `react-aria-components`; the rest are plain markup. The select stays the native `<select>`, and the switch and the check keep their visible native input, with React Aria's hooks, because `console.css` styles the native controls. Only the design system renders `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, `<a>`, `<dl>`, `<details>` and `<summary>`; every page composes primitives and domain components.
 - The shell's stylesheet link carries the id `react-aria-pressable-style`, and `console.css` holds React Aria's `touch-action` rule for pressable elements, so React Aria adds no `<style>` element.
-- The confirmation dialog asks before Delete, Discard, Promote and Discard all, with a text that says what will happen and a button that repeats the verb. Publish and Rollback have confirmation screens instead, which carry a diff.
+- The confirmation dialog asks before Delete, Discard, Promote and Discard all, with a text that says what will happen, a button that repeats the verb and a cancel button, "Cancel", or "Keep changes" for Discard all (section 10.14). Publish and Rollback have confirmation screens instead, which carry a diff.
 
 **Storybook.** Every primitive, domain component and page has stories next to it, rendered over the in-memory adapters, with one story per state of its board. The tokens appear first, as Foundations docs generated from the custom properties of `console.css`, light and dark. Storybook is not built into the package.
 
