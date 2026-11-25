@@ -7,7 +7,7 @@ const icons = { info: InfoIcon, warning: WarningIcon, error: ErrorIcon, success:
 
 interface CalloutProps {
   kind: CalloutKind;
-  title: string;
+  title: ReactNode;
   children?: ReactNode;
   items?: ReactNode[];
   action?: ReactNode;

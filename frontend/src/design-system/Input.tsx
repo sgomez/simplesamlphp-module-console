@@ -4,7 +4,7 @@ import { defined } from './props';
 
 interface InputProps {
   name?: string;
-  type?: 'text' | 'search' | 'password' | 'url';
+  type?: 'text' | 'search' | 'password' | 'url' | 'date';
   value?: string;
   defaultValue?: string;
   placeholder?: string;
