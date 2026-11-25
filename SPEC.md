@@ -336,6 +336,7 @@ The front end has a build step (section 10.17). Its npm dependencies are pinned 
 | `react`, `react-dom` | Components |
 | `react-router` | Client routing over the Console's paths |
 | `react-aria-components` | Keyboard, focus, ARIA and press behaviour of the design-system primitives |
+| `react-aria`, `react-stately` | The hooks behind the switch and the check, which keep their visible native input |
 | `ajv` | Compiling the schemas into standalone JSON Schema 2020-12 validators at build time. Only the compiled validators ship; the `format` rules they call are implemented in the front end to match opis |
 | `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`, `@types/react-dom` | Build and type checking |
 | `eslint`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, `eslint-plugin-boundaries`, `eslint-import-resolver-typescript` | Lint, including the rules of section 12.4 |
