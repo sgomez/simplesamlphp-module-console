@@ -72,3 +72,13 @@ export const Keyboard: Story = {
     await expect(trigger).toHaveFocus();
   },
 };
+
+export const Open: Story = {
+  args: { card: true, defaultExpanded: true },
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement);
+
+    await expect(page.getByRole('button', { name: 'Technical detail' })).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByLabelText('Technical detail', { selector: 'pre' })).toBeVisible();
+  },
+};

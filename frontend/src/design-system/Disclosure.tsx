@@ -5,12 +5,13 @@ interface DisclosureProps {
   summary: string;
   // A card of its own, as the warnings on Publish, rather than a fold inside another surface.
   card?: boolean;
+  defaultExpanded?: boolean;
   children: ReactNode;
 }
 
-export function Disclosure({ summary, card, children }: DisclosureProps) {
+export function Disclosure({ summary, card, defaultExpanded = false, children }: DisclosureProps) {
   return (
-    <AriaDisclosure className={card ? 'grp card' : 'grp'}>
+    <AriaDisclosure className={card ? 'grp card' : 'grp'} defaultExpanded={defaultExpanded}>
       <Button slot="trigger">
         <span className={card ? 'row-name' : 'small'}>{summary}</span>
       </Button>

@@ -1,6 +1,8 @@
-import type { ExternalPage, ExternalSource, OverrideComparison, OverridesPort } from '../../../domain/overrides';
+import type { ExternalPage, ExternalSource, ImportPreview, ImportSelection, OverrideComparison, OverridesPort } from '../../../domain/overrides';
+import type { CreationReport } from '../../../domain/pasted';
 import type { Failed } from '../../../lib/result';
 import { boardSources, copiesOf, type SourceFixture } from './external';
+import { boardImport } from './pastedSeveral';
 
 const ACS = 'catalogue.library.example.edu/Shibboleth.sso/SAML2/POST';
 
@@ -26,6 +28,8 @@ export interface MemoryOverrides {
   review?: Failed | 'pending';
   sources?: SourceFixture[];
   perPage?: number;
+  // What an Import answers; by default the ImportResult board.
+  imported?: CreationReport;
 }
 
 const PER_PAGE = 25;
@@ -36,7 +40,22 @@ function matches(q: string) {
   return (row: { entityId: string; name: string | null }) => row.entityId.toLowerCase().includes(needle) || (row.name ?? '').toLowerCase().includes(needle);
 }
 
-export function memoryOverrides({ comparison = boardComparison, failure, review, sources = boardSources, perPage = PER_PAGE }: MemoryOverrides = {}): OverridesPort {
+// The ticked entities of each source, the managed ones left out as Import leaves them.
+function preview(sources: SourceFixture[], { set, sources: picked }: ImportSelection): ImportPreview {
+  return {
+    sources: picked.flatMap(({ position, all, entityIds }) => {
+      const fixture = sources[position];
+      const rows = (fixture?.sets[set] ?? []).filter((row) => !row.managed && (all || entityIds.includes(row.entityId)));
+
+      return fixture && rows.length > 0
+        ? [{ heading: fixture.heading, location: fixture.location, entities: rows.map(({ entityId, name }) => ({ entityId, name })) }]
+        : [];
+    }),
+  };
+}
+
+export function memoryOverrides(more: MemoryOverrides = {}): OverridesPort {
+  const { comparison = boardComparison, failure, review, sources = boardSources, perPage = PER_PAGE, imported = boardImport } = more;
   const answer = async <T>(data: () => T) => (failure ? { ok: false as const, ...failure } : { ok: true as const, data: data() });
 
   return {
@@ -62,6 +81,8 @@ export function memoryOverrides({ comparison = boardComparison, failure, review,
       return answer(() => ({ set, entityId, name, copies }));
     },
     compare: () => answer(() => comparison),
+    importPreview: (selection) => answer(() => preview(sources, selection)),
+    runImport: () => answer(() => imported),
     markReviewed: async () => {
       if (review === 'pending') {
         return new Promise(() => undefined);

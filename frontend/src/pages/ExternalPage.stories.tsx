@@ -26,7 +26,7 @@ export const Board: Story = {
     await expect(page.getByText('1 to 25 of 2,941')).toBeVisible();
     await expect(page.getByText('12 · copy one at a time')).toBeVisible();
     await expect(page.getByText('3 selected')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Import 3' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Import 3' }).getAttribute('href')).toContain('/external/import?set=saml20-sp-remote');
   },
 };
 

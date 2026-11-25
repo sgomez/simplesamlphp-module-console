@@ -1,7 +1,9 @@
 import { createContext, useContext } from 'react';
 import type { Result } from '../../lib/result';
 import { listRoute, type EntitySet } from '../entities';
+import type { CreationReport } from '../pasted';
 import type { ExternalEntity, ExternalPage, ExternalQuery } from './external';
+import type { ImportPreview, ImportSelection } from './selection';
 
 export function overridePath(entityId: string, set: EntitySet = 'saml20-sp-remote'): string {
   return `${listRoute(set)}/override?entityid=${encodeURIComponent(entityId)}`;
@@ -30,6 +32,9 @@ export interface OverridesPort {
   externalEntity(set: EntitySet, entityId: string): Promise<Result<ExternalEntity>>;
   compare(entityId: string): Promise<Result<OverrideComparison>>;
   markReviewed(entityId: string): Promise<Result<unknown>>;
+  // SPEC 9.5: the confirmation step reads the ticked entities again; Import saves them.
+  importPreview(selection: ImportSelection): Promise<Result<ImportPreview>>;
+  runImport(selection: ImportSelection): Promise<Result<CreationReport>>;
 }
 
 const unset = async () => ({ ok: false, status: 0, body: null }) as const;
@@ -39,6 +44,8 @@ export const OverridesPortContext = createContext<OverridesPort>({
   externalEntity: unset,
   compare: unset,
   markReviewed: unset,
+  importPreview: unset,
+  runImport: unset,
 });
 
 export function useOverridesPort(): OverridesPort {

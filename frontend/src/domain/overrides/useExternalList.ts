@@ -4,6 +4,7 @@ import type { EntitySet } from '../entities';
 import { useLoad, type Loaded } from '../session';
 import { EXTERNAL_SETS, externalPath, externalSearch, type ExternalPage, type ExternalSource } from './external';
 import { useOverridesPort } from './port';
+import type { ImportSelection } from './selection';
 
 // What is ticked in one source: all of it, or some entity IDs.
 interface Ticked {
@@ -17,6 +18,7 @@ export interface ExternalList {
   answer: Loaded<ExternalPage>;
   // Every ticked entity, across the pages of each source.
   count: number;
+  selection: ImportSelection;
   ticked: (source: ExternalSource) => Ticked;
   tick: (source: ExternalSource, entityId: string, on: boolean) => void;
   tickAll: (source: ExternalSource, on: boolean) => void;
@@ -44,11 +46,17 @@ export function useExternalList(): ExternalList {
   const count = sources.reduce((sum, at) => sum + (ticked(at).all ? at.total : ticked(at).ids.length), 0);
   const go = (next: { set: EntitySet; q: string }) => void setParams(externalSearch(next));
 
+  const selection = {
+    set,
+    sources: Object.entries(by).map(([position, { all, ids }]) => ({ position: Number(position), all, entityIds: [...ids] })),
+  };
+
   return {
     set,
     query,
     answer,
     count,
+    selection,
     ticked,
     tick: (at, entityId, on) => {
       const { ids } = ticked(at);

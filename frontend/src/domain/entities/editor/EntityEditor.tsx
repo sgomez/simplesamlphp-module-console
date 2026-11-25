@@ -28,11 +28,13 @@ export interface EntityEditorProps {
   onCancel?: () => void;
   // Opened right after the save that produced it.
   saved?: boolean;
+  // Unsaved text it opens with in place of the stored one, as after "Replace from…".
+  text?: string;
 }
 
-export function EntityEditor({ initial, review, onSaved, onTitle, onCreated, onCancel, saved }: EntityEditorProps) {
+export function EntityEditor({ initial, review, onSaved, onTitle, onCreated, onCancel, saved, text: opened }: EntityEditorProps) {
   const port = useEntitiesPort();
-  const edit = useEditor(initial, { onCreated, saved, onSaved });
+  const edit = useEditor(initial, { onCreated, saved, onSaved, text: opened });
   const settings = useSettings(edit, onCreated !== undefined);
   const { view, text, setText, outcome } = edit;
   const title = onCreated ? ADD_TITLE : (view.name ?? view.entityId);
