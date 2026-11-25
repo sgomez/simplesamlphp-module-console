@@ -2096,7 +2096,7 @@ The front end lives in `frontend/`, outside `src/`, and talks to the module only
 
 - One stylesheet: the `console.css` of `prototype/console-ui`, with its tokens and component classes, plus layout classes for what the boards write inline. It is linked by the shell, never imported into a component. There are no CSS modules, no CSS-in-JS and no `style` prop.
 - No colour, size or font is written outside the token definitions.
-- `frontend/src/components/ui/` holds the primitives, one per component class of `console.css`: button, field, select, text area, switch, check, segmented control, callout, status, chip, row, card, tabs, menu, code, diff, editor, empty state and the confirmation dialog. Only they render `<button>`, `<input>`, `<select>`, `<textarea>` and `<dialog>`; every screen composes them.
+- `frontend/src/components/ui/` holds the primitives, one per component class of `console.css`: button, field, select, text area, switch, check, segmented control, callout, status, chip, row, card, tabs, menu, code, diff, editor, empty state and the confirmation dialog. Only they render `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, `<a>`, `<dl>`, `<details>` and `<summary>`; every screen composes them.
 - The confirmation dialog asks before Delete, Discard, Promote and Discard all, with a text that says what will happen and a button that repeats the verb. Publish and Rollback have confirmation screens instead, which carry a diff.
 
 **Types.** TypeScript in strict mode. The types of the Console documents are generated from `docs/spec/schemas` and committed; the API's request and response types are written by hand next to the client that calls it.
