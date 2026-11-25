@@ -36,7 +36,8 @@ it('builds the dev node on php:8.4-apache with its own database, waiting for a h
 it('puts a Vite service on the pinned Node version in front of the dev node', function (): void {
     $services = LocalEnvironment::compose()['services'];
     $vite = $services['vite'];
-    $node = trim(LocalEnvironment::read('.nvmrc'));
+    preg_match('/^node = "([^"]+)"$/m', LocalEnvironment::read('mise.toml'), $pin);
+    $node = $pin[1] ?? '';
 
     expect($vite['profiles'])->toBe(['dev'])
         ->and($vite['image'])->toStartWith('node:' . $node . '-')

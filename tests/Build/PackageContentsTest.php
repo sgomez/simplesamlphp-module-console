@@ -49,7 +49,7 @@ it('leaves the front-end sources and the Node tooling out of the package', funct
     'package.json',
     'package-lock.json',
     'node_modules',
-    '.nvmrc',
+    'mise.toml',
     'vite.config.ts',
     'tsconfig.json',
     'eslint.config.js',

@@ -47,7 +47,7 @@ The shell contains no chrome. It references the entry script and its stylesheet 
 
 ## Build and development
 
-**Build.** `composer build` runs `npm ci --ignore-scripts` and `vite build`. The hashed files and `.vite/manifest.json` land in `public/assets/app/`, which is committed and shipped in the Composer package. `frontend/`, `package.json`, `package-lock.json` and the configs are `export-ignore`, so installing the module needs no Node. The Node version is pinned in `.nvmrc`. CI rebuilds and fails on any difference from the committed output.
+**Build.** `composer build` runs `npm ci --ignore-scripts` and `vite build`. The hashed files and `.vite/manifest.json` land in `public/assets/app/`, which is committed and shipped in the Composer package. `frontend/`, `package.json`, `package-lock.json` and the configs are `export-ignore`, so installing the module needs no Node. The Node and PHP versions are pinned in `mise.toml`. CI rebuilds and fails on any difference from the committed output.
 
 **Development.** `composer dev` starts the `dev` Docker profile with a Vite service in front of it. The browser opens the Console on Vite's port, and Vite proxies `/simplesaml/` to the SimpleSAMLphp container with the original `Host` header. The dev configuration of that node uses a host-relative `baseurlpath` and sets the module key `dev_server`. With that key set, the shell references:
 
