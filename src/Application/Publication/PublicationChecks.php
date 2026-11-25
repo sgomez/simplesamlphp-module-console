@@ -64,7 +64,11 @@ final class PublicationChecks
         }
 
         return array_map(
-            static fn (string $message): PublicationProblem => new PublicationProblem($entity->entityId, $message),
+            static fn (string $message): PublicationProblem => new PublicationProblem(
+                $entity->entityId,
+                $message,
+                $entity->name(),
+            ),
             $messages,
         );
     }

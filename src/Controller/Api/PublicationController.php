@@ -96,7 +96,10 @@ final class PublicationController
             ));
             $changes === [] || $groups[] = [
                 'state' => $state->value,
-                'changes' => array_map($this->change(...), $changes),
+                'changes' => array_map(
+                    static fn (PendingChange $change): array => self::change($change, $review->name($change)),
+                    $changes,
+                ),
             ];
         }
 
@@ -105,12 +108,13 @@ final class PublicationController
 
 
     /**
-     * @return array{entityId: string, loadError: ?string, opens: bool}
+     * @return array{entityId: string, name: ?string, loadError: ?string, opens: bool}
      */
-    private function change(PendingChange $change): array
+    private static function change(PendingChange $change, ?string $name): array
     {
         return [
             'entityId' => $change->entityId,
+            'name' => $name,
             'loadError' => $change->loadError,
             'opens' => $change->state !== EntityState::Unreadable && $change->state !== EntityState::Deleted,
         ];
@@ -118,10 +122,10 @@ final class PublicationController
 
 
     /**
-     * @return array{entityId: ?string, message: string}
+     * @return array{entityId: ?string, name: ?string, message: string}
      */
     private function problem(PublicationProblem $problem): array
     {
-        return ['entityId' => $problem->entityId, 'message' => $problem->message];
+        return ['entityId' => $problem->entityId, 'name' => $problem->name, 'message' => $problem->message];
     }
 }

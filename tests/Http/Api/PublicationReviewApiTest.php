@@ -28,7 +28,7 @@ it('answers the Pending changes grouped by state, each saying whether it opens',
 
     expect($review['groups'])->toBe([[
         'state' => 'Unpublished',
-        'changes' => [['entityId' => 'https://a.example.org', 'loadError' => null, 'opens' => true]],
+        'changes' => [['entityId' => 'https://a.example.org', 'name' => null, 'loadError' => null, 'opens' => true]],
     ]])->and($review['canPublish'])->toBeTrue()
         ->and($review['nextNumber'])->toBe(1);
 });
@@ -42,7 +42,7 @@ it('answers the problems that block, each naming its entity, and an Unreadable r
     $unreadable = $review['groups'][1];
 
     expect(array_column($review['problems'], 'entityId'))->toBe(['https://a.example.org', 'https://bad.example.org'])
-        ->and(array_keys($review['problems'][0]))->toBe(['entityId', 'message'])
+        ->and(array_keys($review['problems'][0]))->toBe(['entityId', 'name', 'message'])
         ->and($review['problems'][1]['message'])->toContain('not valid JSON')
         ->and($unreadable['state'])->toBe('Unreadable')
         ->and($unreadable['changes'][0]['opens'])->toBeFalse()

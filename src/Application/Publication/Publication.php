@@ -50,11 +50,13 @@ final class Publication
         $all = $this->compute($input);
         $pending = PendingChanges::pending($all);
         $document = SnapshotDocument::build($input->entities);
+        $entities = new PendingEntities($input);
 
         return new PublicationReview(
             $pending,
+            $entities->names($pending),
             $this->checks->problems($input->entities, $document, $this->store->documentLimit()),
-            $this->warningsOf($input, $pending),
+            $this->warningsOf($entities, $pending),
             PendingChanges::hash($all),
             $input->lastNumber + 1,
             $input->currentNumber,
@@ -106,18 +108,16 @@ final class Publication
      * @param list<\SimpleSAML\Module\console\Domain\Publication\PendingChange> $pending
      * @return list<\SimpleSAML\Module\console\Application\Publication\PublicationProblem>
      */
-    private function warningsOf(PublicationInput $input, array $pending): array
+    private function warningsOf(PendingEntities $entities, array $pending): array
     {
-        $documents = [];
-        foreach ($input->entities as $entity) {
-            $documents[$entity->set][$entity->entityId] = $entity->document;
-        }
         $warnings = [];
         foreach ($pending as $change) {
-            $document = $documents[$change->set][$change->entityId] ?? null;
-            $texts = $document === null ? [] : $this->warnings->of($change->set, $change->entityId, $document);
-            foreach ($texts as $text) {
-                $warnings[] = new PublicationProblem($change->entityId, $text);
+            $entity = $entities->saved($change);
+            if ($entity === null || $entity->document === null) {
+                continue;
+            }
+            foreach ($this->warnings->of($change->set, $change->entityId, $entity->document) as $text) {
+                $warnings[] = new PublicationProblem($change->entityId, $text, $entity->name());
             }
         }
 
