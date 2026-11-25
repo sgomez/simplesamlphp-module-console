@@ -47,7 +47,7 @@ body{margin:0;background:var(--bg);color:var(--text);
 *,*::before,*::after{box-sizing:border-box}
 
 /* focus ring: one treatment everywhere */
-a:focus-visible,button:focus-visible,summary:focus-visible,
+a:focus-visible,button:focus-visible,
 input:focus-visible,select:focus-visible,textarea:focus-visible{
   outline:2px solid var(--accent-solid); outline-offset:2px;
 }
@@ -143,13 +143,13 @@ a.row:focus-visible{outline-offset:-2px}
 .ic-info{color:var(--info-text)} .ic-warning{color:var(--warning-text)} .ic-error{color:var(--danger-text)}
 .ic-success{color:var(--success-text)} .ic-pending{color:var(--accent-text)}
 
-/* disclosure groups (native <details>, works before JavaScript) */
-.grp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--r-lg)}
-.grp>summary::-webkit-details-marker{display:none}
-.grp>summary::before{content:"";width:7px;height:7px;border-inline-end:2px solid var(--text-3);border-bottom:2px solid var(--text-3);
+/* disclosure groups (React Aria's Disclosure: a trigger button and a panel) */
+.grp>[slot=trigger]{width:100%;border:0;background:none;color:inherit;font:inherit;text-align:start;
+  cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--r-lg)}
+.grp>[slot=trigger]::before{content:"";width:7px;height:7px;border-inline-end:2px solid var(--text-3);border-bottom:2px solid var(--text-3);
   transform:rotate(-45deg);transition:transform .12s;flex:none;margin-inline:2px 4px}
-.grp[open]>summary::before{transform:rotate(45deg)}
-.grp>summary:hover{background:var(--hover)}
+.grp[data-expanded]>[slot=trigger]::before{transform:rotate(45deg)}
+.grp>[slot=trigger]:hover{background:var(--hover)}
 .opt-add{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border:1px dashed var(--border-strong);border-radius:5px;
   background:transparent;color:var(--text-2);font-family:var(--mono);font-size:12.5px;cursor:pointer}
 .opt-add:hover{border-style:solid;border-color:var(--accent-border);color:var(--accent-text);background:var(--accent-bg)}
@@ -312,7 +312,7 @@ a.row:focus-visible{outline-offset:-2px}
 .facts .is-strong{font-weight:600}
 .section-head{display:flex;align-items:baseline;gap:10px;margin-top:8px}
 .empty .grp{align-self:stretch;min-width:0;text-align:start}
-.empty .grp>summary{justify-content:center}
+.empty .grp>[slot=trigger]{justify-content:center}
 
 /* component layout (DesignSystem) */
 .field{display:flex;flex-direction:column;gap:6px}

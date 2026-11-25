@@ -34,11 +34,11 @@ describe('the state pages', () => {
     expect(container.querySelector('.state-card')?.className).toBe('card empty state-card');
     const text = 'The Console cannot reach its database. Nodes keep serving their local Snapshot.';
     expect(screen.getByText(text).className).toBe('muted empty-text');
-    const details = container.querySelector('details.grp') as HTMLElement;
-    expect(details.hasAttribute('open')).toBe(false);
-    expect(within(details).getByText('Technical detail').className).toBe('small');
-    expect(screen.getByLabelText('Technical detail').textContent).toBe('SQLSTATE[HY000] [2002] Connection refused');
-    expect(buttons()).toEqual([]);
+    const fold = screen.getByRole('button', { name: 'Technical detail' });
+    expect(fold.getAttribute('aria-expanded')).toBe('false');
+    expect(within(fold).getByText('Technical detail').className).toBe('small');
+    expect(screen.getByLabelText('Technical detail', { selector: 'pre' }).textContent).toBe('SQLSTATE[HY000] [2002] Connection refused');
+    expect(buttons()).toEqual([fold]);
   });
 
   it('show SQLite too old with the version found and the minimum', async () => {

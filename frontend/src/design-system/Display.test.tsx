@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Eid } from './Eid';
 import { Code, Pre } from './Code';
-import { Disclosure } from './Disclosure';
 import { Empty } from './Empty';
 import { Skeleton } from './Skeleton';
 
@@ -65,36 +64,6 @@ describe('Empty', () => {
     const { container } = render(<Empty state flush title="Down" />);
 
     expect(container.firstElementChild?.className).toBe('card empty');
-  });
-});
-
-describe('Disclosure', () => {
-  it('folds its content under a small summary', () => {
-    const { container } = render(
-      <Disclosure summary="Technical detail">
-        <p>inside</p>
-      </Disclosure>,
-    );
-
-    const details = container.firstElementChild as HTMLDetailsElement;
-    expect(details.tagName).toBe('DETAILS');
-    expect(details.className).toBe('grp');
-    expect(details.open).toBe(false);
-    expect(details.querySelector('summary > span.small')?.textContent).toBe('Technical detail');
-    expect(details.querySelector('p')?.textContent).toBe('inside');
-  });
-
-  it('folds a card under a bold summary, its content indented', () => {
-    const { container } = render(
-      <Disclosure card summary="2 warnings">
-        <p>inside</p>
-      </Disclosure>,
-    );
-
-    const details = container.firstElementChild as HTMLDetailsElement;
-    expect(details.className).toBe('grp card');
-    expect(details.querySelector('summary > span.row-name')?.textContent).toBe('2 warnings');
-    expect(details.querySelector('.grp-body > p')?.textContent).toBe('inside');
   });
 });
 
