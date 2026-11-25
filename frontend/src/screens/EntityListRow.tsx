@@ -61,7 +61,7 @@ function RowNote({ row }: { row: EntityRow }) {
 // Deleting it keeps the admin on the page and search the list is at.
 function UnreadableRow({ row, children }: { row: EntityRow; children: ReactNode }) {
   const { pathname, search } = useLocation();
-  const deletion = useDeleteEntity(row.entityId, row.name, pathname + search);
+  const deletion = useDeleteEntity(row, pathname + search);
 
   return (
     <Row wrap plain>

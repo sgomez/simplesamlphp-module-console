@@ -9,7 +9,7 @@ import { EditHeader } from './EditHeader';
 // Read-only: the raw bytes view of SPEC 10.8 is not in Milestone 1.
 export function UnreadableEntity({ entity, onTitle }: { entity: EditedEntity; onTitle: (title: string) => void }) {
   const title = entity.name ?? entity.entityId;
-  const deletion = useDeleteEntity(entity.entityId, entity.name, SP_LIST);
+  const deletion = useDeleteEntity(entity, SP_LIST);
 
   useEffect(() => onTitle(title), [title, onTitle]);
 

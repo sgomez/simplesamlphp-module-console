@@ -47,7 +47,7 @@ export function EntityEditor({ initial, pending, onSaved, onTitle }: EntityEdito
   const refuse = useContext(ReportRefusal);
   const title = view.name ?? view.entityId;
   const dirty = text !== (view.php ?? '');
-  const deletion = useDeleteEntity(view.entityId, view.name, SP_LIST);
+  const deletion = useDeleteEntity(view, SP_LIST);
 
   useEffect(() => onTitle(title), [title, onTitle]);
 

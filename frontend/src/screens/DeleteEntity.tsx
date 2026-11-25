@@ -7,14 +7,23 @@ import { refusalOf, ReportRefusal } from '../app/refusals';
 import { Callout } from '../components/ui/Callout';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
+// An Unpublished object is in no Snapshot, so no node serves it.
+const SERVED = ' Nodes keep serving it until the next Publication, which withdraws it.';
+
 interface Deletion {
   ask: () => void;
   // The confirmation dialog, and what went wrong with the last attempt.
   element: ReactNode;
 }
 
+interface Deleted {
+  entityId: string;
+  name: string | null;
+  state: string | null;
+}
+
 // Deleting asks first; once done the interface moves to `then` with the one-shot message.
-export function useDeleteEntity(entityId: string, name: string | null, then: string): Deletion {
+export function useDeleteEntity({ entityId, name, state }: Deleted, then: string): Deletion {
   const [open, setOpen] = useState(false);
   const [failed, setFailed] = useState<number | null>(null);
   const navigate = useNavigate();
@@ -56,7 +65,7 @@ export function useDeleteEntity(entityId: string, name: string | null, then: str
       <ConfirmDialog
         open={open}
         title={`Delete ${label}?`}
-        text={`${label} is removed from the Console. Nodes keep serving it until the next Publication, which withdraws it.`}
+        text={`${label} is removed from the Console.${state === 'Unpublished' ? '' : SERVED}`}
         cancel="Cancel"
         confirm={`Delete ${label}`}
         onCancel={() => setOpen(false)}

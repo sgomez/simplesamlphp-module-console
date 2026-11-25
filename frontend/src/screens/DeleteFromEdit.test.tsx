@@ -11,7 +11,7 @@ describe('deleting from the edit screen', () => {
   withDialogs();
 
   it('asks under More actions, saying what will happen, with a button that repeats the verb', async () => {
-    const fetch = await openEdit(entity(), { [DELETE]: gone });
+    const fetch = await openEdit(entity({ state: 'Modified' }), { [DELETE]: gone });
 
     chooseDelete();
 
