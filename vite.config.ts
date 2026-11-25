@@ -20,6 +20,7 @@ export default defineConfig(({ command }) => ({
     host: '0.0.0.0',
     port: 5173,
     strictPort: true,
+    allowedHosts: process.env.CONSOLE_DEV_HOSTS?.split(',').filter(Boolean) ?? [],
     hmr: { overlay: false },
     proxy: {
       [`^/simplesaml/(?!module\\.php/console/assets/app/)`]: {

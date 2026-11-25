@@ -2292,7 +2292,7 @@ SQLite needs no container. MySQL is not in the local environment; it runs in Git
 - It uses a database of its own in the same MariaDB service, separate from the one the tests use.
 - It is a hosted IdP connected to its own SP, both configured with flat files. Users come from `exampleauth:UserPass`.
 - It starts with an empty Console. The first steps are the schema migration and an Import of those flat files, both from the web.
-- A Vite service, from a pinned Node image, serves the front end with hot module replacement and proxies the rest to SimpleSAMLphp on the same origin (section 10.17). `composer dev` starts the profile with it. The node's configuration sets `dev_server` and a host-relative `baseurlpath`.
+- A Vite service, from a pinned Node image, serves the front end with hot module replacement and proxies the rest to SimpleSAMLphp on the same origin (section 10.17). It answers `localhost` and IP addresses, plus the host names listed in `CONSOLE_DEV_HOSTS`. `composer dev` starts the profile with it. The node's configuration sets `dev_server` and a host-relative `baseurlpath`.
 - A scheduler service, a minimal container (such as `curlimages/curl`), calls the node's core `cron` URL every minute from outside the node's container (section 2.7), so the node is never shown as silent or forgotten and a rotated secret can be seen to take effect.
 - There is no LDAP server, no SQL users table, no second SimpleSAMLphp and no second node. Two nodes serving different Snapshots cannot be seen locally; the Publication suites cover that behaviour.
 
