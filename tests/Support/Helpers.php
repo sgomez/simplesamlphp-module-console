@@ -34,13 +34,4 @@ final class Helpers
         Configuration::setPreLoadedConfig(Configuration::loadFromArray($core), 'config.php');
         Configuration::setPreLoadedConfig(Configuration::loadFromArray($module ?? []), 'module_console.php');
     }
-
-
-    public static function assertShellWithoutCounts(string $html): void
-    {
-        expect($html)->toContain('data-identity')
-            ->and($html)->toContain('class="shell-side"')
-            ->and($html)->not->toContain('Pending changes')
-            ->and($html)->not->toContain('data-pending-count');
-    }
 }

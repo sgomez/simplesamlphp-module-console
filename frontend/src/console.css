@@ -296,6 +296,14 @@ a.row:focus-visible{outline-offset:-2px}
 .state-card{margin-top:48px}
 .wrap-any{overflow-wrap:anywhere}
 
+/* state pages (Migration, Publish) */
+.facts{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0;font-size:13px;text-align:start}
+.facts dd{margin:0}
+.facts .is-strong{font-weight:600}
+.section-head{display:flex;align-items:baseline;gap:10px;margin-top:8px}
+.empty .grp{align-self:stretch;min-width:0;text-align:start}
+.empty .grp>summary{justify-content:center}
+
 /* component layout (DesignSystem) */
 .field{display:flex;flex-direction:column;gap:6px}
 .switch-field{display:flex;align-items:center;gap:10px}

@@ -4,31 +4,30 @@ declare(strict_types=1);
 
 use SimpleSAML\Logger;
 use SimpleSAML\Module\console\Infrastructure\Http\CsrfToken;
+use SimpleSAML\Module\console\Tests\Support\Api;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\Db;
 use SimpleSAML\Session;
 
-it('answers a request without a valid token with a plain 403, a log warning and no Audit trail row', function (
-    array $data,
+it('answers a request without a valid token with 403, a log warning and no Audit trail row', function (
+    array $headers,
 ): void {
     $client = (new ConsoleClient())->withDatabase(null)->loginAsAdmin();
-    $client->page();
     Logger::setCaptureLog();
 
-    $response = $client->post('/migrate', $data);
+    $response = $client->api('POST', '/migrate', $headers + ['CONTENT_TYPE' => 'application/json'], '{}');
     $log = implode("\n", Logger::getCapturedLog());
     Logger::setCaptureLog(false);
 
     expect($response->getStatusCode())->toBe(403)
-        ->and(ConsoleClient::body($response))->toContain('request-forgery token')
-        ->and(ConsoleClient::body($response))->toContain('href="http://localhost/simplesaml/module.php/console/"')
+        ->and(Api::json($response))->toBe(['error' => 'refused'])
         ->and($log)->toContain('Console: refused a POST')
         ->and(Db::tableExists($client->database(), 'console_schema_version'))->toBeFalse()
         ->and(Db::tableExists($client->database(), 'console_audit'))->toBeFalse();
 })->with([
     'missing' => [[]],
-    'wrong' => [['_token' => 'not-the-token']],
-    'empty' => [['_token' => '']],
+    'wrong' => [['HTTP_X_CONSOLE_TOKEN' => 'not-the-token']],
+    'empty' => [['HTTP_X_CONSOLE_TOKEN' => '']],
 ]);
 
 it('keeps one token for the whole session and compares it in constant time', function (): void {
@@ -48,8 +47,8 @@ it('keeps one token for the whole session and compares it in constant time', fun
 it('checks the database state before the token', function (): void {
     $client = (new ConsoleClient())->withDatabase([1, 2, 3, 10])->loginAsAdmin();
 
-    $response = $client->post('/migrate', []);
+    $response = $client->api('POST', '/migrate', ['CONTENT_TYPE' => 'application/json'], '{}');
 
-    expect($response->getStatusCode())->toBe(200)
-        ->and(ConsoleClient::body($response))->toContain('data-state="console-older"');
+    expect($response->getStatusCode())->toBe(503)
+        ->and(Api::json($response)['state'])->toBe('ConsoleOlder');
 });

@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { CrossIcon, WarningIcon } from './icons';
+import { CrossIcon, ErrorIcon, WarningIcon } from './icons';
 import { cx } from './classes';
 
 export type StatusTone = 'live' | 'pending' | 'unsaved' | 'warn' | 'danger' | 'off';
-export type StatusMark = 'dot' | 'full' | 'half' | 'minus' | 'warning' | 'cross';
+export type StatusMark = 'dot' | 'full' | 'half' | 'minus' | 'warning' | 'error' | 'cross';
 
 interface StatusProps {
   tone: StatusTone;
@@ -16,6 +16,9 @@ interface StatusProps {
 function Mark({ mark }: { mark: StatusMark }) {
   if (mark === 'warning') {
     return <WarningIcon />;
+  }
+  if (mark === 'error') {
+    return <ErrorIcon />;
   }
   if (mark === 'cross') {
     return <CrossIcon />;

@@ -1,9 +1,9 @@
 import { Link, NavLink } from 'react-router';
 import { consoleUrl } from '../api/client';
-import type { Session } from '../api/types';
+import type { SessionLinks } from '../api/types';
 import { LogoutIcon } from '../components/ui/icons';
 
-function SideFoot({ session }: { session: Session }) {
+function SideFoot({ session }: { session: SessionLinks }) {
   return (
     <div className="side-foot">
       <div className="card identity-card">
@@ -21,9 +21,7 @@ function SideFoot({ session }: { session: Session }) {
   );
 }
 
-export function Sidebar({ session }: { session: Session | null }) {
-  const pending = session?.pendingCount ?? 0;
-
+export function Sidebar({ session, pending }: { session: SessionLinks | null; pending: number }) {
   return (
     <nav className="side-nav" aria-label="Main">
       <div className="side-body">

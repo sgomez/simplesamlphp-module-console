@@ -22,7 +22,7 @@ describe('a failed request', () => {
     stubApi({ '/api/session': { body: session }, [`/api${LIST}`]: { body: page([sp('https://a.example.org')]) } });
     renderAt('/x/y');
 
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Not found');
+    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Not found');
     expect(crumbs()).toEqual(['Console', 'Not found']);
     expect(screen.getByRole('main').className).toBe('page page-narrow');
     expect(screen.getByRole('heading', { level: 1 }).parentElement?.className).toBe('card empty state-card');

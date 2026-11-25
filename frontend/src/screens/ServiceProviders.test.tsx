@@ -25,7 +25,7 @@ describe('the service provider list', () => {
     serve(page([]));
     renderAt(LIST);
 
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Service providers');
+    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Service providers');
     expect(screen.getByText('saml20-sp-remote').className).toBe('mono faint');
     expect(screen.getByRole('link', { name: 'Add' }).getAttribute('href')).toBe(`${LIST}/new`);
   });
@@ -42,7 +42,9 @@ describe('the service provider list', () => {
     const fetch = serve(page([sp('https://a.example.org')]));
     renderAt(`${LIST}?page=3`);
 
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Search service providers' }), { target: { value: 'zoom' } });
+    fireEvent.change(await screen.findByRole('searchbox', { name: 'Search service providers' }), {
+      target: { value: 'zoom' },
+    });
     fireEvent.submit(screen.getByRole('search'));
 
     await waitFor(() => expect(location()).toBe(`${LIST}?q=zoom`));
@@ -80,12 +82,16 @@ describe('the service provider list', () => {
   });
 
   it('renders no list and no skeleton while the page loads', async () => {
-    const fetch = vi.fn(async () => new Promise<Response>(() => undefined));
+    const fetch = vi.fn(async (input: RequestInfo | URL) =>
+      String(input) === '/api/session'
+        ? new Response(JSON.stringify(session))
+        : new Promise<Response>(() => undefined),
+    );
     vi.stubGlobal('fetch', fetch);
     const { container } = renderAt(LIST);
 
     await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 
-    expect(container.querySelector('.card, .skel, [aria-busy]')).toBeNull();
+    expect(container.querySelector('main')?.querySelector('.card, .skel, [aria-busy]')).toBeNull();
   });
 });

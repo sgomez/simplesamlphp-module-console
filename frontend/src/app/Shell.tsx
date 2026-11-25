@@ -1,13 +1,14 @@
 import { useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import { consoleUrl } from '../api/client';
-import type { Session } from '../api/types';
+import type { SessionLinks } from '../api/types';
 import { Button, LinkButton } from '../components/ui/Button';
 import { MenuIcon } from '../components/ui/icons';
 import { Sidebar } from './Sidebar';
 
 interface ShellProps {
-  session: Session | null;
+  session: SessionLinks | null;
+  pending: number;
   crumb: string | undefined;
   parent?: { label: string; to: string } | undefined;
   // The width of a state or failure page.
@@ -24,16 +25,15 @@ function Review({ count }: { count: number }) {
   );
 }
 
-export function Shell({ session, crumb, parent, narrow, children }: ShellProps) {
+export function Shell({ session, pending, crumb, parent, narrow, children }: ShellProps) {
   const { key } = useLocation();
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === key;
-  const pending = session?.pendingCount ?? 0;
 
   return (
     <div className="shell">
       <div id="nav" className={open ? 'shell-side is-open' : 'shell-side'}>
-        <Sidebar session={session} />
+        <Sidebar session={session} pending={pending} />
       </div>
       <div className="shell-main">
         <header className="shell-head">

@@ -24,16 +24,22 @@ final class StateInspector
 
     public function inspect(): DatabaseStatus
     {
+        return $this->read()->status;
+    }
+
+
+    public function read(): DatabaseReading
+    {
         try {
             $pdo = $this->connections->open($this->settings);
             $sqlite = $this->sqliteVersion($pdo);
             if ($sqlite !== null && !SqliteVersion::isSupported($sqlite)) {
-                return DatabaseStatus::sqliteTooOld($sqlite);
+                return new DatabaseReading(DatabaseStatus::sqliteTooOld($sqlite));
             }
 
-            return DatabaseStatus::ofSchema($this->applied($pdo), $this->known);
-        } catch (\PDOException) {
-            return DatabaseStatus::unreachable();
+            return new DatabaseReading(DatabaseStatus::ofSchema($this->applied($pdo), $this->known));
+        } catch (\PDOException $e) {
+            return new DatabaseReading(DatabaseStatus::unreachable(), $e->getMessage());
         }
     }
 

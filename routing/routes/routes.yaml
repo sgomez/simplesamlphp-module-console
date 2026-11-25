@@ -16,10 +16,10 @@ console-api-entities:
     set: saml20-sp-remote
   methods: [GET]
 
-console-migrate:
-  path: /migrate
+console-api-migrate:
+  path: /api/migrate
   defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\MigrateController::run'
+    _controller: 'SimpleSAML\Module\console\Controller\Api\MigrateController::run'
   }
   methods: [POST]
 
