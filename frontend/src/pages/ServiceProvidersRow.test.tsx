@@ -44,7 +44,7 @@ describe('a row of the list', () => {
 
     expect(row.querySelectorAll('.status')).toHaveLength(1);
     expect(row.querySelector('.status')?.textContent).toBe('Modified, not live');
-    expect(within(row).getByText('+2 more').className).toBe('xs faint row-more');
+    expect(within(row).getByText('+2 more').className).toBe('xs faint row-more at-wide');
   });
 
   it('shows the errors of a stored object against the current schema first, with their message', async () => {

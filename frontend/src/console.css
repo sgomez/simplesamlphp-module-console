@@ -366,7 +366,8 @@ a.row:focus-visible{outline-offset:-2px}
 /* phone-width wording (MobileList): both texts render, one shows */
 .at-wide{display:inline}
 .at-narrow{display:none}
-@media (max-width:600px){.at-wide{display:none}.at-narrow{display:inline}.toolbar .seg{display:none}}
+@media (max-width:600px){.at-wide{display:none}.at-narrow{display:inline}.toolbar .seg{display:none}
+  .page-head{align-items:center;gap:12px}.title-block{flex:1 1 auto}}
 
 /* React Aria's rule for pressable elements, which it would otherwise add as a <style> element core's CSP blocks */
 [data-react-aria-pressable]{touch-action:pan-x pan-y pinch-zoom}

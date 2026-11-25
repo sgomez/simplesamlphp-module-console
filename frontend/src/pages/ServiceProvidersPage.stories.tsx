@@ -69,8 +69,14 @@ export const Empty: Story = {
 
 export const FilterMatchesNothing: Story = {
   name: 'Draft: Filter matches nothing',
-  args: { entities: { rows: boardRows.filter((entity) => entity.state === 'Up to date') } },
+  args: { entities: { rows: boardRows.filter((entity) => entity.labels.length === 0) } },
   parameters: { route: `${LIST}?filter=warnings` },
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement);
+
+    await expect(await page.findByRole('heading', { name: 'No service provider matches the filter' })).toBeVisible();
+    await expect(page.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
+  },
 };
 
 export const Unreadable: Story = {

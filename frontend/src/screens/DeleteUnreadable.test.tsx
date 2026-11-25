@@ -56,7 +56,7 @@ describe('deleting an Unreadable object', () => {
     await waitFor(() => expect(screen.queryByText('Unreadable')).toBeNull());
   });
 
-  it('keeps the status column where readable rows have it, and reports a failure below the row', async () => {
+  it('puts Delete… in the slot where readable rows have their chevron, and reports a failure below the row', async () => {
     const unreadable = sp(BAD, { unreadable: true, error: 'The stored document is not valid JSON.' });
     stubApi({
       '/api/session': { body: session },
@@ -68,7 +68,7 @@ describe('deleting an Unreadable object', () => {
     const readable = screen.getByRole('link', { name: (name) => name.includes(ID) });
 
     expect(row.lastElementChild?.className).toBe('row-slot');
-    expect(readable.lastElementChild?.className).toBe('row-slot');
+    expect(readable.lastElementChild?.getAttribute('class')).toBe('row-end');
     expect(row.querySelector('.row-slot button')?.textContent).toBe('Delete…');
 
     fireEvent.click(within(row).getByRole('button', { name: 'Delete…' }));

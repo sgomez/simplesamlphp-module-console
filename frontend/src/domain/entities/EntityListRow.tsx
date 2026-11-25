@@ -23,7 +23,7 @@ function RowNote({ row }: { row: EntityRow }) {
       <Status tone={first.tone} mark={first.mark} {...(first.title === undefined ? {} : { title: first.title })}>
         {first.text}
       </Status>
-      {more !== null && <span className="xs faint row-more">{more}</span>}
+      {more !== null && <span className={cx('xs faint row-more', row.error === null && 'at-wide')}>{more}</span>}
     </div>
   );
 }
@@ -65,9 +65,7 @@ export function EntityListRow({ row }: { row: EntityRow }) {
   return (
     <Row wrap to={editPath(row.entityId)}>
       {content}
-      <div className="row-slot">
-        <ChevronIcon />
-      </div>
+      <ChevronIcon />
     </Row>
   );
 }
