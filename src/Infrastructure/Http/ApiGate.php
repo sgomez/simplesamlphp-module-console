@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace SimpleSAML\Module\console\Infrastructure\Http;
 
 use SimpleSAML\Logger;
-use SimpleSAML\Module;
 use SimpleSAML\Module\console\Domain\DatabaseState;
 use SimpleSAML\Module\console\Domain\SqliteVersion;
 use SimpleSAML\Module\console\Infrastructure\Persistence\DatabaseReading;
@@ -64,11 +63,7 @@ final class ApiGate
             'sqliteVersion' => $status->sqliteVersion,
             'sqliteMinimum' => SqliteVersion::MINIMUM,
             'detail' => $reading->failure,
-            'session' => [
-                'identity' => $this->access->identity(),
-                'adminUrl' => Module::getModuleURL('admin/'),
-                'logoutUrl' => $this->access->logoutUrl(Module::getModuleURL('console/')),
-            ],
+            'session' => $this->access->links(),
         ], 503);
     }
 
