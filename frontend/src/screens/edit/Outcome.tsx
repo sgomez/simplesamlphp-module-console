@@ -1,5 +1,6 @@
-import { PUBLISH } from '../../app/paths';
-import { LinkButton } from '../../components/ui/Button';
+import { plural } from '../../app/counts';
+import { ReviewChanges } from '../../app/ReviewChanges';
+import { failureText } from '../../app/settle';
 import { Callout } from '../../components/ui/Callout';
 
 // What the last save came to; null before any.
@@ -17,15 +18,6 @@ interface OutcomeProps {
   pending: number;
 }
 
-function Review({ count }: { count: number }) {
-  return (
-    <LinkButton small to={PUBLISH}>
-      <span className="dot dot-half" aria-hidden="true" />
-      {`Review ${count} ${count === 1 ? 'change' : 'changes'}`}
-    </LinkButton>
-  );
-}
-
 export function Outcome({ outcome, title, state, pending }: OutcomeProps) {
   switch (outcome?.kind) {
     case 'saved':
@@ -33,12 +25,12 @@ export function Outcome({ outcome, title, state, pending }: OutcomeProps) {
         <Callout
           kind="success"
           title={state === 'Up to date' ? 'Saved.' : 'Saved. Not live yet.'}
-          action={pending > 0 && <Review count={pending} />}
+          action={pending > 0 && <ReviewChanges count={pending} variant="secondary" />}
         />
       );
     case 'invalid':
       return outcome.readable ? (
-        <Callout kind="error" title={`Not saved: ${outcome.count} ${outcome.count === 1 ? 'error' : 'errors'}`} />
+        <Callout kind="error" title={`Not saved: ${plural(outcome.count, 'error', 'errors')}`} />
       ) : (
         <Callout kind="error" title="Not saved: the text could not be read">
           Nothing else is checked until this is fixed.
@@ -51,16 +43,7 @@ export function Outcome({ outcome, title, state, pending }: OutcomeProps) {
         </Callout>
       );
     case 'failed':
-      return (
-        <Callout
-          kind="error"
-          title={
-            outcome.status === 0
-              ? 'Not saved: the Console could not be reached.'
-              : `Not saved: the server answered ${outcome.status}.`
-          }
-        />
-      );
+      return <Callout kind="error" title={failureText('Not saved', outcome.status)} />;
     case undefined:
       return null;
   }

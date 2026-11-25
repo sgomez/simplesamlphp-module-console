@@ -1,9 +1,10 @@
 import type { FormEvent } from 'react';
 import { useSearchParams } from 'react-router';
+import { spListOf } from '../api/paths';
 import type { EntityPage } from '../api/types';
 import type { ApiState } from '../app/useApi';
 import { Page } from '../app/Page';
-import { SP_EDIT, SP_LIST, SP_NEW } from '../app/paths';
+import { SP_LIST, SP_NEW } from '../app/paths';
 import { useApi } from '../app/useApi';
 import { LinkButton } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -34,7 +35,7 @@ function Listing({ result }: { result: EntityPage }) {
     <>
       <Card list>
         {result.rows.map((row) => (
-          <EntityListRow key={row.entityId} row={row} editPath={SP_EDIT} />
+          <EntityListRow key={row.entityId} row={row} />
         ))}
       </Card>
       <Pager result={result} />
@@ -64,7 +65,7 @@ export function ServiceProviders() {
   if (page !== null) {
     search.set('page', page);
   }
-  const answer = useApi<EntityPage>(`${SP_LIST}${search.size > 0 ? `?${search}` : ''}`);
+  const answer = useApi<EntityPage>(spListOf(search));
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

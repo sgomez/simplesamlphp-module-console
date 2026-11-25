@@ -68,6 +68,7 @@ describe('the shell', () => {
     renderAt(LIST);
 
     expect(await screen.findByRole('link', { name: 'Review 1 change' })).toBeDefined();
+    expect(screen.getByLabelText('1 change to publish').textContent).toBe('1');
   });
 
   it('shows no count without Pending changes', async () => {

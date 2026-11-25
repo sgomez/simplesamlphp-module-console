@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { postJson } from '../../api/client';
+import { API } from '../../api/paths';
 import type { EditedEntity, Validation } from '../../api/types';
 import { checkedOf, marksOf } from './marks';
 
-export const VALIDATE_DELAY = 400;
-export const VALIDATE_PATH = '/entities/saml20-sp-remote/validate';
+const VALIDATE_DELAY = 400;
 
 // Checks the text through the API once typing pauses; current holds the text on screen, for answers that arrive late.
 export function useValidation(initial: EditedEntity, text: string, entityId: string) {
@@ -17,7 +17,7 @@ export function useValidation(initial: EditedEntity, text: string, entityId: str
       return;
     }
     const timer = setTimeout(() => {
-      void postJson<Validation>(VALIDATE_PATH, { entityid: entityId, php: text }).then((result) => {
+      void postJson<Validation>(API.spValidate, { entityid: entityId, php: text }).then((result) => {
         if (result.ok && current.current === text) {
           setChecked({ text, marks: marksOf(result.data) });
         }

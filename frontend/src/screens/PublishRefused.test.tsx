@@ -25,9 +25,9 @@ describe('a refused confirming request', () => {
   });
 
   it.each([
-    [0, 'Not published: the Console could not be reached'],
-    [503, 'Not published: the database is not ready'],
-    [415, 'Not published: the server answered 415'],
+    [0, 'Not published: the Console could not be reached.'],
+    [503, 'Not published: the server answered 503.'],
+    [415, 'Not published: the server answered 415.'],
   ])('says why nothing was published after a %i, keeping the screen', async (status, message) => {
     servePublication([ready], { status, body: {} });
     const panel = await shown();
@@ -40,7 +40,7 @@ describe('a refused confirming request', () => {
 
   it('shows no change of the earlier review once a Publication after a move succeeds', async () => {
     const moved = review({ ...ready, groups: ready.groups.slice(0, 1), hash: 'h2' });
-    const fetch = servePublication([ready, review()], { status: 409, body: { error: 'moved', review: moved } });
+    const fetch = servePublication([ready, review()], { status: 409, body: { code: 'moved', review: moved } });
     const panel = await shown();
     fireEvent.click(within(panel).getByRole('button', { name: 'Publish 4 changes' }));
     await screen.findByText('The changes moved while this page was open');

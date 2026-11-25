@@ -51,13 +51,14 @@ final class PublicationController
             return new JsonResponse(['number' => $outcome->number, 'build' => $build === '' ? null : $build]);
         }
 
-        return $outcome->moved
-            ? new JsonResponse(['error' => 'moved', 'review' => $this->review()], 409)
-            : new JsonResponse([
-                'error' => 'blocked',
+        // A new problem found here is a move of the review too (SPEC 10.14): both answer 409 with the current state.
+        return new JsonResponse($outcome->moved
+            ? ['code' => 'moved', 'review' => $this->review()]
+            : [
+                'code' => 'blocked',
                 'problems' => array_map($this->problem(...), $outcome->problems),
                 'review' => $this->review(),
-            ], 422);
+            ], 409);
     }
 
 
@@ -104,35 +105,23 @@ final class PublicationController
 
 
     /**
-     * @return array{entityId: string, loadError: ?string, edit: ?string}
+     * @return array{entityId: string, loadError: ?string, opens: bool}
      */
     private function change(PendingChange $change): array
     {
-        $opens = $change->state !== EntityState::Unreadable && $change->state !== EntityState::Deleted;
-
         return [
             'entityId' => $change->entityId,
             'loadError' => $change->loadError,
-            'edit' => $opens ? self::edit($change->set, $change->entityId) : null,
+            'opens' => $change->state !== EntityState::Unreadable && $change->state !== EntityState::Deleted,
         ];
     }
 
 
     /**
-     * @return array{entityId: ?string, message: string, edit: ?string}
+     * @return array{entityId: ?string, message: string}
      */
     private function problem(PublicationProblem $problem): array
     {
-        return [
-            'entityId' => $problem->entityId,
-            'message' => $problem->message,
-            'edit' => $problem->entityId === null ? null : self::edit('saml20-sp-remote', $problem->entityId),
-        ];
-    }
-
-
-    private static function edit(string $set, string $entityId): string
-    {
-        return '/entities/' . $set . '/edit?entityid=' . rawurlencode($entityId);
+        return ['entityId' => $problem->entityId, 'message' => $problem->message];
     }
 }

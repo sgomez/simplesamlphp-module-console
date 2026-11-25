@@ -69,7 +69,7 @@ it('reports SQLite below 3.24.0 before reading the schema', function (): void {
         9,
         static fn (): string => '3.22.0',
     );
-    $status = $inspector->inspect();
+    $status = $inspector->read()->status;
 
     expect($status->state)->toBe(DatabaseState::SqliteTooOld)
         ->and($status->sqliteVersion)->toBe('3.22.0');

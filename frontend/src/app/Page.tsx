@@ -13,22 +13,19 @@ export type Said = MigrationRun | string | { created: EditedEntity };
 export const ReportOutcome = createContext<(said: Said) => void>(() => undefined);
 
 interface PageProps {
-  wide?: boolean;
-  // The width of a state or failure page.
-  narrow?: boolean;
-  // The width and spacing of the Publish boards.
-  publish?: boolean;
+  // narrow: a state or failure page; publish: the width and spacing of the Publish boards.
+  width?: 'wide' | 'narrow' | 'publish' | undefined;
   bar?: ReactNode;
   children: ReactNode;
 }
 
 // The content of a screen, and the bar that sticks below it.
-export function Page({ wide, narrow, publish, bar, children }: PageProps) {
+export function Page({ width, bar, children }: PageProps) {
   const notice = useContext(PageNotice);
 
   return (
     <>
-      <main className={cx('page', wide && 'page-wide', narrow && 'page-narrow', publish && 'page-publish')}>
+      <main className={cx('page', width && `page-${width}`)}>
         {notice}
         {children}
       </main>

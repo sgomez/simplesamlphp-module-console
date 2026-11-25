@@ -41,14 +41,14 @@ it('answers 409 with the current review, writing nothing, when the Pending chang
     $body = Api::json($response);
 
     expect($response->getStatusCode())->toBe(409)
-        ->and($body['error'])->toBe('moved')
+        ->and($body['code'])->toBe('moved')
         ->and(array_column($body['review']['groups'][0]['changes'], 'entityId'))
             ->toBe(['https://a.example.org', 'https://b.example.org'])
         ->and($body['review']['hash'])->toBe(P::hash($client))
         ->and(P::snapshots($client))->toBe(0);
 });
 
-it('answers 422 with the problems, writing nothing, when a problem blocks the request', function (): void {
+it('answers 409 with the problems, writing nothing, when a new problem blocks the request', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
     P::seed($client, 'https://a.example.org');
     $client->database()->exec("UPDATE console_entity SET document = '{oops'");
@@ -57,8 +57,8 @@ it('answers 422 with the problems, writing nothing, when a problem blocks the re
     $response = P::publish($client, $hash);
     $body = Api::json($response);
 
-    expect($response->getStatusCode())->toBe(422)
-        ->and($body['error'])->toBe('blocked')
+    expect($response->getStatusCode())->toBe(409)
+        ->and($body['code'])->toBe('blocked')
         ->and($body['problems'][0]['entityId'])->toBe('https://a.example.org')
         ->and($body['problems'][0]['message'])->toContain('not valid JSON')
         ->and($body['review']['problems'])->toBe($body['problems'])

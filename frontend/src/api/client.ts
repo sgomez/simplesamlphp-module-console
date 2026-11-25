@@ -6,7 +6,7 @@ export function consoleBase(pathname: string): string {
   return at === -1 ? '' : pathname.slice(0, at + MODULE.length);
 }
 
-export function consoleUrl(path: string): string {
+function consoleUrl(path: string): string {
   return consoleBase(window.location.pathname) + path;
 }
 

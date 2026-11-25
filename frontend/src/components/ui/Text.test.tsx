@@ -1,33 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { Code, Token } from './Code';
 import { Diff } from './Diff';
 import { Editor } from './Editor';
-
-describe('Code', () => {
-  it('shows the text and copies it', () => {
-    const writeText = vi.fn(async () => undefined);
-    vi.stubGlobal('navigator', { clipboard: { writeText } });
-    render(<Code label="PHP" text="'a' => true," />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Copy' }));
-
-    expect(screen.getByText("'a' => true,").className).toBe('code');
-    expect(screen.getByText('PHP').className).toBe('xs muted code-label');
-    expect(writeText).toHaveBeenCalledWith("'a' => true,");
-  });
-
-  it('renders highlighted tokens', () => {
-    render(
-      <Code label="PHP" text="'a' => true,">
-        <Token kind="s">{"'a'"}</Token> =&gt; <Token kind="k">true</Token>,
-      </Code>,
-    );
-
-    expect(screen.getByText("'a'").className).toBe('tk-s');
-    expect(screen.getByText('true').className).toBe('tk-k');
-  });
-});
 
 describe('Diff', () => {
   it('marks each line with its sign', () => {

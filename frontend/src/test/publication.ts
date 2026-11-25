@@ -5,14 +5,15 @@ import { renderAt } from './render';
 
 export const PUBLISH = '/publish';
 export const EDIT_A = '/entities/saml20-sp-remote/edit?entityid=https%3A%2F%2Fa.example.org';
+export const EDIT_M = '/entities/saml20-sp-remote/edit?entityid=https%3A%2F%2Fm.example.org';
 export const CURRENT = { number: 41, createdAt: '2026-11-20 10:15:00' };
 
 export const ready = review({
   groups: [
-    { state: 'Unpublished', changes: [{ entityId: 'https://a.example.org', loadError: null, edit: EDIT_A }] },
-    { state: 'Modified', changes: [{ entityId: 'https://m.example.org', loadError: null, edit: '/m' }] },
-    { state: 'Deleted', changes: [{ entityId: 'https://d.example.org', loadError: null, edit: null }] },
-    { state: 'Unreadable', changes: [{ entityId: 'https://u.example.org', loadError: 'Syntax error', edit: null }] },
+    { state: 'Unpublished', changes: [{ entityId: 'https://a.example.org', loadError: null, opens: true }] },
+    { state: 'Modified', changes: [{ entityId: 'https://m.example.org', loadError: null, opens: true }] },
+    { state: 'Deleted', changes: [{ entityId: 'https://d.example.org', loadError: null, opens: false }] },
+    { state: 'Unreadable', changes: [{ entityId: 'https://u.example.org', loadError: 'Syntax error', opens: false }] },
   ],
   hash: 'h1',
   nextNumber: 42,

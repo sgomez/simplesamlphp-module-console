@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { refusal } from '../test/api';
 import { renderAt } from '../test/render';
@@ -27,13 +27,13 @@ describe('a run the server does not carry out', () => {
 
   it('says so in an error callout for any other answer', async () => {
     serveRun({ status: 500, body: null }, { missing: PENDING });
-    renderAt(LIST);
+    const { container } = renderAt(LIST);
 
     await update();
 
     const alert = await screen.findByRole('alert');
-    expect(alert.querySelector('.callout-title')?.textContent).toBe('Migrations failed');
-    expect(within(alert).getByText('The server answered 500.')).toBeDefined();
+    expect(alert.textContent).toBe('Migrations not run: the server answered 500.');
+    expect(container.querySelector('.state-card')).toBeNull();
     expect((await screen.findByRole('button', { name: 'Update database' })).className).toBe('btn btn-primary');
   });
 
@@ -50,7 +50,6 @@ describe('a run the server does not carry out', () => {
 
     await update();
 
-    const alert = await screen.findByRole('alert');
-    expect(within(alert).getByText('No answer from the server.')).toBeDefined();
+    expect((await screen.findByRole('alert')).textContent).toBe('Migrations not run: the Console could not be reached.');
   });
 });

@@ -1,7 +1,6 @@
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getJson } from '../api/client';
-import { useFailure } from './failure';
-import { refusalOf, ReportRefusal } from './refusals';
+import { useSettle } from './settle';
 
 export type ApiState<T> =
   | { state: 'loading' }
@@ -18,8 +17,7 @@ interface ApiOptions {
 // A 403 or 404 replaces the screen (entityId names the missing object), a 503 shows the state page; a 401 reloads.
 // A new revision asks for the path again and keeps the last answer until the new one arrives.
 export function useApi<T>(path: string, { entityId, revision = 0 }: ApiOptions = {}): ApiState<T> {
-  const fail = useFailure();
-  const refuse = useContext(ReportRefusal);
+  const settle = useSettle();
   const [answer, setAnswer] = useState<{ path: string; state: ApiState<T> } | null>(null);
 
   useEffect(() => {
@@ -33,18 +31,14 @@ export function useApi<T>(path: string, { entityId, revision = 0 }: ApiOptions =
 
         return;
       }
-      fail(result.status, entityId);
       setAnswer({ path, state: { state: 'failed', status: result.status, body: result.body } });
-      const refused = refusalOf(result.status, result.body);
-      if (refused) {
-        refuse(refused);
-      }
+      settle(result, () => undefined, entityId);
     });
 
     return () => {
       live = false;
     };
-  }, [path, entityId, revision, fail, refuse]);
+  }, [path, entityId, revision, settle]);
 
   return answer?.path === path ? answer.state : loading;
 }

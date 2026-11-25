@@ -8,8 +8,6 @@ use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\EntityDb;
 use SimpleSAML\Module\console\Tests\Support\PublishFixtures as P;
 
-const EDIT_A = '/entities/saml20-sp-remote/edit?entityid=https%3A%2F%2Fa.example.org';
-
 it('answers nothing to publish before the first Publication', function (): void {
     $review = Api::get((new ConsoleClient())->loginAsAdmin(), P::PATH);
 
@@ -22,7 +20,7 @@ it('answers nothing to publish before the first Publication', function (): void 
         ->and($review['canPublish'])->toBeFalse();
 });
 
-it('answers the Pending changes grouped by state, each with a link to edit it', function (): void {
+it('answers the Pending changes grouped by state, each saying whether it opens', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
     P::seed($client, 'https://a.example.org');
 
@@ -30,12 +28,12 @@ it('answers the Pending changes grouped by state, each with a link to edit it', 
 
     expect($review['groups'])->toBe([[
         'state' => 'Unpublished',
-        'changes' => [['entityId' => 'https://a.example.org', 'loadError' => null, 'edit' => EDIT_A]],
+        'changes' => [['entityId' => 'https://a.example.org', 'loadError' => null, 'opens' => true]],
     ]])->and($review['canPublish'])->toBeTrue()
         ->and($review['nextNumber'])->toBe(1);
 });
 
-it('answers the problems that block, each naming its entity, and no link for an Unreadable row', function (): void {
+it('answers the problems that block, each naming its entity, and an Unreadable row as not opening', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
     P::seed($client, 'https://a.example.org', ['AssertionConsumerService' => [['Binding' => 'urn:a:b']]]);
     EntityDb::seedUnreadable($client);
@@ -44,15 +42,15 @@ it('answers the problems that block, each naming its entity, and no link for an 
     $unreadable = $review['groups'][1];
 
     expect(array_column($review['problems'], 'entityId'))->toBe(['https://a.example.org', 'https://bad.example.org'])
-        ->and($review['problems'][0]['edit'])->toBe(EDIT_A)
+        ->and(array_keys($review['problems'][0]))->toBe(['entityId', 'message'])
         ->and($review['problems'][1]['message'])->toContain('not valid JSON')
         ->and($unreadable['state'])->toBe('Unreadable')
-        ->and($unreadable['changes'][0]['edit'])->toBeNull()
+        ->and($unreadable['changes'][0]['opens'])->toBeFalse()
         ->and($unreadable['changes'][0]['loadError'])->toContain('not valid JSON')
         ->and($review['canPublish'])->toBeFalse();
 });
 
-it('answers Modified with a link and Deleted without one', function (): void {
+it('answers Modified as opening and Deleted as not', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
     P::seed($client, 'https://a.example.org');
     P::seed($client, 'https://b.example.org');
@@ -64,8 +62,8 @@ it('answers Modified with a link and Deleted without one', function (): void {
     $groups = Api::get($client, P::PATH)['groups'];
 
     expect(array_column($groups, 'state'))->toBe(['Modified', 'Deleted'])
-        ->and($groups[0]['changes'][0]['edit'])->toBe(EDIT_A)
-        ->and($groups[1]['changes'][0]['edit'])->toBeNull();
+        ->and($groups[0]['changes'][0]['opens'])->toBeTrue()
+        ->and($groups[1]['changes'][0]['opens'])->toBeFalse();
 });
 
 it('answers 401 without an admin session', function (): void {

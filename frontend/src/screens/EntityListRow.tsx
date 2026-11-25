@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import type { EntityRow } from '../api/types';
+import { editPath } from '../app/paths';
 import { Button } from '../components/ui/Button';
 import { cx } from '../components/ui/classes';
 import { Eid } from '../components/ui/Eid';
@@ -78,7 +79,7 @@ function UnreadableRow({ row, children }: { row: EntityRow; children: ReactNode 
   );
 }
 
-export function EntityListRow({ row, editPath }: { row: EntityRow; editPath: string }) {
+export function EntityListRow({ row }: { row: EntityRow }) {
   const off = row.labels.some((label) => label.kind === 'disabled');
   const content = (
     <>
@@ -94,7 +95,7 @@ export function EntityListRow({ row, editPath }: { row: EntityRow; editPath: str
   }
 
   return (
-    <Row wrap to={`${editPath}?entityid=${encodeURIComponent(row.entityId)}`}>
+    <Row wrap to={editPath(row.entityId)}>
       {content}
       <div className="row-slot">
         <ChevronIcon />

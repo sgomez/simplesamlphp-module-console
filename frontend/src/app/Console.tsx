@@ -11,7 +11,7 @@ import { PUBLISH } from './paths';
 import { refusalOf, ReportRefusal } from './refusals';
 import { Screens } from './Screens';
 import { Shell } from './Shell';
-import { useApi } from './useApi';
+import type { ApiState } from './useApi';
 
 // A one-shot message and the location it shows at; redirects carry it along, the admin's next move ends it.
 export interface Outcome {
@@ -20,14 +20,18 @@ export interface Outcome {
 }
 
 interface ConsoleProps {
+  session: ApiState<Session>;
   outcome: Outcome | null;
   onOutcome: (said: Said, at: string) => void;
+  // A save or a Publication changed what the session answers.
+  onChange: () => void;
   onMove: (at: string | null) => void;
 }
 
-export function Console({ outcome, onOutcome, onMove }: ConsoleProps) {
-  const [revision, setRevision] = useState(0);
-  const answer = useApi<Session>('/session', { revision });
+export function Console({ session: latest, outcome, onOutcome, onChange, onMove }: ConsoleProps) {
+  // Mounted after an outcome, the session answered before it is stale until the new one arrives.
+  const [stale] = useState(latest);
+  const answer: ApiState<Session> = latest === stale ? { state: 'loading' } : latest;
   const [reported, setReported] = useState<DatabaseRefusal | null>(null);
   const { pathname, search, key } = useLocation();
   const navigation = useNavigationType();
@@ -41,7 +45,6 @@ export function Console({ outcome, onOutcome, onMove }: ConsoleProps) {
   const at = pathname + search;
   const [title, setTitle] = useState<{ at: string; text: string } | null>(null);
   const onTitle = useCallback((text: string) => setTitle({ at, text }), [at]);
-  const changed = useCallback(() => setRevision((n) => n + 1), []);
   const announce = useCallback((said: Said) => onOutcome(said, key), [onOutcome, key]);
   const shown = title?.at === at ? title.text : (new URLSearchParams(search).get('entityid') ?? '');
 
@@ -60,7 +63,7 @@ export function Console({ outcome, onOutcome, onMove }: ConsoleProps) {
 
     return (
       <Shell session={refusal?.session ?? session} pending={pending} crumbs={[...(parent ? [parent] : []), { label: crumb }]}>
-        <Page narrow>
+        <Page width="narrow">
           {message}
           <FailurePage failure={failure} />
         </Page>
@@ -70,17 +73,18 @@ export function Console({ outcome, onOutcome, onMove }: ConsoleProps) {
   if (refusal) {
     return (
       <Shell session={refusal.session} pending={0} crumbs={[{ label: stateCrumb(refusal) }]}>
-        <Page narrow>
+        <Page width="narrow">
           {message}
-          <ReportFailure value={report}>
-            <StatePage
-              refusal={refusal}
-              flush={run !== null}
-              failedAt={run?.outcome === 'Failed' ? (run.failed?.number ?? null) : null}
-              onRun={announce}
-              onRefused={setReported}
-            />
-          </ReportFailure>
+          <ReportRefusal value={setReported}>
+            <ReportFailure value={report}>
+              <StatePage
+                refusal={refusal}
+                flush={run !== null}
+                failedAt={run?.outcome === 'Failed' ? (run.failed?.number ?? null) : null}
+                onRun={announce}
+              />
+            </ReportFailure>
+          </ReportRefusal>
         </Page>
       </Shell>
     );
@@ -102,7 +106,7 @@ export function Console({ outcome, onOutcome, onMove }: ConsoleProps) {
           <ReportRefusal value={setReported}>
             <ReportFailure value={report}>
               <ReportOutcome value={announce}>
-                <Screens pending={pending} onChange={changed} onTitle={onTitle} created={created} />
+                <Screens pending={pending} onChange={onChange} onTitle={onTitle} created={created} />
               </ReportOutcome>
             </ReportFailure>
           </ReportRefusal>

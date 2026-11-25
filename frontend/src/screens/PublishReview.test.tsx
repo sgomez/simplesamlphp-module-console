@@ -1,8 +1,8 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { review } from '../test/api';
-import { CURRENT, EDIT_A, PUBLISH, ready, servePublication, shown } from '../test/publication';
-import { renderAt } from '../test/render';
+import { CURRENT, EDIT_A, EDIT_M, PUBLISH, ready, servePublication, shown } from '../test/publication';
+import { location, renderAt } from '../test/render';
 
 describe('the Publish screen', () => {
   it('says there is nothing to publish and what is live, and offers no Publication', async () => {
@@ -42,11 +42,20 @@ describe('the Publish screen', () => {
 
     expect(rows).toEqual([
       ['A', 'row row-tight', '+', 'Unpublished', 'https://a.example.org', 'Service provider', EDIT_A],
-      ['A', 'row row-tight', '~', 'Modified', 'https://m.example.org', 'Service provider', '/m'],
+      ['A', 'row row-tight', '~', 'Modified', 'https://m.example.org', 'Service provider', EDIT_M],
       ['DIV', 'row row-tight', '×', 'Deleted', 'https://d.example.org', 'Service provider', null],
       ['DIV', 'row row-tight', '!', 'Unreadable', 'https://u.example.org', 'Service provider', null],
     ]);
     expect(within(list).getByText('Syntax error').className).toBe('small muted change-end');
+  });
+
+  it('opens the edit screen of a change inside the Console, without reloading the page', async () => {
+    servePublication([ready]);
+    await shown();
+
+    fireEvent.click(within(document.querySelector('.card-list') as HTMLElement).getAllByRole('link')[1] as HTMLElement);
+
+    expect(location()).toBe(EDIT_M);
   });
 
   it('heads the changes with their count and the Snapshot they are compared with', async () => {

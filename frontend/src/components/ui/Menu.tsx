@@ -3,10 +3,12 @@ import { Button } from './Button';
 import { cx } from './classes';
 import { ChevronDownIcon } from './icons';
 
-export type MenuEntry = { label: string; danger?: boolean; separated?: boolean } & (
-  | { href: string; onSelect?: never }
-  | { onSelect: () => void; href?: never }
-);
+export interface MenuEntry {
+  label: string;
+  onSelect: () => void;
+  danger?: boolean;
+  separated?: boolean;
+}
 
 interface MenuProps {
   entries: readonly MenuEntry[];
@@ -15,22 +17,16 @@ interface MenuProps {
   pop?: boolean;
 }
 
-// A plain list of links and buttons: there is no arrow-key model, so no menu roles.
+// A plain list of buttons: there is no arrow-key model, so no menu roles.
 export function Menu({ entries, id, pop }: MenuProps) {
   return (
     <div id={id} className={cx('card menu', pop ? 'menu-pop' : 'menu-card')}>
-      {entries.map(({ label, href, onSelect, danger, separated }) => (
+      {entries.map(({ label, onSelect, danger, separated }) => (
         <Fragment key={label}>
           {separated && <hr />}
-          {onSelect ? (
-            <button type="button" className={cx('nav-item', danger && 'is-danger')} onClick={onSelect}>
-              {label}
-            </button>
-          ) : (
-            <a className={cx('nav-item', danger && 'is-danger')} href={href}>
-              {label}
-            </a>
-          )}
+          <button type="button" className={cx('nav-item', danger && 'is-danger')} onClick={onSelect}>
+            {label}
+          </button>
         </Fragment>
       ))}
     </div>
@@ -64,18 +60,14 @@ export function MenuButton({ label, entries }: { label: string; entries: readonl
     };
   }, [open]);
 
-  const closing = entries.map((entry) =>
-    entry.onSelect === undefined
-      ? entry
-      : {
-          ...entry,
-          onSelect: () => {
-            setOpen(false);
-            button.current?.focus();
-            entry.onSelect();
-          },
-        },
-  );
+  const closing = entries.map((entry) => ({
+    ...entry,
+    onSelect: () => {
+      setOpen(false);
+      button.current?.focus();
+      entry.onSelect();
+    },
+  }));
 
   return (
     <div className="menu-anchor" ref={anchor}>
