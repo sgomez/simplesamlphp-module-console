@@ -9,13 +9,6 @@ use SimpleSAML\Module\console\Tests\Support\Flash;
 
 const DELETE_PATH = '/entities/saml20-sp-remote/delete';
 
-it('offers Delete with a confirmation text on the edit screen', function (): void {
-    [, $edit] = EntityPages::existing();
-
-    expect($edit)->toContain('data-confirm="')
-        ->and($edit)->toContain('action="' . ConsoleClient::BASE . DELETE_PATH . '"');
-});
-
 it('deletes the entity, writing a delete row without a document, and leaves a message', function (): void {
     [$client, $edit] = EntityPages::existing();
 

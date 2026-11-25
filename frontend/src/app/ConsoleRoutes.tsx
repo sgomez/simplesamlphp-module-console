@@ -1,25 +1,18 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router';
-import type { DatabaseRefusal, MigrationRun, Session } from '../api/types';
+import type { DatabaseRefusal, MigrationRun } from '../api/types';
+import { EditServiceProvider } from '../screens/edit/EditServiceProvider';
 import { RunMessage } from '../screens/RunMessage';
 import { ServiceProviders } from '../screens/ServiceProviders';
 import { StatePage, stateCrumb } from '../screens/StatePage';
-import { FailurePage, failureTrail, ReportFailure, useFailure, type Failure } from './failure';
-import { SP_LIST } from './paths';
+import { FailurePage, failureTrail, ReportFailure, type Failure } from './failure';
+import { Page, PageNotice } from './Page';
+import { crumbsOf } from './crumbs';
+import { SP_EDIT, SP_LIST } from './paths';
 import { refusalOf, ReportRefusal } from './refusals';
 import { Shell } from './Shell';
-import { useApi } from './useApi';
-
-const crumbs: Record<string, string> = { [SP_LIST]: 'Service providers' };
-
-function Unknown() {
-  const fail = useFailure();
-  useLayoutEffect(() => {
-    fail(404);
-  }, [fail]);
-
-  return null;
-}
+import { Unknown } from './Unknown';
+import { useSession } from './useSession';
 
 // The outcome of Run migrations and the location it is shown at; redirects carry it along, the admin's next move ends it.
 interface Outcome {
@@ -34,15 +27,21 @@ interface ConsoleProps {
 }
 
 function Console({ outcome, onRun, onMove }: ConsoleProps) {
-  const answer = useApi<Session>('/session');
+  const [revision, setRevision] = useState(0);
+  const answer = useSession(revision);
   const [reported, setReported] = useState<DatabaseRefusal | null>(null);
-  const { pathname, key } = useLocation();
+  const { pathname, search, key } = useLocation();
   const navigation = useNavigationType();
   const [failed, setFailed] = useState<{ key: string; failure: Failure } | null>(null);
   const report = useCallback((failure: Failure) => setFailed({ key, failure }), [key]);
   const failure = failed?.key === key ? failed.failure : null;
   const refusal = reported ?? (answer.state === 'failed' ? refusalOf(answer.status, answer.body) : null);
   const run = outcome !== null && (outcome.at === key || navigation === 'REPLACE') ? outcome.run : null;
+  const at = pathname + search;
+  const [title, setTitle] = useState<{ at: string; text: string } | null>(null);
+  const onTitle = useCallback((text: string) => setTitle({ at, text }), [at]);
+  const onSaved = useCallback(() => setRevision((n) => n + 1), []);
+  const shown = title?.at === at ? title.text : (new URLSearchParams(search).get('entityid') ?? '');
 
   useEffect(() => {
     if (outcome !== null && outcome.at !== key) {
@@ -58,43 +57,52 @@ function Console({ outcome, onRun, onMove }: ConsoleProps) {
     const { crumb, parent } = failureTrail(failure);
 
     return (
-      <Shell session={refusal?.session ?? session} pending={pending} crumb={crumb} parent={parent} narrow>
-        {message}
-        <FailurePage failure={failure} />
+      <Shell session={refusal?.session ?? session} pending={pending} crumbs={[...(parent ? [parent] : []), { label: crumb }]}>
+        <Page narrow>
+          {message}
+          <FailurePage failure={failure} />
+        </Page>
       </Shell>
     );
   }
   if (refusal) {
     return (
-      <Shell session={refusal.session} pending={0} crumb={stateCrumb(refusal)} narrow>
-        {message}
-        <ReportFailure value={report}>
-          <StatePage
-            refusal={refusal}
-            flush={run !== null}
-            failedAt={run?.outcome === 'Failed' ? (run.failed?.number ?? null) : null}
-            onRun={(done) => onRun(done, key)}
-            onRefused={setReported}
-          />
-        </ReportFailure>
+      <Shell session={refusal.session} pending={0} crumbs={[{ label: stateCrumb(refusal) }]}>
+        <Page narrow>
+          {message}
+          <ReportFailure value={report}>
+            <StatePage
+              refusal={refusal}
+              flush={run !== null}
+              failedAt={run?.outcome === 'Failed' ? (run.failed?.number ?? null) : null}
+              onRun={(done) => onRun(done, key)}
+              onRefused={setReported}
+            />
+          </ReportFailure>
+        </Page>
       </Shell>
     );
   }
 
   // The screen waits for the state check, so it never shows before the state page that replaces it.
   return (
-    <Shell session={session} pending={pending} crumb={crumbs[pathname]}>
-      {message}
+    <Shell session={session} pending={pending} crumbs={crumbsOf(pathname, shown)}>
       {answer.state !== 'loading' && (
-        <ReportRefusal value={setReported}>
-          <ReportFailure value={report}>
-            <Routes>
-              <Route index element={<Navigate to={SP_LIST} replace />} />
-              <Route path={SP_LIST} element={<ServiceProviders />} />
-              <Route path="*" element={<Unknown />} />
-            </Routes>
-          </ReportFailure>
-        </ReportRefusal>
+        <PageNotice value={message}>
+          <ReportRefusal value={setReported}>
+            <ReportFailure value={report}>
+              <Routes>
+                <Route index element={<Navigate to={SP_LIST} replace />} />
+                <Route path={SP_LIST} element={<ServiceProviders />} />
+                <Route
+                  path={SP_EDIT}
+                  element={<EditServiceProvider pending={pending} onSaved={onSaved} onTitle={onTitle} />}
+                />
+                <Route path="*" element={<Unknown />} />
+              </Routes>
+            </ReportFailure>
+          </ReportRefusal>
+        </PageNotice>
       )}
     </Shell>
   );

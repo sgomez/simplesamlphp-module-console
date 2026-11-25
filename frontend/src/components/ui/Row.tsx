@@ -5,13 +5,13 @@ import { cx } from './classes';
 type RowTarget =
   | { to: string; href?: never; plain?: never }
   | { href: string; to?: never; plain?: never }
-  | { plain: true; to?: never; href?: never };
+  | { plain: true; to?: never; href?: never; as?: 'div' | 'li' };
 
-type RowProps = RowTarget & { wrap?: boolean; children: ReactNode };
+type RowProps = RowTarget & { wrap?: boolean; className?: string; children: ReactNode };
 
 export function Row(props: RowProps) {
   const { wrap, children } = props;
-  const className = cx('row', wrap && 'row-wrap');
+  const className = cx('row', wrap && 'row-wrap', props.className);
   if (props.to !== undefined) {
     return (
       <Link className={className} to={props.to}>
@@ -27,5 +27,7 @@ export function Row(props: RowProps) {
     );
   }
 
-  return <div className={className}>{children}</div>;
+  const Tag = props.as ?? 'div';
+
+  return <Tag className={className}>{children}</Tag>;
 }

@@ -27,7 +27,14 @@ it('answers every screen path with the shell', function (string $path): void {
         ->and($html)->toContain('<meta name="viewport" content="width=device-width, initial-scale=1">')
         ->and($html)->toContain('assets/img/favicon.svg')
         ->and($html)->toMatch('~<body>\s*</body>~');
-})->with(['/', '/entities/saml20-sp-remote', '/entities/saml20-sp-remote?q=a&page=2', '/entities/nonsense', '/x/y']);
+})->with([
+    '/',
+    '/entities/saml20-sp-remote',
+    '/entities/saml20-sp-remote?q=a&page=2',
+    '/entities/saml20-sp-remote/edit?entityid=https%3A%2F%2Fsp.example.org',
+    '/entities/nonsense',
+    '/x/y',
+]);
 
 it('carries the request-forgery token of the session in a meta element', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();

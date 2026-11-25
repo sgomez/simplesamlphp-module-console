@@ -38,4 +38,15 @@ describe('useApi', () => {
     expect(result.current).toEqual({ state: 'loading' });
     await waitFor(() => expect(result.current).toEqual({ state: 'ready', data: 'b' }));
   });
+
+  it('asks again for a new revision of the same path', async () => {
+    let n = 0;
+    stubApi({ '/api/a': () => ({ body: (n += 1) }) });
+    const { result, rerender } = renderHook(({ revision }) => useApi('/a', { revision }), { initialProps: { revision: 0 } });
+    await waitFor(() => expect(result.current).toEqual({ state: 'ready', data: 1 }));
+
+    rerender({ revision: 1 });
+
+    await waitFor(() => expect(result.current).toEqual({ state: 'ready', data: 2 }));
+  });
 });

@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { DatabaseRefusal, EntityPage, EntityRow, Session } from '../api/types';
+import type { DatabaseRefusal, EditedEntity, EntityPage, EntityRow, Refusal, Session, Validation } from '../api/types';
 
 type Answer = { status?: number; body: unknown };
 
@@ -52,4 +52,41 @@ export function refusal(more: Partial<DatabaseRefusal> = {}): Answer {
   };
 
   return { status: 503, body };
+}
+
+export const EDIT = '/entities/saml20-sp-remote/edit?entityid=https%3A%2F%2Fsp.example.org';
+export const ENTITY = '/api/entities/saml20-sp-remote/entity';
+export const SAVE = '/api/entities/saml20-sp-remote/save';
+export const VALIDATE = '/api/entities/saml20-sp-remote/validate';
+export const PHP = "$metadata['https://sp.example.org'] = [\n    'name' => 'Example',\n];";
+
+export function entity(more: Partial<EditedEntity> = {}): EditedEntity {
+  return {
+    entityId: 'https://sp.example.org',
+    name: 'Example',
+    version: 1,
+    state: 'Unpublished',
+    unreadable: false,
+    error: null,
+    php: PHP,
+    warnings: [],
+    notices: [],
+    ...more,
+  };
+}
+
+export function saveRefusal(more: Partial<Refusal> = {}): Refusal {
+  return { errors: [], notices: [], readable: true, ...more };
+}
+
+export function validation(more: Partial<Validation> = {}): Validation {
+  return { ...saveRefusal(), warnings: [], ...more };
+}
+
+// The body of the n-th POST to a path.
+export function posted(fetch: ReturnType<typeof stubApi>, path: string, n = 0): unknown {
+  const calls = fetch.mock.calls.filter(([input]) => String(input) === path);
+  const init = calls[n]?.[1];
+
+  return init?.body === undefined ? undefined : JSON.parse(String(init.body));
 }

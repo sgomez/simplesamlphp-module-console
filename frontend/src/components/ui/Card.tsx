@@ -1,6 +1,13 @@
 import type { ReactNode } from 'react';
 import { cx } from './classes';
 
-export function Card({ list, children }: { list?: boolean; children: ReactNode }) {
-  return <div className={cx('card', list && 'card-list')}>{children}</div>;
+interface CardProps {
+  list?: boolean;
+  as?: 'div' | 'ul';
+  className?: string;
+  children: ReactNode;
+}
+
+export function Card({ list, as: Tag = 'div', className, children }: CardProps) {
+  return <Tag className={cx('card', list && 'card-list', className)}>{children}</Tag>;
 }

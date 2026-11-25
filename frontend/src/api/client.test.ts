@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { getJson } from './client';
+import { getJson, postJson } from './client';
 
 function answer(response: Response | Error) {
   vi.stubGlobal(
@@ -62,5 +62,30 @@ describe('the API client', () => {
     answer(new TypeError('Failed to fetch'));
 
     expect(await getJson('/session')).toEqual({ ok: false, status: 0, body: null });
+  });
+
+  it('posts JSON with the session token of the page shell and answers the status and body of a refusal', async () => {
+    const meta = document.createElement('meta');
+    meta.name = 'console-token';
+    meta.content = 'abc';
+    document.head.append(meta);
+    answer(new Response('{"errors":[]}', { status: 422 }));
+
+    const result = await postJson('/entities/saml20-sp-remote/save', { php: 'x' });
+    const [url, init] = vi.mocked(fetch).mock.calls[0] ?? [];
+    meta.remove();
+
+    expect(result).toEqual({ ok: false, status: 422, body: { errors: [] } });
+    expect(url).toBe('/api/entities/saml20-sp-remote/save');
+    expect(init?.method).toBe('POST');
+    expect(init?.body).toBe('{"php":"x"}');
+    expect(new Headers(init?.headers).get('X-Console-Token')).toBe('abc');
+    expect(new Headers(init?.headers).get('Content-Type')).toBe('application/json');
+  });
+
+  it('answers a network failure of a POST with status 0', async () => {
+    answer(new TypeError('Failed to fetch'));
+
+    expect(await postJson('/x', {})).toEqual({ ok: false, status: 0, body: null });
   });
 });

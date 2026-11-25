@@ -13,7 +13,6 @@ use SimpleSAML\Module\console\Domain\Entity\ValidationError;
 use SimpleSAML\Module\console\Infrastructure\Core\CoreCertificateFiles;
 use SimpleSAML\Module\console\Infrastructure\Http\AdminAccess;
 use SimpleSAML\Module\console\Infrastructure\Http\EntityEditView;
-use SimpleSAML\Module\console\Infrastructure\Http\EntityWarnings;
 use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
 use SimpleSAML\Module\console\Infrastructure\Http\RequestGate;
 use SimpleSAML\Module\console\Infrastructure\Persistence\Repositories;
@@ -21,19 +20,17 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * The create of the Twig add screen; edits go through the API.
+ */
 final class EntitySaveController
 {
-    private const string CHANGED = 'This service provider changed meanwhile. Your edits were not saved; '
-        . 'this is how it stands now.';
-
-
     public function __construct(
         private readonly RequestGate $gate,
         private readonly AdminAccess $access,
         private readonly EntityEditView $view,
         private readonly Repositories $repositories,
         private readonly FlashMessage $flash,
-        private readonly EntityWarnings $warnings,
     ) {
     }
 
@@ -46,18 +43,13 @@ final class EntitySaveController
         }
         $entityId = (string) $request->request->get('entityid', '');
         $text = (string) $request->request->get('php', '');
-        $version = $request->request->has('version') ? $request->request->getInt('version') : null;
         $save = new SaveEntity($this->repositories->entities(), new SpRemote(new CoreCertificateFiles()));
-        $identity = $this->access->identity();
-        $result = $version === null
-            ? $save->create($entityId, $text, $identity)
-            : $save->edit($entityId, $version, $text, $identity);
+        $result = $save->create($entityId, $text, $this->access->identity());
 
         return match ($result->outcome) {
             SaveOutcome::Saved => $this->saved($result),
-            SaveOutcome::Invalid => $this->view->render($entityId, $version, $text, $result->errors, 422),
-            SaveOutcome::AlreadyExists => $this->exists($entityId, $text),
-            SaveOutcome::Conflict => $this->conflict($set, $entityId),
+            SaveOutcome::Invalid => $this->view->render($entityId, null, $text, $result->errors, 422),
+            SaveOutcome::AlreadyExists, SaveOutcome::Conflict => $this->exists($entityId, $text),
         };
     }
 
@@ -80,26 +72,6 @@ final class EntitySaveController
             [new ValidationError('', 'An entity with this entity ID already exists.')],
             422,
             ['existingUrl' => $this->editUrl($entityId)],
-        );
-    }
-
-
-    private function conflict(string $set, string $entityId): Response
-    {
-        $entity = $this->repositories->entities()->find($set, $entityId);
-        if ($entity === null || $entity->document === null) {
-            $this->flash->put('The service provider no longer exists.');
-
-            return new RedirectResponse(Module::getModuleURL('console/entities/' . $set));
-        }
-
-        return $this->view->render(
-            $entityId,
-            $entity->version,
-            (new SpRemote())->toText($entityId, $entity->document),
-            [],
-            409,
-            ['message' => self::CHANGED, 'warnings' => $this->warnings->of($entityId, $entity->document)],
         );
     }
 

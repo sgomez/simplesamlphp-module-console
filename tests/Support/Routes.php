@@ -9,11 +9,33 @@ use Symfony\Component\Yaml\Yaml;
 final class Routes
 {
     /**
-     * The path of every route that accepts POST, keyed by route name.
+     * The path of every form route that accepts POST, keyed by route name.
      *
      * @return array<string, array{string}>
      */
     public static function post(): array
+    {
+        return array_filter(self::all(), static fn (array $path): bool => !str_starts_with($path[0], '/api/'));
+    }
+
+
+    /**
+     * The path below api/ of every API route that accepts POST, keyed by route name.
+     *
+     * @return array<string, array{string}>
+     */
+    public static function apiPost(): array
+    {
+        $api = array_filter(self::all(), static fn (array $path): bool => str_starts_with($path[0], '/api/'));
+
+        return array_map(static fn (array $path): array => [substr($path[0], 4)], $api);
+    }
+
+
+    /**
+     * @return array<string, array{string}>
+     */
+    private static function all(): array
     {
         $routes = Yaml::parseFile(dirname(__DIR__, 2) . '/routing/routes/routes.yaml');
         $paths = [];
