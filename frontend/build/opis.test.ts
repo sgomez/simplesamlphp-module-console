@@ -85,6 +85,11 @@ describe('the rewrite refuses', () => {
     ['a reference outside $defs', { $ref: '#/properties/a' }, 'does not point to a $defs entry'],
     ['an $error that is not a map of messages', { $error: 'm' }, '$error maps keywords to messages'],
     ['propertyNames that is not a schema object', { propertyNames: false }, 'propertyNames must be a schema object'],
+    [
+      'a $defs entry named like the ones it adds',
+      { $defs: { opis1: { type: 'string' } }, type: 'string', enum: ['a'], minLength: 1 },
+      'The $defs entry opis1 is reserved',
+    ],
   ])('%s', (_, schema, message) => {
     expect(() => rewrite(split(schema) as Record<string, unknown>)).toThrow(message);
   });

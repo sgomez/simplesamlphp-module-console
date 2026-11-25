@@ -1,0 +1,60 @@
+{
+  "SingleSignOnService": [
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:SOAP",
+      "Location": "https://idp.example.org/soap"
+    },
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+      "Location": "https://idp.example.org/sso"
+    }
+  ],
+  "SingleLogoutService": [
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+      "Location": "https://idp.example.org/slo",
+      "ResponseLocation": "https://idp.example.org/slo-response"
+    }
+  ],
+  "certificates": [
+    {
+      "pem": "@PEM@",
+      "use": "encryption"
+    },
+    {
+      "pem": "@PEM@",
+      "use": "both"
+    }
+  ],
+  "name": {
+    "en": "Example IdP",
+    "pt-BR": "IdP de exemplo"
+  },
+  "UIInfo": {
+    "DisplayName": {
+      "en": "Example"
+    },
+    "Keywords": {
+      "en": ["example", "test"]
+    },
+    "Logo": [
+      {
+        "url": "https://idp.example.org/logo.png",
+        "width": 80,
+        "height": 60,
+        "lang": "en"
+      }
+    ]
+  },
+  "DiscoHints": {
+    "IPHint": ["192.0.2.0/24"],
+    "DomainHint": ["example.org"]
+  },
+  "hide.from.discovery": false,
+  "AuthnContextComparison": "minimum",
+  "NameIDFormats": ["urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"],
+  "RegistrationInfo": {
+    "authority": "https://federation.example.org",
+    "instant": "2026-11-24T10:15:00Z"
+  }
+}

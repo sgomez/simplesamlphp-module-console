@@ -1,6 +1,6 @@
-// opis's date-time: the time zone is optional and the date must exist.
+// opis's date-time: the time zone is optional, the date must exist, and PHP's $ allows a final newline.
 const DATE_TIME =
-  /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)([01][0-9]|2[0-3]):([0-5][0-9]))?$/i;
+  /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(Z|(\+|-)([01][0-9]|2[0-3]):([0-5][0-9]))?\n?$/i;
 
 function dateTime(value: string): boolean {
   const match = DATE_TIME.exec(value);

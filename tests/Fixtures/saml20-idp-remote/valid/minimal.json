@@ -1,0 +1,14 @@
+{
+  "SingleSignOnService": [
+    {
+      "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+      "Location": "https://idp.example.org/sso"
+    }
+  ],
+  "certificates": [
+    {
+      "pem": "@PEM@",
+      "use": "signing"
+    }
+  ]
+}

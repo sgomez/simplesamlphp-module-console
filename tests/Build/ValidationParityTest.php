@@ -11,12 +11,22 @@ it('keeps the opis results the front end compares its validators with up to date
 });
 
 it('holds every valid and invalid fixture of every set that has fixtures', function (): void {
-    $fixtures = array_map(
+    $fixtures = dirname(__DIR__) . '/Fixtures';
+    $expected = [];
+    foreach (['saml20-sp-remote', 'saml20-idp-remote', 'saml20-idp-hosted'] as $set) {
+        foreach (glob($fixtures . '/' . $set . '/valid/*.json') ?: [] as $file) {
+            $expected[] = $set . ':valid/' . basename($file, '.json');
+        }
+        $invalid = json_decode((string) file_get_contents($fixtures . '/' . $set . '/invalid.json'), true);
+        foreach ($invalid as $case) {
+            $expected[] = $set . ':invalid/' . $case['name'];
+        }
+    }
+
+    $cases = array_map(
         static fn (array $case): string => $case['set'] . ':' . $case['fixture'],
         ValidationParity::cases(),
     );
 
-    expect($fixtures)->toContain('saml20-sp-remote:valid/minimal')
-        ->and($fixtures)->toContain('saml20-sp-remote:invalid/a binding that is not a URI')
-        ->and($fixtures)->toHaveCount(4 + 32);
+    expect($cases)->toEqualCanonicalizing($expected);
 });

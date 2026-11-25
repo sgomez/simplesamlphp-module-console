@@ -7,7 +7,7 @@ type SchemaObject = { [keyword: string]: unknown };
 const ANNOTATIONS = ['title', 'description', 'examples', 'default', '$comment', '$schema'];
 
 const BEFORE = ['type', 'const', 'enum', 'format'];
-const AFTER = ['if', 'then', 'else', 'anyOf', 'allOf', 'oneOf', 'not', '$ref'];
+const AFTER = ['if', 'then', 'else', 'allOf', 'not', '$ref'];
 const TYPED: Record<string, string[]> = {
   string: ['minLength', 'maxLength', 'pattern'],
   number: ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf'],
@@ -104,6 +104,9 @@ export function rewrite(root: SchemaObject): SchemaObject {
   // A schema used twice is compiled once, behind a reference.
   const shared = (schema: Schema): Schema => {
     const name = `opis${Object.keys(hoisted).length + 1}`;
+    if (isObject(root.$defs) && name in root.$defs) {
+      throw new Error(`The $defs entry ${name} is reserved for the rewrite`);
+    }
     hoisted[name] = schema;
 
     return { $ref: `#/$defs/${name}` };

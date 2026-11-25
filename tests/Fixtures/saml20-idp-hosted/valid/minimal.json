@@ -1,0 +1,11 @@
+{
+  "host": "idp.example.org",
+  "auth": "example-userpass",
+  "key": {
+    "privatekey": "idp.key",
+    "certificate": {
+      "source": "file",
+      "file": "idp.crt"
+    }
+  }
+}

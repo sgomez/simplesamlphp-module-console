@@ -5,7 +5,7 @@ import { equal, ucs2length } from './runtime';
 const dateTime = formats['date-time'];
 
 describe('the date-time format, as opis reads it', () => {
-  it.each(['2026-11-24T10:15:00Z', '2026-11-24T10:15:00', '2026-11-24t10:15:00.5+01:00', '2024-02-29T00:00:60Z'])(
+  it.each(['2026-11-24T10:15:00Z', '2026-11-24T10:15:00Z\n', '2026-11-24T10:15:00', '2026-11-24t10:15:00.5+01:00', '2024-02-29T00:00:60Z'])(
     'accepts %s',
     (value) => {
       expect(dateTime(value)).toBe(true);

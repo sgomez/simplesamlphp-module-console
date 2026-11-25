@@ -1,5 +1,684 @@
 [
     {
+        "set": "saml20-idp-hosted",
+        "fixture": "valid/metadata",
+        "document": {
+            "host": "__DEFAULT__",
+            "auth": "example-userpass",
+            "key": {
+                "privatekey": "idp.key",
+                "privatekey_pass": "secret",
+                "certificate": {
+                    "source": "pasted",
+                    "pem": "-----BEGIN CERTIFICATE-----\nMIIBhzCCAS2gAwIBAgIUMYEkNMi2NmvWJcijz7C1Wzf7h54wCgYIKoZIzj0EAwIw\nGTEXMBUGA1UEAwwOc3AuZXhhbXBsZS5uZXQwHhcNMjYxMTI0MTcyMjE2WhcNMzYx\nMTIxMTcyMjE2WjAZMRcwFQYDVQQDDA5zcC5leGFtcGxlLm5ldDBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABL5aDkN3KKoUJchTdDxewZnowahYEtAuvn4AfbuJkb0B\nMfrtUMNHH/Y26bDjzG7jchaiITeVgFXXRTUi5GioQlmjUzBRMB0GA1UdDgQWBBS9\nIItIMsk7y1gj8HMyVd4Cp+2GnjAfBgNVHSMEGDAWgBS9IItIMsk7y1gj8HMyVd4C\np+2GnjAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIGu2NI6cNouL\ny5AiMpn/sPyJkcy5k8DPVxxEiEl3OesAAiEAz3wRjEQ1803SAamlbJi/PUcrLeiD\nFXKk3jf+vjPF13Y=\n-----END CERTIFICATE-----\n"
+                },
+                "key_name": "current"
+            },
+            "https_certificate": {
+                "source": "file",
+                "file": "https.crt"
+            },
+            "SingleSignOnService": {
+                "Bindings": [
+                    "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+                ]
+            },
+            "logouttype": "iframe",
+            "OrganizationName": {
+                "en": "Example"
+            },
+            "OrganizationURL": {
+                "en": "https://example.org"
+            },
+            "metadata.sign.enable": true,
+            "metadata.sign.algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+            "metadata_sign_key": {
+                "privatekey": "metadata.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "metadata.crt"
+                }
+            }
+        },
+        "errors": []
+    },
+    {
+        "set": "saml20-idp-hosted",
+        "fixture": "valid/minimal",
+        "document": {
+            "host": "idp.example.org",
+            "auth": "example-userpass",
+            "key": {
+                "privatekey": "idp.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "idp.crt"
+                }
+            }
+        },
+        "errors": []
+    },
+    {
+        "set": "saml20-idp-hosted",
+        "fixture": "invalid/a metadata signature algorithm without metadata signing",
+        "document": {
+            "host": "idp.example.org",
+            "auth": "a",
+            "key": {
+                "privatekey": "idp.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "idp.crt"
+                }
+            },
+            "metadata.sign.algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
+        },
+        "errors": [
+            {
+                "pointer": "",
+                "message": "The required properties (metadata.sign.enable) are missing"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-hosted",
+        "fixture": "invalid/metadata signing settings with metadata signing off",
+        "document": {
+            "host": "idp.example.org",
+            "auth": "a",
+            "key": {
+                "privatekey": "idp.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "idp.crt"
+                }
+            },
+            "metadata.sign.enable": false,
+            "metadata.sign.algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+            "metadata_sign_key": {
+                "privatekey": "m.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "m.crt"
+                }
+            }
+        },
+        "errors": [
+            {
+                "pointer": "/metadata.sign.enable",
+                "message": "The data must match the const value"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-hosted",
+        "fixture": "invalid/an organization name without its URL",
+        "document": {
+            "host": "idp.example.org",
+            "auth": "a",
+            "key": {
+                "privatekey": "idp.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "idp.crt"
+                }
+            },
+            "OrganizationName": {
+                "en": "Example"
+            }
+        },
+        "errors": [
+            {
+                "pointer": "",
+                "message": "'OrganizationURL' property is required by 'OrganizationName' property"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-hosted",
+        "fixture": "invalid/a binding listed twice",
+        "document": {
+            "host": "idp.example.org",
+            "auth": "a",
+            "key": {
+                "privatekey": "idp.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "idp.crt"
+                }
+            },
+            "SingleSignOnService": {
+                "Bindings": [
+                    "urn:oasis:names:tc:SAML:2.0:bindings:SOAP",
+                    "urn:oasis:names:tc:SAML:2.0:bindings:SOAP"
+                ]
+            }
+        },
+        "errors": [
+            {
+                "pointer": "/SingleSignOnService/Bindings",
+                "message": "Array must have unique items"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-hosted",
+        "fixture": "invalid/an endpoint without bindings",
+        "document": {
+            "host": "idp.example.org",
+            "auth": "a",
+            "key": {
+                "privatekey": "idp.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "idp.crt"
+                }
+            },
+            "SingleLogoutService": {
+                "Location": "https://idp.example.org/slo",
+                "Bindings": []
+            }
+        },
+        "errors": [
+            {
+                "pointer": "/SingleLogoutService/Bindings",
+                "message": "Array should have at least 1 items, 0 found"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-hosted",
+        "fixture": "invalid/a signing key without its certificate",
+        "document": {
+            "host": "idp.example.org",
+            "auth": "a",
+            "key": {
+                "privatekey": "idp.key"
+            }
+        },
+        "errors": [
+            {
+                "pointer": "/key",
+                "message": "'certificate' property is required by 'privatekey' property"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-hosted",
+        "fixture": "invalid/an HTTPS certificate from a file without the file",
+        "document": {
+            "host": "idp.example.org",
+            "auth": "a",
+            "key": {
+                "privatekey": "idp.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "idp.crt"
+                }
+            },
+            "https_certificate": {
+                "source": "file",
+                "pem": "x"
+            }
+        },
+        "errors": [
+            {
+                "pointer": "/https_certificate",
+                "message": "The required properties (file) are missing"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-hosted",
+        "fixture": "invalid/several faults at once",
+        "document": {
+            "key": {
+                "privatekey": "idp.key",
+                "certificate": {
+                    "source": "elsewhere"
+                }
+            },
+            "logouttype": "popup",
+            "errorURL": "",
+            "saml20.ecp": "yes",
+            "assertion.lifetime": 0,
+            "OrganizationName": {
+                "English!": "X",
+                "Spanish!": "Y"
+            },
+            "metadata_sign_key": {
+                "privatekey": "m.key",
+                "certificate": {
+                    "source": "file",
+                    "file": "m.crt"
+                }
+            },
+            "metadata.sign.algorithm": "md5",
+            "bogus": 1
+        },
+        "errors": [
+            {
+                "pointer": "",
+                "message": "'OrganizationURL' property is required by 'OrganizationName' property"
+            },
+            {
+                "pointer": "",
+                "message": "Additional object properties are not allowed: bogus"
+            },
+            {
+                "pointer": "",
+                "message": "The required properties (host, auth) are missing"
+            },
+            {
+                "pointer": "",
+                "message": "The required properties (metadata.sign.enable) are missing"
+            },
+            {
+                "pointer": "/OrganizationName",
+                "message": "A language is a code such as en, es or pt-BR."
+            },
+            {
+                "pointer": "/assertion.lifetime",
+                "message": "Number must be greater than or equal to 1"
+            },
+            {
+                "pointer": "/errorURL",
+                "message": "Minimum string length is 1, found 0"
+            },
+            {
+                "pointer": "/key/certificate/source",
+                "message": "The data should match one item from enum"
+            },
+            {
+                "pointer": "/logouttype",
+                "message": "The data should match one item from enum"
+            },
+            {
+                "pointer": "/metadata.sign.algorithm",
+                "message": "The data should match one item from enum"
+            },
+            {
+                "pointer": "/saml20.ecp",
+                "message": "The data (string) must match the type: boolean"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "valid/discovery",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:SOAP",
+                    "Location": "https://idp.example.org/soap"
+                },
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+                    "Location": "https://idp.example.org/sso"
+                }
+            ],
+            "SingleLogoutService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    "Location": "https://idp.example.org/slo",
+                    "ResponseLocation": "https://idp.example.org/slo-response"
+                }
+            ],
+            "certificates": [
+                {
+                    "pem": "-----BEGIN CERTIFICATE-----\nMIIBhzCCAS2gAwIBAgIUMYEkNMi2NmvWJcijz7C1Wzf7h54wCgYIKoZIzj0EAwIw\nGTEXMBUGA1UEAwwOc3AuZXhhbXBsZS5uZXQwHhcNMjYxMTI0MTcyMjE2WhcNMzYx\nMTIxMTcyMjE2WjAZMRcwFQYDVQQDDA5zcC5leGFtcGxlLm5ldDBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABL5aDkN3KKoUJchTdDxewZnowahYEtAuvn4AfbuJkb0B\nMfrtUMNHH/Y26bDjzG7jchaiITeVgFXXRTUi5GioQlmjUzBRMB0GA1UdDgQWBBS9\nIItIMsk7y1gj8HMyVd4Cp+2GnjAfBgNVHSMEGDAWgBS9IItIMsk7y1gj8HMyVd4C\np+2GnjAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIGu2NI6cNouL\ny5AiMpn/sPyJkcy5k8DPVxxEiEl3OesAAiEAz3wRjEQ1803SAamlbJi/PUcrLeiD\nFXKk3jf+vjPF13Y=\n-----END CERTIFICATE-----\n",
+                    "use": "encryption"
+                },
+                {
+                    "pem": "-----BEGIN CERTIFICATE-----\nMIIBhzCCAS2gAwIBAgIUMYEkNMi2NmvWJcijz7C1Wzf7h54wCgYIKoZIzj0EAwIw\nGTEXMBUGA1UEAwwOc3AuZXhhbXBsZS5uZXQwHhcNMjYxMTI0MTcyMjE2WhcNMzYx\nMTIxMTcyMjE2WjAZMRcwFQYDVQQDDA5zcC5leGFtcGxlLm5ldDBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABL5aDkN3KKoUJchTdDxewZnowahYEtAuvn4AfbuJkb0B\nMfrtUMNHH/Y26bDjzG7jchaiITeVgFXXRTUi5GioQlmjUzBRMB0GA1UdDgQWBBS9\nIItIMsk7y1gj8HMyVd4Cp+2GnjAfBgNVHSMEGDAWgBS9IItIMsk7y1gj8HMyVd4C\np+2GnjAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIGu2NI6cNouL\ny5AiMpn/sPyJkcy5k8DPVxxEiEl3OesAAiEAz3wRjEQ1803SAamlbJi/PUcrLeiD\nFXKk3jf+vjPF13Y=\n-----END CERTIFICATE-----\n",
+                    "use": "both"
+                }
+            ],
+            "name": {
+                "en": "Example IdP",
+                "pt-BR": "IdP de exemplo"
+            },
+            "UIInfo": {
+                "DisplayName": {
+                    "en": "Example"
+                },
+                "Keywords": {
+                    "en": [
+                        "example",
+                        "test"
+                    ]
+                },
+                "Logo": [
+                    {
+                        "url": "https://idp.example.org/logo.png",
+                        "width": 80,
+                        "height": 60,
+                        "lang": "en"
+                    }
+                ]
+            },
+            "DiscoHints": {
+                "IPHint": [
+                    "192.0.2.0/24"
+                ],
+                "DomainHint": [
+                    "example.org"
+                ]
+            },
+            "hide.from.discovery": false,
+            "AuthnContextComparison": "minimum",
+            "NameIDFormats": [
+                "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+            ],
+            "RegistrationInfo": {
+                "authority": "https://federation.example.org",
+                "instant": "2026-11-24T10:15:00Z"
+            }
+        },
+        "errors": []
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "valid/minimal",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    "Location": "https://idp.example.org/sso"
+                }
+            ],
+            "certificates": [
+                {
+                    "pem": "-----BEGIN CERTIFICATE-----\nMIIBhzCCAS2gAwIBAgIUMYEkNMi2NmvWJcijz7C1Wzf7h54wCgYIKoZIzj0EAwIw\nGTEXMBUGA1UEAwwOc3AuZXhhbXBsZS5uZXQwHhcNMjYxMTI0MTcyMjE2WhcNMzYx\nMTIxMTcyMjE2WjAZMRcwFQYDVQQDDA5zcC5leGFtcGxlLm5ldDBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABL5aDkN3KKoUJchTdDxewZnowahYEtAuvn4AfbuJkb0B\nMfrtUMNHH/Y26bDjzG7jchaiITeVgFXXRTUi5GioQlmjUzBRMB0GA1UdDgQWBBS9\nIItIMsk7y1gj8HMyVd4Cp+2GnjAfBgNVHSMEGDAWgBS9IItIMsk7y1gj8HMyVd4C\np+2GnjAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIGu2NI6cNouL\ny5AiMpn/sPyJkcy5k8DPVxxEiEl3OesAAiEAz3wRjEQ1803SAamlbJi/PUcrLeiD\nFXKk3jf+vjPF13Y=\n-----END CERTIFICATE-----\n",
+                    "use": "signing"
+                }
+            ]
+        },
+        "errors": []
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "invalid/no certificate for signing",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    "Location": "https://idp.example.org/sso"
+                }
+            ],
+            "certificates": [
+                {
+                    "pem": "x",
+                    "use": "encryption"
+                }
+            ]
+        },
+        "errors": [
+            {
+                "pointer": "/certificates",
+                "message": "At least one certificate is for signing."
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "invalid/an empty list of certificates",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    "Location": "https://idp.example.org/sso"
+                }
+            ],
+            "certificates": []
+        },
+        "errors": [
+            {
+                "pointer": "/certificates",
+                "message": "Array should have at least 1 items, 0 found"
+            },
+            {
+                "pointer": "/certificates",
+                "message": "At least one certificate is for signing."
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "invalid/no single sign-on service with a binding core uses",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:SOAP",
+                    "Location": "https://idp.example.org/soap"
+                }
+            ],
+            "certificates": [
+                {
+                    "pem": "x",
+                    "use": "signing"
+                }
+            ]
+        },
+        "errors": [
+            {
+                "pointer": "/SingleSignOnService",
+                "message": "At least one endpoint needs a binding SimpleSAMLphp uses for this service."
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "invalid/a single sign-on service with a location that is not http or https",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:SOAP",
+                    "Location": "ftp://idp.example.org/sso"
+                }
+            ],
+            "certificates": [
+                {
+                    "pem": "x",
+                    "use": "signing"
+                }
+            ]
+        },
+        "errors": [
+            {
+                "pointer": "/SingleSignOnService/0/Location",
+                "message": "An absolute http or https URL."
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "invalid/display names in languages that are not codes",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    "Location": "https://idp.example.org/sso"
+                }
+            ],
+            "certificates": [
+                {
+                    "pem": "x",
+                    "use": "signing"
+                }
+            ],
+            "UIInfo": {
+                "DisplayName": {
+                    "en": "X",
+                    "English!": "X",
+                    "Spanish!": "Y"
+                }
+            }
+        },
+        "errors": [
+            {
+                "pointer": "/UIInfo/DisplayName",
+                "message": "A language is a code such as en, es or pt-BR."
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "invalid/keywords with an empty list",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    "Location": "https://idp.example.org/sso"
+                }
+            ],
+            "certificates": [
+                {
+                    "pem": "x",
+                    "use": "signing"
+                }
+            ],
+            "UIInfo": {
+                "Keywords": {
+                    "en": []
+                }
+            }
+        },
+        "errors": [
+            {
+                "pointer": "/UIInfo/Keywords/en",
+                "message": "Array should have at least 1 items, 0 found"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "invalid/discovery hints with an empty list",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    "Location": "https://idp.example.org/sso"
+                }
+            ],
+            "certificates": [
+                {
+                    "pem": "x",
+                    "use": "signing"
+                }
+            ],
+            "DiscoHints": {
+                "IPHint": []
+            }
+        },
+        "errors": [
+            {
+                "pointer": "/DiscoHints/IPHint",
+                "message": "Array should have at least 1 items, 0 found"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "invalid/a signing key without its certificate",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
+                    "Location": "https://idp.example.org/sso"
+                }
+            ],
+            "certificates": [
+                {
+                    "pem": "x",
+                    "use": "signing"
+                }
+            ],
+            "signature_key": {
+                "privatekey": "sp.key"
+            }
+        },
+        "errors": [
+            {
+                "pointer": "/signature_key",
+                "message": "'certificate' property is required by 'privatekey' property"
+            }
+        ]
+    },
+    {
+        "set": "saml20-idp-remote",
+        "fixture": "invalid/several faults at once",
+        "document": {
+            "SingleSignOnService": [
+                {
+                    "Binding": "not a uri",
+                    "Location": "ftp://idp.example.org/sso"
+                },
+                {
+                    "Location": "https://idp.example.org/sso"
+                }
+            ],
+            "hide.from.discovery": "yes",
+            "AuthnContextComparison": "best",
+            "ProxyCount": -1,
+            "contacts": [
+                {
+                    "contactType": "boss",
+                    "telephoneNumber": [
+                        ""
+                    ]
+                }
+            ],
+            "bogus": 1,
+            "other": [
+                1
+            ]
+        },
+        "errors": [
+            {
+                "pointer": "",
+                "message": "Additional object properties are not allowed: bogus, other"
+            },
+            {
+                "pointer": "",
+                "message": "The required properties (certificates) are missing"
+            },
+            {
+                "pointer": "/AuthnContextComparison",
+                "message": "The data should match one item from enum"
+            },
+            {
+                "pointer": "/ProxyCount",
+                "message": "Number must be greater than or equal to 0"
+            },
+            {
+                "pointer": "/SingleSignOnService/0/Binding",
+                "message": "An absolute URI."
+            },
+            {
+                "pointer": "/SingleSignOnService/0/Location",
+                "message": "An absolute http or https URL."
+            },
+            {
+                "pointer": "/SingleSignOnService/1",
+                "message": "The required properties (Binding) are missing"
+            },
+            {
+                "pointer": "/contacts/0/contactType",
+                "message": "The data should match one item from enum"
+            },
+            {
+                "pointer": "/contacts/0/telephoneNumber/0",
+                "message": "Minimum string length is 1, found 0"
+            },
+            {
+                "pointer": "/hide.from.discovery",
+                "message": "The data (string) must match the type: boolean"
+            }
+        ]
+    },
+    {
         "set": "saml20-sp-remote",
         "fixture": "valid/description",
         "document": {
