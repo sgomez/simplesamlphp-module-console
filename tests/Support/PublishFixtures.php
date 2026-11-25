@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class PublishFixtures
 {
-    public const string PATH = '/publish';
+    public const string PATH = '/publication';
 
     public const array VALID = ['AssertionConsumerService' => [[
         'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
@@ -26,16 +26,29 @@ final class PublishFixtures
     }
 
 
-    /**
-     * Submits the confirmation screen the given HTML came from.
-     */
-    public static function publish(ConsoleClient $client, string $html, string $comment = ''): Response
+    public static function hash(ConsoleClient $client): string
     {
-        return $client->post(self::PATH, [
-            '_token' => EntityPages::field($html, '_token'),
-            'hash' => EntityPages::field($html, 'hash'),
-            'comment' => $comment,
-        ]);
+        return (string) Api::get($client, self::PATH)['hash'];
+    }
+
+
+    /**
+     * Sends the confirming request, with the hash of the screen as it stands unless another one is given.
+     */
+    public static function publish(ConsoleClient $client, ?string $hash = null, string $comment = ''): Response
+    {
+        $body = ['hash' => $hash ?? self::hash($client), 'comment' => $comment];
+
+        return self::send($client, (string) json_encode($body));
+    }
+
+
+    public static function send(ConsoleClient $client, string $body): Response
+    {
+        return $client->api('POST', self::PATH, [
+            'HTTP_X_CONSOLE_TOKEN' => Shell::token($client->page()),
+            'CONTENT_TYPE' => 'application/json',
+        ], $body);
     }
 
 
@@ -47,9 +60,6 @@ final class PublishFixtures
 
     public static function delete(ConsoleClient $client, string $entityId): void
     {
-        $client->post('/entities/saml20-sp-remote/delete', [
-            '_token' => EntityPages::field($client->page(EntityPages::NEW), '_token'),
-            'entityid' => $entityId,
-        ]);
+        EntityApi::delete($client, $entityId);
     }
 }

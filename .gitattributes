@@ -1,4 +1,7 @@
-/docs export-ignore
+/docs/adr export-ignore
+/docs/agents export-ignore
+/docs/spec/ddl export-ignore
+/docs/spec/examples export-ignore
 /tests export-ignore
 /tools export-ignore
 /.github export-ignore
@@ -14,3 +17,11 @@
 /AGENTS.md export-ignore
 /docker-compose.yml export-ignore
 /docker export-ignore
+/frontend export-ignore
+/node_modules export-ignore
+/package.json export-ignore
+/package-lock.json export-ignore
+/.nvmrc export-ignore
+/vite.config.ts export-ignore
+/tsconfig.json export-ignore
+/eslint.config.js export-ignore

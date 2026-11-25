@@ -19,4 +19,9 @@ composer test       # Pest suite
 composer static     # PHPStan, PHP_CodeSniffer, file size
 composer coverage   # line coverage, at least 90 %
 composer mutate     # mutation score on src/Domain, at least 85 %
+composer build      # build the front end into public/assets/app/ (committed)
+composer dev        # local environment with the Vite development server
+npm run lint        # ESLint
+npm run typecheck   # tsc
+npm test            # Vitest with coverage
 ```

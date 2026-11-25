@@ -20,7 +20,7 @@ final class Helpers
 
     public static function inspect(DatabaseSettings $settings, int $known = 9): DatabaseState
     {
-        return (new StateInspector(new ConnectionFactory(), $settings, $known))->inspect()->state;
+        return (new StateInspector(new ConnectionFactory(), $settings, $known))->read()->status->state;
     }
 
 
@@ -33,14 +33,5 @@ final class Helpers
         Configuration::clearInternalState();
         Configuration::setPreLoadedConfig(Configuration::loadFromArray($core), 'config.php');
         Configuration::setPreLoadedConfig(Configuration::loadFromArray($module ?? []), 'module_console.php');
-    }
-
-
-    public static function assertShellWithoutCounts(string $html): void
-    {
-        expect($html)->toContain('data-identity')
-            ->and($html)->toContain('class="shell-side"')
-            ->and($html)->not->toContain('Pending changes')
-            ->and($html)->not->toContain('data-pending-count');
     }
 }

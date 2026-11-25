@@ -29,7 +29,21 @@ it('builds the dev node on php:8.4-apache with its own database, waiting for a h
         ->and($dev['depends_on']['mariadb']['condition'])->toBe('service_healthy')
         ->and(LocalEnvironment::devFile('Dockerfile'))->toContain('FROM php:8.4-apache')
         ->and(LocalEnvironment::devFile('config/config.php'))->toContain('dbname=console_dev')
-        ->and(LocalEnvironment::devFile('config/config.php'))->toContain("'baseurlpath' => 'http://localhost");
+        ->and(LocalEnvironment::devFile('config/config.php'))->toContain("'baseurlpath' => '/simplesaml/'")
+        ->and(LocalEnvironment::devFile('config/module_console.php'))->toContain("'dev_server' => true");
+});
+
+it('puts a Vite service on the pinned Node version in front of the dev node', function (): void {
+    $services = LocalEnvironment::compose()['services'];
+    $vite = $services['vite'];
+    $node = trim(LocalEnvironment::read('.nvmrc'));
+
+    expect($vite['profiles'])->toBe(['dev'])
+        ->and($vite['image'])->toStartWith('node:' . $node . '-')
+        ->and($vite['ports'])->toBe(['5173:5173'])
+        ->and($vite['environment']['CONSOLE_DEV_UPSTREAM'])->toBe('http://simplesamlphp')
+        ->and($vite['depends_on']['simplesamlphp']['condition'])->toBe('service_healthy')
+        ->and($services['simplesamlphp']['healthcheck']['test'])->not->toBeEmpty();
 });
 
 it('lists the Console Snapshot first in metadata.sources of the dev node', function (): void {

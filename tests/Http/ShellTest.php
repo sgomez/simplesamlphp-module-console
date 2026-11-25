@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
-use SimpleSAML\Module\console\Tests\Support\Redirects;
+use SimpleSAML\Module\console\Tests\Support\Shell;
 
 it('does not render the shell for a visitor without the admin login', function (): void {
     $script = escapeshellarg(__DIR__ . '/../Support/visit-without-login.php');
@@ -11,78 +11,68 @@ it('does not render the shell for a visitor without the admin login', function (
 
     expect($output)->toContain('You were redirected to')
         ->and($output)->toContain('/module.php/core/loginuserpass')
-        ->and($output)->not->toContain('data-identity');
+        ->and($output)->not->toContain('console-token');
 });
 
-it('renders the shell for an administrator', function (): void {
-    $client = (new ConsoleClient())->loginAsAdmin();
-    $response = Redirects::follow($client, $client->get('/'));
+it('answers every screen path with the shell', function (string $path): void {
+    $response = (new ConsoleClient())->loginAsAdmin()->get($path);
     $html = ConsoleClient::body($response);
 
     expect($response->getStatusCode())->toBe(200)
         ->and($html)->toContain('<html lang="en" dir="ltr">')
-        ->and($html)->toContain('name="robots"')
-        ->and($html)->toContain('name="viewport"')
-        ->and($html)->not->toContain('assets/base/');
-});
-
-it('loads only the module stylesheet and script', function (): void {
-    $html = (new ConsoleClient())->loginAsAdmin()->page();
-
-    preg_match_all('/<link[^>]+rel="stylesheet"[^>]*>/', $html, $styles);
-    preg_match_all('/<script[^>]*>/', $html, $scripts);
-
-    expect($styles[0])->toHaveCount(1)
-        ->and($styles[0][0])->toContain('assets/css/console.css')
-        ->and($scripts[0])->toHaveCount(1)
-        ->and($scripts[0][0])->toContain('assets/js/console.js');
-});
-
-it('uses system font stacks only', function (): void {
-    $css = (string) file_get_contents(dirname(__DIR__, 2) . '/public/assets/css/console.css');
-
-    expect($css)->toContain('system-ui')
-        ->and($css)->toContain('ui-monospace')
-        ->and($css)->not->toContain('@font-face')
-        ->and($css)->not->toContain('url(http');
-});
-
-it('has the two fixed links to core at the foot of the sidebar', function (): void {
-    $html = (new ConsoleClient())->loginAsAdmin()->page();
-
-    expect($html)->toContain('href="http://localhost/simplesaml/module.php/admin/"')
-        ->and($html)->toContain('/module.php/core/logout/admin');
-});
-
-it('shows the constant admin identity when useridattr is unset', function (): void {
-    $html = (new ConsoleClient())->loginAsAdmin(['uid' => ['alice']])->page();
-
-    expect($html)->toContain('data-identity>admin<');
-});
-
-it('shows the first value of useridattr', function (): void {
-    $client = (new ConsoleClient())
-        ->withModuleConfig(['useridattr' => 'uid'])
-        ->loginAsAdmin(['uid' => ['alice', 'bob']]);
-
-    expect($client->page())->toContain('data-identity>alice<');
-});
-
-it('falls back to admin when the useridattr attribute is missing or empty', function (array $attributes): void {
-    $client = (new ConsoleClient())
-        ->withModuleConfig(['useridattr' => 'uid'])
-        ->loginAsAdmin($attributes);
-
-    expect($client->page())->toContain('data-identity>admin<');
+        ->and($html)->toContain('<title>Console</title>')
+        ->and($html)->toContain('<meta name="robots" content="noindex, nofollow">')
+        ->and($html)->toContain('<meta name="viewport" content="width=device-width, initial-scale=1">')
+        ->and($html)->toContain('assets/img/favicon.svg')
+        ->and($html)->toMatch('~<body>\s*</body>~');
 })->with([
-    'missing' => [[]],
-    'empty' => [['uid' => []]],
-    'blank' => [['uid' => ['']]],
+    '/',
+    '/publish',
+    '/entities/saml20-sp-remote',
+    '/entities/saml20-sp-remote?q=a&page=2',
+    '/entities/saml20-sp-remote/new',
+    '/entities/saml20-sp-remote/edit?entityid=https%3A%2F%2Fsp.example.org',
+    '/entities/nonsense',
+    '/x/y',
 ]);
 
-it('passes the default Content Security Policy', function (): void {
+it('carries the request-forgery token of the session in a meta element', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
-    $response = Redirects::follow($client, $client->get('/'));
+    $first = Shell::token($client->page());
+
+    expect($first)->toMatch('/^[0-9a-f]{64}$/')->and(Shell::token($client->page('/entities/saml20-sp-remote')))
+        ->toBe($first);
+});
+
+it('references only the entry script and the stylesheet named by the manifest', function (): void {
+    $html = (new ConsoleClient())->loginAsAdmin()->page();
+    $manifest = Shell::manifest();
+    $base = ConsoleClient::BASE . '/assets/app/';
+
+    expect(Shell::scripts($html))->toBe([$base . $manifest['src/main.tsx']['file']])
+        ->and(Shell::stylesheets($html))->toBe([$base . $manifest['src/console.css']['file']])
+        ->and($html)->not->toContain('assets/base/')
+        ->and($html)->not->toContain('assets/css/');
+});
+
+it('references the Vite development server on the same origin when dev_server is set', function (): void {
+    $html = (new ConsoleClient())->withModuleConfig(['dev_server' => true])->loginAsAdmin()->page();
+    $base = ConsoleClient::BASE . '/assets/app/';
+
+    expect(Shell::scripts($html))->toBe([$base . '@vite/client', $base . 'dev/refresh.ts', $base . 'src/main.tsx'])
+        ->and(Shell::stylesheets($html))->toBe([$base . 'src/console.css']);
+});
+
+it('leaves the paths under api and assets to their own handlers', function (): void {
+    $client = (new ConsoleClient())->loginAsAdmin();
+    $asset = $client->get('/assets/app/.vite/manifest.json');
+
+    expect($asset->headers->get('Content-Type'))->toBe('application/json')
+        ->and(fn () => $client->get('/api/nonsense'))->toThrow(SimpleSAML\Error\NotFound::class);
+});
+
+it('passes the default Content Security Policy', function (array $config): void {
+    $response = (new ConsoleClient())->withModuleConfig($config)->loginAsAdmin()->get('/');
     $html = ConsoleClient::body($response);
 
     expect($response->headers->get('Content-Security-Policy'))->toContain("script-src 'self'")
@@ -90,5 +80,14 @@ it('passes the default Content Security Policy', function (): void {
         ->and($html)->not->toContain('<style')
         ->and($html)->not->toMatch('/\sstyle\s*=/')
         ->and($html)->not->toMatch('/\son[a-z]+\s*=/')
-        ->and($html)->not->toMatch('~(?:src|href)="https?://(?!localhost/)~');
+        ->and($html)->not->toMatch('~(?:src|href|content)="https?://(?!localhost/)~');
+})->with(['built files' => [[]], 'development server' => [['dev_server' => true]]]);
+
+it('ships a stylesheet with system font stacks only', function (): void {
+    $css = (string) file_get_contents(Shell::BUILD . Shell::manifest()['src/console.css']['file']);
+
+    expect($css)->toContain('system-ui')
+        ->and($css)->toContain('ui-monospace')
+        ->and($css)->not->toContain('@font-face')
+        ->and($css)->not->toContain('url(');
 });

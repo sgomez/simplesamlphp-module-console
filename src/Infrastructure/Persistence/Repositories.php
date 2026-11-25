@@ -34,6 +34,17 @@ final class Repositories
     }
 
 
+    /**
+     * @return array{number: int, createdAt: ?string}|null
+     */
+    public function currentSnapshot(): ?array
+    {
+        $settings = ModuleConfig::database();
+
+        return (new PublicationReader((new ConnectionFactory())->open($settings), $settings->prefix))->current();
+    }
+
+
     public function publication(): Publication
     {
         $settings = ModuleConfig::database();

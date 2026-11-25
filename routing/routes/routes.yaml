@@ -1,74 +1,85 @@
 ---
 
-console-home:
-  path: /
+console-api-session:
+  path: /api/session
   defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\HomeController::main'
+    _controller: 'SimpleSAML\Module\console\Controller\Api\SessionController::show'
   }
   methods: [GET]
 
-console-migrate:
-  path: /migrate
+console-api-entities:
+  path: /api/entities/{set}
   defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\MigrateController::run'
-  }
-  methods: [POST]
-
-console-entity-list:
-  path: /entities/{set}
-  defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\EntityListController::list'
+    _controller: 'SimpleSAML\Module\console\Controller\Api\EntityListController::list'
   }
   requirements:
     set: saml20-sp-remote
   methods: [GET]
 
-console-entity-new:
-  path: /entities/{set}/new
+console-api-entity:
+  path: /api/entities/{set}/entity
   defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\EntityEditController::add'
+    _controller: 'SimpleSAML\Module\console\Controller\Api\EntityController::show'
   }
   requirements:
     set: saml20-sp-remote
   methods: [GET]
 
-console-entity-edit:
-  path: /entities/{set}/edit
+console-api-entity-save:
+  path: /api/entities/{set}/save
   defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\EntityEditController::edit'
-  }
-  requirements:
-    set: saml20-sp-remote
-  methods: [GET]
-
-console-entity-save:
-  path: /entities/{set}/save
-  defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\EntitySaveController::save'
+    _controller: 'SimpleSAML\Module\console\Controller\Api\EntitySaveController::save'
   }
   requirements:
     set: saml20-sp-remote
   methods: [POST]
 
-console-publish:
-  path: /publish
+console-api-entity-validate:
+  path: /api/entities/{set}/validate
   defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\PublishController::review'
-  }
-  methods: [GET]
-
-console-publish-confirm:
-  path: /publish
-  defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\PublishController::publish'
-  }
-  methods: [POST]
-
-console-entity-delete:
-  path: /entities/{set}/delete
-  defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\EntityDeleteController::delete'
+    _controller: 'SimpleSAML\Module\console\Controller\Api\EntityValidateController::validate'
   }
   requirements:
     set: saml20-sp-remote
   methods: [POST]
+
+console-api-publication:
+  path: /api/publication
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\Api\PublicationController::show'
+  }
+  methods: [GET]
+
+console-api-publication-confirm:
+  path: /api/publication
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\Api\PublicationController::publish'
+  }
+  methods: [POST]
+
+console-api-entity-delete:
+  path: /api/entities/{set}/delete
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\Api\EntityDeleteController::delete'
+  }
+  requirements:
+    set: saml20-sp-remote
+  methods: [POST]
+
+console-api-migrate:
+  path: /api/migrate
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\Api\MigrateController::run'
+  }
+  methods: [POST]
+
+# Last: every other GET that is not under api/ or assets/ is a screen of the client router.
+console-shell:
+  path: /{path}
+  defaults: {
+    _controller: 'SimpleSAML\Module\console\Controller\ShellController::show',
+    path: ''
+  }
+  requirements:
+    path: '(?!api(?:/|$)|assets/).*'
+  methods: [GET]
