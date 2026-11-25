@@ -3,34 +3,29 @@ import { describe, expect, it, vi } from 'vitest';
 import { Menu, MenuButton } from './Menu';
 
 describe('Menu', () => {
-  it('lists its entries, a separated danger entry last', () => {
+  it('lists links and actions, a separated danger entry last, with no menu roles', () => {
+    const onSelect = vi.fn();
     const { container } = render(
       <Menu
-        label="More actions"
         entries={[
-          { label: 'Replace from…', href: '/replace' },
-          { label: 'Delete…', href: '/delete', danger: true, separated: true },
+          { label: 'Download', href: '/download' },
+          { label: 'Delete…', onSelect, danger: true, separated: true },
         ]}
       />,
     );
 
-    expect(screen.getByRole('menu', { name: 'More actions' }).className).toBe('card menu menu-card');
-    expect(screen.getByRole('menuitem', { name: 'Replace from…' }).className).toBe('nav-item');
-    expect(screen.getByRole('menuitem', { name: 'Delete…' }).className).toBe('nav-item is-danger');
+    expect(container.firstElementChild?.className).toBe('card menu menu-card');
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(screen.queryByRole('menuitem')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Download' }).className).toBe('nav-item');
+    const action = screen.getByRole('button', { name: 'Delete…' });
+    expect(action.className).toBe('nav-item is-danger');
+    expect(action.getAttribute('type')).toBe('button');
     expect(container.querySelectorAll('hr')).toHaveLength(1);
-  });
 
-  it('runs an action entry instead of following a link', () => {
-    const onSelect = vi.fn();
-    render(<Menu label="More actions" entries={[{ label: 'Delete…', onSelect, danger: true }]} />);
-
-    const item = screen.getByRole('menuitem', { name: 'Delete…' });
-    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
-    fireEvent(item, click);
+    fireEvent.click(action);
 
     expect(onSelect).toHaveBeenCalledOnce();
-    expect(click.defaultPrevented).toBe(true);
-    expect(item.className).toBe('nav-item is-danger');
   });
 });
 
@@ -48,49 +43,66 @@ describe('MenuButton', () => {
     return screen.getByRole('button', { name: 'More actions' });
   }
 
-  it('opens its menu below the button and closes it again', () => {
+  function popup() {
+    return document.querySelector('.menu-pop');
+  }
+
+  it('discloses its entries below the button and hides them again', () => {
     more();
 
-    expect(opener().getAttribute('aria-haspopup')).toBe('menu');
+    expect(opener().hasAttribute('aria-haspopup')).toBe(false);
     expect(opener().getAttribute('aria-expanded')).toBe('false');
-    expect(screen.queryByRole('menu')).toBeNull();
+    expect(popup()).toBeNull();
 
     fireEvent.click(opener());
 
     expect(opener().getAttribute('aria-expanded')).toBe('true');
     expect(opener().className).toBe('btn btn-secondary');
-    expect(screen.getByRole('menu', { name: 'More actions' }).className).toBe('card menu menu-pop');
+    expect(popup()?.className).toBe('card menu menu-pop');
+    expect(opener().getAttribute('aria-controls')).toBe(popup()?.id);
     expect(opener().parentElement?.className).toBe('menu-anchor');
 
     fireEvent.click(opener());
 
-    expect(screen.queryByRole('menu')).toBeNull();
+    expect(popup()).toBeNull();
   });
 
-  it('closes after an entry is chosen', () => {
-    const onSelect = vi.fn();
-    more(onSelect);
+  it('closes after an entry is chosen and hands the focus back to the button first', () => {
+    let focused: Element | null = null;
+    more(
+      vi.fn(() => {
+        focused = document.activeElement;
+      }),
+    );
     fireEvent.click(opener());
 
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete…' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete…' }));
 
-    expect(onSelect).toHaveBeenCalledOnce();
-    expect(screen.queryByRole('menu')).toBeNull();
+    expect(focused).toBe(opener());
+    expect(popup()).toBeNull();
   });
 
-  it('closes on Escape and on a press outside it, not on a press inside it', () => {
+  it('closes on Escape with the focus back on the button', () => {
+    more();
+    fireEvent.click(opener());
+    screen.getByRole('button', { name: 'Delete…' }).focus();
+
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(popup()).not.toBeNull();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(popup()).toBeNull();
+    expect(document.activeElement).toBe(opener());
+  });
+
+  it('closes on a press outside it, not on a press inside it', () => {
     more();
     fireEvent.click(opener());
 
-    fireEvent.pointerDown(screen.getByRole('menuitem', { name: 'Delete…' }));
-    fireEvent.keyDown(document, { key: 'Tab' });
-    expect(screen.getByRole('menu')).toBeDefined();
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Delete…' }));
+    expect(popup()).not.toBeNull();
 
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(screen.queryByRole('menu')).toBeNull();
-
-    fireEvent.click(opener());
     fireEvent.pointerDown(screen.getByText('Elsewhere'));
-    expect(screen.queryByRole('menu')).toBeNull();
+    expect(popup()).toBeNull();
   });
 });

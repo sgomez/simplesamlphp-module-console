@@ -58,19 +58,23 @@ function RowNote({ row }: { row: EntityRow }) {
   );
 }
 
-// Deleting it keeps the admin on the page and search the list is at.
+// Deleting it keeps the admin on the page and search the list is at; a failure shows below the row.
 function UnreadableRow({ row, children }: { row: EntityRow; children: ReactNode }) {
   const { pathname, search } = useLocation();
   const deletion = useDeleteEntity(row, pathname + search);
 
   return (
-    <Row wrap plain>
-      {children}
-      <Button variant="danger" small onClick={deletion.ask}>
-        Delete…
-      </Button>
+    <>
+      <Row wrap plain>
+        {children}
+        <div className="row-slot">
+          <Button variant="danger" small onClick={deletion.ask}>
+            Delete…
+          </Button>
+        </div>
+      </Row>
       {deletion.element}
-    </Row>
+    </>
   );
 }
 
@@ -92,7 +96,9 @@ export function EntityListRow({ row, editPath }: { row: EntityRow; editPath: str
   return (
     <Row wrap to={`${editPath}?entityid=${encodeURIComponent(row.entityId)}`}>
       {content}
-      <ChevronIcon />
+      <div className="row-slot">
+        <ChevronIcon />
+      </div>
     </Row>
   );
 }

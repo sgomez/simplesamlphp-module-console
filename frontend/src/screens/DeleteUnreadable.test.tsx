@@ -20,7 +20,7 @@ describe('deleting an Unreadable object', () => {
     await screen.findByRole('alert');
 
     chooseDelete();
-    confirmDelete(ID);
+    confirmDelete(null);
 
     await deletedMessage();
     expect(posted(fetch, DELETE)).toEqual({ entityid: ID });
@@ -48,11 +48,35 @@ describe('deleting an Unreadable object', () => {
 
     fireEvent.click(offer);
     const dialog = screen.getByRole('dialog', { name: `Delete ${BAD}?` });
-    fireEvent.click(within(dialog).getByRole('button', { name: `Delete ${BAD}` }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
 
     await deletedMessage();
     expect(posted(fetch, DELETE)).toEqual({ entityid: BAD });
     expect(location()).toBe(`${LIST}?q=example`);
     await waitFor(() => expect(screen.queryByText('Unreadable')).toBeNull());
+  });
+
+  it('keeps the status column where readable rows have it, and reports a failure below the row', async () => {
+    const unreadable = sp(BAD, { unreadable: true, error: 'The stored document is not valid JSON.' });
+    stubApi({
+      '/api/session': { body: session },
+      [`/api${LIST}`]: { body: page([unreadable, sp(ID)]) },
+      [DELETE]: { status: 500, body: {} },
+    });
+    renderAt(LIST);
+    const row = (await screen.findByText('Unreadable')).closest('.row') as HTMLElement;
+    const readable = screen.getByRole('link', { name: new RegExp(ID) });
+
+    expect(row.lastElementChild?.className).toBe('row-slot');
+    expect(readable.lastElementChild?.className).toBe('row-slot');
+    expect(row.querySelector('.row-slot button')?.textContent).toBe('Delete…');
+
+    fireEvent.click(within(row).getByRole('button', { name: 'Delete…' }));
+    confirmDelete(null);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toBe('Not deleted: the server answered 500.');
+    expect(alert.closest('.row')).toBeNull();
+    expect(row.nextElementSibling).toBe(alert);
   });
 });

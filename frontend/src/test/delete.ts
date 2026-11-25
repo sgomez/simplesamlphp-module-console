@@ -20,11 +20,12 @@ export function withDialogs() {
 
 export function chooseDelete() {
   fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
-  fireEvent.click(screen.getByRole('menuitem', { name: 'Delete…' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Delete…' }));
 }
 
-export function confirmDelete(name: string) {
-  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: `Delete ${name}` }));
+// The confirming button: "Delete <name>", or "Delete" when only the entity ID is known.
+export function confirmDelete(name: string | null) {
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: name === null ? 'Delete' : `Delete ${name}` }));
 }
 
 export async function deletedMessage() {

@@ -5,6 +5,10 @@ declare(strict_types=1);
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\Routes;
 
+it('finds at least one form POST route to walk', function (): void {
+    expect(Routes::post())->not->toBeEmpty();
+});
+
 it('answers 403 to every form POST route without a valid token', function (string $path, array $data): void {
     $response = (new ConsoleClient())->loginAsAdmin()->post($path, $data);
 

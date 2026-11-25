@@ -10,7 +10,7 @@ describe('deleting from the edit screen', () => {
   withToken();
   withDialogs();
 
-  it('asks under More actions, saying what will happen, with a button that repeats the verb', async () => {
+  it('asks under More actions, saying what will happen', async () => {
     const fetch = await openEdit(entity({ state: 'Modified' }), { [DELETE]: gone });
 
     chooseDelete();
@@ -55,6 +55,7 @@ describe('deleting from the edit screen', () => {
 
     confirmDelete('Example');
 
+    expect(screen.getByRole('button', { name: 'Delete Example' }).className).toBe('btn btn-danger-solid is-loading');
     await deletedMessage();
     expect(location()).toBe(LIST);
     expect(posted(fetch, DELETE)).toEqual({ entityid: ID });
@@ -67,13 +68,13 @@ describe('deleting from the edit screen', () => {
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
   });
 
-  it('names an object without a name by its entity ID', async () => {
+  it('names an object without a name by its entity ID, with a plain Delete button', async () => {
     await openEdit(entity({ name: null }), { [DELETE]: gone });
 
     chooseDelete();
 
     const dialog = screen.getByRole('dialog', { name: `Delete ${ID}?` });
-    expect(within(dialog).getByRole('button', { name: `Delete ${ID}` })).toBeDefined();
+    expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeDefined();
     expect(within(dialog).getByText(new RegExp(`^${ID} is removed from the Console\\.`))).toBeDefined();
   });
 

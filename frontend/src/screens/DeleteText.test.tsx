@@ -42,4 +42,13 @@ describe('the confirmation text of an object never published', () => {
 
     expect(text(screen.getByRole('dialog'))).toBe(`${BAD} is removed from the Console.`);
   });
+
+  it('hands the focus back to More actions when the dialog closes', async () => {
+    await openEdit(entity(), { [DELETE]: gone });
+    chooseDelete();
+
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'More actions' }));
+  });
 });

@@ -25,6 +25,7 @@ interface Deleted {
 // Deleting asks first; once done the interface moves to `then` with the one-shot message.
 export function useDeleteEntity({ entityId, name, state }: Deleted, then: string): Deletion {
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<number | null>(null);
   const navigate = useNavigate();
   const fail = useFailure();
@@ -33,8 +34,10 @@ export function useDeleteEntity({ entityId, name, state }: Deleted, then: string
   const label = name ?? entityId;
 
   const confirm = async () => {
-    setOpen(false);
+    setBusy(true);
     const result = await postJson<unknown>('/entities/saml20-sp-remote/delete', { entityid: entityId });
+    setBusy(false);
+    setOpen(false);
     if (result.ok) {
       announce('Deleted.');
       void navigate(then, { replace: true });
@@ -67,7 +70,8 @@ export function useDeleteEntity({ entityId, name, state }: Deleted, then: string
         title={`Delete ${label}?`}
         text={`${label} is removed from the Console.${state === 'Unpublished' ? '' : SERVED}`}
         cancel="Cancel"
-        confirm={`Delete ${label}`}
+        confirm={name === null ? 'Delete' : `Delete ${name}`}
+        busy={busy}
         onCancel={() => setOpen(false)}
         onConfirm={() => void confirm()}
       />
