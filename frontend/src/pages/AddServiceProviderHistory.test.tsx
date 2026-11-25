@@ -1,9 +1,9 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { ENTITY, page } from '../../app/test/api';
-import { CREATED, created, saveNew } from '../../app/test/add';
-import { editor } from '../../app/test/edit';
-import { go, location } from '../../app/test/render';
+import { ENTITY, page } from '../app/test/api';
+import { CREATED, created, saveNew } from '../app/test/add';
+import { editor } from '../app/test/edit';
+import { go, location } from '../app/test/render';
 
 const LIST = '/entities/saml20-sp-remote';
 

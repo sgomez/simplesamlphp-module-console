@@ -1,10 +1,11 @@
+import { useContext } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
-import type { EditedEntity } from '../domain/entities';
-import { AddServiceProvider } from '../screens/edit/AddServiceProvider';
+import { editPath, type EditedEntity } from '../domain/entities';
+import { AddServiceProviderPage } from '../pages/AddServiceProviderPage';
 import { EditServiceProviderPage } from '../pages/EditServiceProviderPage';
 import { EntityListPage } from '../pages/EntityListPage';
 import { PublishPage } from '../pages/PublishPage';
-import { CARRY } from './Page';
+import { CARRY, ReportOutcome } from './Page';
 import { PUBLISH, SP_EDIT, SP_LIST, SP_NEW } from './paths';
 import { Unknown } from './Unknown';
 
@@ -18,13 +19,21 @@ interface ScreensProps {
 }
 
 export function Screens({ pending, onChange, onTitle, created }: ScreensProps) {
+  const announce = useContext(ReportOutcome);
+
   return (
     <Routes>
       <Route index element={<Navigate to={SP_LIST} replace state={CARRY} />} />
       <Route path={SP_LIST} element={<EntityListPage set="saml20-sp-remote" />} />
       <Route
         path={SP_NEW}
-        element={<AddServiceProvider onSaved={onChange} onTitle={onTitle} />}
+        element={
+          <AddServiceProviderPage
+            onSaved={onChange}
+            onTitle={onTitle}
+            onCreated={(entity) => announce({ created: entity }, editPath(entity.entityId))}
+          />
+        }
       />
       <Route
         path={SP_EDIT}

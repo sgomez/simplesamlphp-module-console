@@ -8,15 +8,18 @@ interface TextAreaProps {
   rows?: number;
   placeholder?: string;
   mono?: boolean;
+  // Configuration text: monospace, lines kept whole, no spell check.
+  code?: boolean;
   invalid?: boolean;
   onChange?: (value: string) => void;
 }
 
-export function TextArea({ label, value, rows = 2, placeholder, mono, invalid, onChange }: TextAreaProps) {
+export function TextArea({ label, value, rows = 2, placeholder, mono, code, invalid, onChange }: TextAreaProps) {
   return (
     <AriaTextArea
-      className={cx('input', mono && 'mono')}
+      className={cx('input', (mono || code) && 'mono', code && 'input-code')}
       rows={rows}
+      {...(code ? { spellCheck: false, wrap: 'off' } : {})}
       {...defined({
         value,
         placeholder,

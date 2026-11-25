@@ -17,6 +17,8 @@ import { SaveBar } from './SaveBar';
 import { useActions } from './useActions';
 import { useEditor } from './useEditor';
 
+export const ADD_TITLE = 'Add service provider';
+
 export interface EntityEditorProps {
   initial: EditedEntity;
   // The Review button of the success callout, when there are Pending changes.
@@ -36,7 +38,7 @@ export function EntityEditor({ initial, review, onSaved, onTitle, onCreated, onC
   const { view, text, setText } = edit;
   const editor = useRef<EditorHandle>(null);
   const cursor = useRef<number | null>(null);
-  const title = onCreated ? 'New service provider' : (view.name ?? view.entityId);
+  const title = onCreated ? ADD_TITLE : (view.name ?? view.entityId);
   const deletion = useDeleteEntity(view, SP_LIST);
   const actions = useActions(view, text, edit.replace, deletion.ask);
   const { hideTidied } = port;

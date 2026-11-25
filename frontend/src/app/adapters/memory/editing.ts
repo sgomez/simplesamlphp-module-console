@@ -1,5 +1,6 @@
-import type { Draft, EditedEntity, EntitiesPort, SaveResult, Validation } from '../../../domain/entities';
+import type { Draft, EditedEntity, EntitiesPort, PastedFormat, SaveResult, Validation } from '../../../domain/entities';
 import type { Failed, Result } from '../../../lib/result';
+import { travelbooker } from './added';
 
 export interface MemoryEditing {
   entities?: EditedEntity[];
@@ -13,6 +14,8 @@ export interface MemoryEditing {
   served?: boolean;
   // What the operations the API does not serve yet answer, in place of their result.
   failing?: Failed;
+  // What reading pasted configuration answers; by default the board's Travelbooker.
+  pasted?: (text: string, format: PastedFormat) => Result<EditedEntity>;
 }
 
 type Editing = Omit<EntitiesPort, 'list' | 'remove'>;
@@ -23,7 +26,7 @@ function missing<T>(): Result<T> {
   return { ok: false, status: 404, body: { error: 'not found' } };
 }
 
-export function memoryEditing({ entities = [], starter, save, validate, reading, served, failing }: MemoryEditing): Editing {
+export function memoryEditing({ entities = [], starter, save, validate, reading, served, failing, pasted }: MemoryEditing): Editing {
   const stored = new Map(entities.map((entity) => [entity.entityId, entity]));
   const keep = (entity: EditedEntity): Result<EditedEntity> => {
     stored.set(entity.entityId, entity);
@@ -77,5 +80,6 @@ export function memoryEditing({ entities = [], starter, save, validate, reading,
     promote: async (entityId) => change(entityId, () => ({ nextKey: false, state: 'Modified' })),
     replacePath: (entityId) => `/entities/saml20-sp-remote/replace?entityid=${encodeURIComponent(entityId)}`,
     hideTidied: () => undefined,
+    readPasted: async (text, format) => (pasted ? pasted(text, format) : { ok: true, data: travelbooker }),
   };
 }

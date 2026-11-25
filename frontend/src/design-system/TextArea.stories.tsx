@@ -37,6 +37,17 @@ export const Monospace: Story = {
   },
 };
 
+export const Code: Story = {
+  args: { label: 'Metadata XML or PHP array', code: true, rows: 6, placeholder: 'Metadata XML or PHP array' },
+  play: async ({ canvasElement }) => {
+    const area = within(canvasElement).getByRole('textbox', { name: 'Metadata XML or PHP array' });
+
+    await expect(area).toHaveClass('input mono input-code');
+    await expect(area).toHaveAttribute('wrap', 'off');
+    await expect(area).toHaveAttribute('spellcheck', 'false');
+  },
+};
+
 export const Invalid: Story = {
   args: { mono: true, invalid: true, value: 'not a certificate' },
   play: async ({ canvasElement }) => {
