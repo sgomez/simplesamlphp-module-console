@@ -1,11 +1,12 @@
-import type { PublicationProblem } from '../domain/publication';
-import { plural } from '../lib/plural';
-import { editPath } from '../app/paths';
-import { Callout } from '../design-system/Callout';
-import { Disclosure } from '../design-system/Disclosure';
-import { WarningIcon } from '../design-system/icons';
-import { TextLink } from '../design-system/TextLink';
+import { Callout } from '../../design-system/Callout';
+import { Disclosure } from '../../design-system/Disclosure';
+import { WarningIcon } from '../../design-system/icons';
+import { TextLink } from '../../design-system/TextLink';
+import { plural } from '../../lib/plural';
+import { editPath } from '../entities';
+import type { Moved, PublicationProblem } from './types';
 
+// Names its object as the change rows do: the name, or the entity ID when it has none.
 function Note({ note }: { note: PublicationProblem }) {
   if (note.entityId === null) {
     return <>{note.message}</>;
@@ -14,7 +15,7 @@ function Note({ note }: { note: PublicationProblem }) {
   return (
     <>
       <TextLink to={editPath(note.entityId)} inherit>
-        <span className="mono">{note.entityId}</span>
+        {note.name ?? <span className="mono">{note.entityId}</span>}
       </TextLink>
       {`: ${note.message}`}
     </>
@@ -56,5 +57,13 @@ export function Warnings({ warnings }: { warnings: PublicationProblem[] }) {
         </div>
       ))}
     </Disclosure>
+  );
+}
+
+export function MovedNotice({ moved: { last } }: { moved: Moved }) {
+  return (
+    <Callout kind="warning" title="The changes moved while this page was open">
+      {`${last ? `${last.name} was saved again ${last.when}. ` : ''}This is the current list.`}
+    </Callout>
   );
 }
