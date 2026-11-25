@@ -68,11 +68,11 @@ final class EntityDb
     }
 
 
-    public static function seedUnreadable(ConsoleClient $client): void
+    public static function seedUnreadable(ConsoleClient $client, string $stored = '{oops'): void
     {
-        $client->database()->exec(
-            "INSERT INTO console_entity VALUES ('" . self::SET . "', 'https://bad.example.org', 1, '{oops', 1, NULL, "
+        $client->database()->prepare(
+            "INSERT INTO console_entity VALUES ('" . self::SET . "', 'https://bad.example.org', 1, ?, 1, NULL, "
             . "'x', 'x')",
-        );
+        )->execute([$stored]);
     }
 }
