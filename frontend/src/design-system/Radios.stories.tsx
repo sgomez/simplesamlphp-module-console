@@ -5,12 +5,13 @@ import { Radios } from './Radios';
 
 const change = fn();
 
-function Format() {
+function Format({ labelHidden = false }: { labelHidden?: boolean }) {
   const [value, setValue] = useState('persistent');
 
   return (
     <Radios
       label="Name ID format"
+      labelHidden={labelHidden}
       value={value}
       options={[
         { value: 'persistent', label: 'Persistent' },
@@ -66,5 +67,15 @@ export const Keyboard: Story = {
     await expect(transient).toHaveFocus();
     await expect(transient).toBeChecked();
     await expect(change).toHaveBeenCalledWith('transient');
+  },
+};
+
+export const LabelHidden: Story = {
+  args: { labelHidden: true },
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement);
+
+    await expect(page.getByRole('radiogroup', { name: 'Name ID format' })).toBeVisible();
+    await expect(page.getByText('Name ID format')).toHaveClass('sr-only');
   },
 };

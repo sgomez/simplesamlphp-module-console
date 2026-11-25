@@ -5,6 +5,7 @@ const SLICES = {
   database: [],
   session: ['database'],
   documents: [],
+  forms: ['documents'],
   entities: ['session', 'documents'],
   publication: ['session', 'entities'],
   nodes: ['session'],

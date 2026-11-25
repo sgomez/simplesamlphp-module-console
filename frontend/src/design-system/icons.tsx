@@ -73,6 +73,27 @@ export function SuccessIcon({ className }: { className?: string }) {
   );
 }
 
+export function GripIcon() {
+  return (
+    <svg {...solid} width="12" height="14" viewBox="0 0 12 14">
+      <circle cx="3.5" cy="3" r="1.3" />
+      <circle cx="8.5" cy="3" r="1.3" />
+      <circle cx="3.5" cy="7" r="1.3" />
+      <circle cx="8.5" cy="7" r="1.3" />
+      <circle cx="3.5" cy="11" r="1.3" />
+      <circle cx="8.5" cy="11" r="1.3" />
+    </svg>
+  );
+}
+
+export function RemoveIcon() {
+  return (
+    <svg {...line} width="12" height="12" viewBox="0 0 12 12" strokeWidth="1.75">
+      <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" />
+    </svg>
+  );
+}
+
 export function CrossIcon() {
   return (
     <svg {...line} width="14" height="14" viewBox="0 0 12 12" strokeWidth="2">

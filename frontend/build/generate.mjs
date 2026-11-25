@@ -154,9 +154,93 @@ ${sets.join('\n')}
 `;
 }
 
+const WIDGETS = ['radio', 'textarea', 'suggest', 'certificate', 'key-slot', 'certificates'];
+
+function rules(node) {
+  const out = [];
+  if (node.if !== undefined) {
+    const [[name, test]] = Object.entries(node.if.properties);
+    out.push({ if: { name, value: test.const }, then: node.then?.required ?? [], else: node.else?.required ?? [] });
+  }
+  for (const [present, then] of Object.entries(node.dependentRequired ?? {})) {
+    out.push({ present, then });
+  }
+
+  return out;
+}
+
+function deref(node, path) {
+  if (typeof node.$ref !== 'string') {
+    return [node, path];
+  }
+  const [file, pointer] = node.$ref.split('#');
+  const target = file === '' ? path : join(dirname(path), file).split('\\').join('/');
+  const [found, at] = deref(pointer.split('/').slice(1).reduce((here, key) => here[key], byPath.get(target)), target);
+
+  return [{ ...found, ...node }, at];
+}
+
+// The form's reading of a schema node: `$ref` resolved, only what the engine needs.
+function formNode(own, path) {
+  const [node, target] = deref(own, path);
+  const type = [node.type].flat()[0];
+  const out = { type: type ?? 'any' };
+  for (const key of ['title', 'description', 'default', 'examples', 'enum', 'const', 'required']) {
+    if (node[key] !== undefined) {
+      out[key] = node[key];
+    }
+  }
+  if (node['x-widget'] !== undefined) {
+    if (!WIDGETS.includes(node['x-widget'])) {
+      throw new Error(`Unknown x-widget ${node['x-widget']} in ${path}`);
+    }
+    out.widget = node['x-widget'];
+  }
+  const flags = { when: 'x-when', sensitive: 'x-sensitive', literal: 'x-literal', authsource: 'x-authsource-reference' };
+  for (const [key, annotation] of Object.entries(flags)) {
+    if (node[annotation] !== undefined) {
+      out[key] = node[annotation];
+    }
+  }
+  if (node.properties !== undefined) {
+    out.properties = Object.fromEntries(Object.entries(node.properties).map(([name, child]) => [name, formNode(child, target)]));
+  }
+  if (typeof node.additionalProperties === 'object') {
+    out.values = formNode(node.additionalProperties, target);
+  }
+  if (node.items !== undefined) {
+    out.items = formNode(node.items, target);
+  }
+  const found = rules(node);
+  if (found.length > 0) {
+    out.rules = found;
+  }
+
+  return out;
+}
+
+// The schemas as the Settings form reads them; the browser never compiles one.
+function forms() {
+  const sets = documents.map(({ path, schema, set }) => {
+    const form = { ...formNode(schema, path), groups: schema['x-groups'] };
+    delete form.title;
+
+    return `  ${JSON.stringify(set)}: ${JSON.stringify(form)},`;
+  });
+
+  return `${BANNER}import type { FormSchema } from '../form';
+import type { DocumentSet } from './validators';
+
+export const forms: Record<DocumentSet, FormSchema> = {
+${sets.join('\n')}
+};
+`;
+}
+
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 writeFileSync(join(OUT, 'validators.js'), validators());
 writeFileSync(join(OUT, 'validators.d.ts'), declarations());
 writeFileSync(join(OUT, 'documents.ts'), await types());
 writeFileSync(join(OUT, 'options.ts'), options());
+writeFileSync(join(OUT, 'forms.ts'), forms());

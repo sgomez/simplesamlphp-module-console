@@ -21,17 +21,19 @@ interface RadiosProps {
   label: string;
   value: string;
   options: readonly { value: string; label: string }[];
+  // Named by a label beside the group rather than above it.
+  labelHidden?: boolean;
   onChange: (value: string) => void;
 }
 
-export function Radios({ label, value, options, onChange }: RadiosProps) {
+export function Radios({ label, value, options, labelHidden, onChange }: RadiosProps) {
   const aria = { label, value, onChange };
   const state = useRadioGroupState(aria);
   const { radioGroupProps, labelProps } = useRadioGroup(aria, state);
 
   return (
     <div className="field" {...radioGroupProps}>
-      <span className="label" {...labelProps}>
+      <span className={labelHidden ? 'sr-only' : 'label'} {...labelProps}>
         {label}
       </span>
       <GroupState value={state}>
