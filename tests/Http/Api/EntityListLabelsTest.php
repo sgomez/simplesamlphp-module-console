@@ -32,6 +32,20 @@ it('says a disabled row that cannot be loaded is Unreadable, although it has no 
         ->and($row['error'])->toContain('not valid JSON');
 });
 
+it('labels a stored service provider that the current schema rejects, with its errors as the title', function (): void {
+    $client = (new ConsoleClient())->loginAsAdmin();
+    EntityDb::seedInvalid($client, 'https://bad.example.org');
+    EntityDb::seed($client, 'https://sp.example.org');
+
+    [$bad, $sound] = Api::get($client, '/entities/saml20-sp-remote')['rows'];
+    $errors = array_values(array_filter($bad['labels'], static fn (array $l): bool => $l['kind'] === 'error'));
+
+    expect($errors)->toHaveCount(1)
+        ->and($errors[0]['text'])->toBe('Errors')
+        ->and($errors[0]['title'])->toBeString()->not->toBe('')
+        ->and($sound['labels'])->toBe([]);
+});
+
 it('labels a disabled service provider', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
     EntityDb::seed($client, 'https://off.example.org');

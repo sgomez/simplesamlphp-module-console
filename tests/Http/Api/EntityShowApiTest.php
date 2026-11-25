@@ -50,8 +50,18 @@ it('answers the warnings of an entity apart from errors', function (): void {
     $entity = Api::get($client, '/entities/saml20-sp-remote/entity?entityid=my-sp');
 
     expect(array_column($entity['warnings'], 'message'))->toContain('The entity ID is not an absolute URI.')
-        ->and(array_column($entity['warnings'], 'label'))->toContain('Uses extra')->toContain('Signing off')
-        ->and($entity)->not->toHaveKey('errors');
+        ->and(array_column($entity['warnings'], 'label'))->toContain('Uses extra')->toContain('Signing off');
+});
+
+it('answers the errors of a stored entity that the current schema rejects, and none of a sound one', function (): void {
+    $client = (new ConsoleClient())->loginAsAdmin();
+    EntityDb::seedInvalid($client, 'https://bad.example.org');
+
+    $bad = Api::get($client, '/entities/saml20-sp-remote/entity?entityid=https%3A%2F%2Fbad.example.org');
+
+    expect($bad['errors'])->not->toBe([])
+        ->and($bad['errors'][0])->toHaveKeys(['pointer', 'message', 'line', 'column'])
+        ->and(Api::get(EntityApi::existing(), EntityApi::ENTITY)['errors'])->toBe([]);
 });
 
 it('answers no warnings for a sound entity', function (): void {

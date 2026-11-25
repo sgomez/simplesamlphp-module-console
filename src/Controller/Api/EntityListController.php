@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace SimpleSAML\Module\console\Controller\Api;
 
 use SimpleSAML\Module\console\Application\ListEntities;
+use SimpleSAML\Module\console\Domain\Entity\SpRemote;
 use SimpleSAML\Module\console\Domain\Entity\StoredEntity;
+use SimpleSAML\Module\console\Domain\Entity\ValidationError;
 use SimpleSAML\Module\console\Infrastructure\Http\ApiGate;
 use SimpleSAML\Module\console\Infrastructure\Http\EntityWarnings;
 use SimpleSAML\Module\console\Infrastructure\Persistence\Repositories;
@@ -54,6 +56,15 @@ final class EntityListController
     {
         $labels = [];
         $entity->enabled || $labels[] = ['text' => 'Disabled', 'kind' => 'disabled', 'title' => null];
+        $errors = $entity->document === null ? [] : (new SpRemote())->check($entity->document);
+        $errors === [] || $labels[] = [
+            'text' => 'Errors',
+            'kind' => 'error',
+            'title' => implode("\n", array_map(
+                static fn (ValidationError $e): string => ($e->pointer === '' ? '' : $e->pointer . ': ') . $e->message,
+                $errors,
+            )),
+        ];
         foreach ($entity->document === null ? [] : $this->warnings->of($entity->entityId, $entity->document) as $w) {
             $labels[] = ['text' => $w['label'], 'kind' => 'warning', 'title' => $w['message']];
         }
