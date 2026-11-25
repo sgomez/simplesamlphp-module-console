@@ -7,7 +7,7 @@ ADR 0007 said a bundle becomes a new decision "when the script would need to kno
 - **The Milestone 1 UI departed from `prototype/console-ui`.** Nothing forced the templates to follow the boards, so they drifted from them.
 - **The schema-driven form is stateful UI.** Adding and unsetting root options, `x-when`, group counts, list rows, the option finder, and the key slot and certificate controls make up the core of the product. ADR 0007 estimated 300 to 400 lines of untyped, untested script for them.
 - **The Settings/PHP switch is client state over one document, and live validation has to read the schemas.**
-- **Reuse can be enforced.** ESLint fails CI on a raw `<button>`, `<input>`, `<select>`, `<textarea>` or `<dialog>` outside `components/ui/`. Twig has no equivalent, and `templates/` has no macros.
+- **Reuse can be enforced.** ESLint fails CI on a raw `<button>`, `<input>`, `<select>`, `<textarea>` or `<dialog>` outside the design system. Twig has no equivalent, and `templates/` has no macros.
 - **Components are typed.** TypeScript props fail at compile time, whereas a mistake in a Twig macro argument shows up only at render time.
 - **Switching is cheap now.** The Milestone 1 templates total about 330 lines.
 
@@ -38,12 +38,23 @@ The shell contains no chrome. It references the entry script and its stylesheet 
 ## Front end
 
 - **Location.** The sources live in `frontend/`.
-- **Native elements.** Only `frontend/src/components/ui/` may render native form and dialog elements. These primitives map one to one to the component classes of the prototype's `console.css`.
-- **Styling.** Styles come from one stylesheet: the prototype's `console.css`, with layout classes for what the boards write inline. It is linked as a file, never imported into a component. There are no CSS modules, no CSS-in-JS and no `style` prop.
-- **Tokens and fonts.** No colour, size or font is written outside the token definitions, and fonts are system stacks.
-- **Dependencies.** The npm set is pinned exactly and kept small:
-  - at runtime: React, React DOM and a router;
-  - at build and test time: Vite with its React plugin, TypeScript, ESLint with its TypeScript and React plugins, Vitest with Testing Library and jsdom, Ajv, and a JSON-Schema-to-TypeScript generator.
+- **The board wins.** The boards of `prototype/console-ui` decide layout, wording and components, light and dark. When a board and `SPEC.md` disagree, `SPEC.md` is changed to match the board. A screen or state with no board, or a board that needs a capability the product lacks, is decided by the maintainer before it is built.
+- **Layers.** `frontend/src/` is organised as `tokens → design-system → domain → pages → app` ([FSD Lite](https://gist.github.com/sgomez/b51eab2a95c84bf66949e2d1ff570b80)), with a small `lib/` beside `tokens` for helpers with no business meaning. A layer imports only from layers to its left.
+  - `tokens` are the custom properties of `console.css`, as the prototype defines them.
+  - `design-system` holds the primitives and knows no business term. Only it renders native form, link and dialog elements.
+  - `domain` holds one slice per area of the glossary (`database`, `session`, `entities`, `publication`, `documents`). A slice owns its components, state and use cases, and reaches the server only through its ports. Slices import each other without cycles and only through their `index.ts`.
+  - `pages` compose slices and primitives for one route and hold no logic.
+  - `app` holds the entry, the router, the providers and the adapters that implement the ports: HTTP in production, in memory for stories and tests.
+  - `eslint-plugin-boundaries` enforces these rules in CI.
+- **Primitives on React Aria.** Primitives with behaviour build on `react-aria-components`, so keyboard use, focus, ARIA and press handling come from a library tested with real assistive technology rather than from our code. Primitives without behaviour are plain markup.
+- **Styling.** Styles come from one stylesheet: the prototype's `console.css`, with layout classes for what the boards write inline and `[data-…]` selectors for the states React Aria exposes, with the same values as the class selectors they mirror. It is linked as a file, never imported into a component. There are no CSS modules, no CSS-in-JS and no `style` prop. React Aria sets positioning and visually-hidden styles through the CSSOM, which core's CSP allows because the client renders every page.
+- **Tokens and fonts.** No colour, size or font is written outside the token definitions, and fonts are system stacks, whatever a board names.
+- **Storybook.** Every primitive, domain component and page has stories next to it, rendered over the in-memory adapters. Tokens appear as Foundations docs generated from the custom properties of `console.css`, light and dark. Storybook is the review surface: every state of every page has its own URL, with no backend.
+- **Tests on the stories.** Every story runs as a Vitest browser test in Playwright's Chromium (`@storybook/addon-vitest`) with an axe check that fails on any violation. Interactive stories have `play` functions for keyboard and focus. Domain logic keeps jsdom unit tests.
+- **Visual regression.** Page stories, and only page stories, are compared with Vitest's `toMatchScreenshot`, light and dark, at desktop width and at 400 px. Reference screenshots are committed. The browser runs in the official Playwright Docker image, pinned by digest, locally and in CI, so fonts and rendering are the same everywhere. A CI job fails when a pull request changes reference screenshots without the `visual-change` label, which only the maintainer applies.
+- **Dependencies.** The npm set is pinned exactly:
+  - at runtime: React, React DOM, a router and `react-aria-components`;
+  - at build and test time: Vite with its React plugin, TypeScript, ESLint with its TypeScript, React and boundaries plugins, Vitest with Testing Library, jsdom and browser mode on Playwright, Storybook with its Vitest, accessibility and docs addons, Ajv, and a JSON-Schema-to-TypeScript generator.
 
 ## Build and development
 
@@ -84,12 +95,21 @@ Both sides read the same files in `docs/spec/schemas`.
 - **Module emitting Vite client tags that point to another origin in development**: rejected; it needs a development-only CSP that allows the Vite origin and its websocket, so development would not run under the policy production enforces.
 - **Ajv compiling schemas in the browser**: rejected; it needs `'unsafe-eval'`.
 - **Porting the PHP cross-field rules to TypeScript**: rejected; it would be a second implementation of every rule.
+- **Hand-written primitives**: rejected; keyboard, focus and ARIA behaviour are hard to get right and costly to test, and React Aria ships them tested.
+- **Radix**: rejected; fewer form components, and one package per primitive.
+- **Component-scoped styles or CSS modules**: rejected; one stylesheet, the prototype's, is what keeps the UI faithful to the boards.
+- **dependency-cruiser**: rejected; ESLint already runs in CI, and `eslint-plugin-boundaries` enforces the layers there.
+- **Code snapshots** (`toMatchSnapshot` of rendered HTML): rejected; they do not see `console.css`, break on any markup change and get updated without review.
+- **Hosted visual review** (Chromatic, Percy, Applitools, Lost Pixel's platform): rejected; no proprietary software is used and nothing is sent to an external service.
+- **Playwright Test `toHaveScreenshot`**: not chosen; more mature, but a second test runner next to Vitest. It is the fallback if Vitest's comparison proves unstable.
 
 ## Consequences
 
 - **New security surface.** The JSON API is new attack surface. Every API route goes through the gate, and the request forgery walk covers every API POST.
-- **Two test stacks.** The HTTP tests that asserted Twig HTML become API tests that assert status, JSON and headers. Front-end code gets Vitest component tests.
-- **CI.** CI gains a front-end job: lint, type check, tests, build-and-compare, generated types up to date, and a package-contents check. Dependabot gains the `npm` ecosystem, and CodeQL gains `javascript-typescript`.
+- **Two test stacks.** The HTTP tests that asserted Twig HTML become API tests that assert status, JSON and headers. Front-end code gets Vitest tests in jsdom and in a real browser.
+- **CI.** CI gains a front-end job: lint, type check, tests in jsdom and in the browser, build-and-compare, generated types up to date, and a package-contents check. A visual job runs the page screenshots in the Playwright image, and a gate job checks the `visual-change` label. Dependabot gains the `npm` ecosystem, and CodeQL gains `javascript-typescript`.
+- **Screenshots are reviewed by a person.** A pull request that changes the look of a page waits for the maintainer, who compares it with its board in Storybook before applying the label.
+- **React Aria's pressable style.** `usePress` adds a `<style>` element for `touch-action` unless an element with the id `react-aria-pressable-style` exists. Core's CSP would block that element, so the shell's stylesheet link carries that id and `console.css` holds the rule.
 - **Node** is a development and CI dependency, never an installation one.
 - **The semantics of ADR 0007 survive in the client's form engine, specified in SPEC section 10.10.** Only set root options are shown, presence is the existence of the key, `x-groups`, `x-when`, the `x-widget` allowlist, booleans starting opposite their `default`, `default` never written, and `extra` alone in the last group.
 - **ADR 0010 holds**, except that switching views and Reveal are API calls instead of form round trips. The client now knows the schema, but it still never parses PHP.
