@@ -1,4 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
+import { useLocation, useNavigationType } from 'react-router';
 import type { EditedEntity, MigrationRun } from '../api/types';
 import { cx } from '../components/ui/classes';
 
@@ -9,8 +10,18 @@ export const PageNotice = createContext<ReactNode>(null);
 // which its edit screen shows as saved.
 export type Said = MigrationRun | string | { created: EditedEntity };
 
-// Hands the outcome of a POST to the screen that follows; call it just before moving there with replace.
-export const ReportOutcome = createContext<(said: Said) => void>(() => undefined);
+// Hands the outcome of a POST to the screen that follows, at `to` when given.
+export const ReportOutcome = createContext<(said: Said, to?: string) => void>(() => undefined);
+
+// The history state of a redirect, which takes the one-shot message along; any other move ends it, even a click
+// on a link to the same URL, which the router also makes a replace.
+export const CARRY = { carry: true };
+
+export function useCarried(): boolean {
+  const { state } = useLocation();
+
+  return useNavigationType() === 'REPLACE' && typeof state === 'object' && state !== null && 'carry' in state;
+}
 
 interface PageProps {
   // narrow: a state or failure page; publish: the width and spacing of the Publish boards.

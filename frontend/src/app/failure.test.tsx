@@ -33,6 +33,17 @@ describe('a failed request', () => {
     expect(await screen.findByTitle('https://a.example.org')).toBeTruthy();
   });
 
+  it.each([`${LIST}/edit`, `${LIST}/edit?entityid=`])('shows the path Not found for %s, which names no entity', async (path) => {
+    const fetch = stubApi({ '/api/session': { body: session } });
+    renderAt(path);
+
+    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Not found');
+    expect(crumbs()).toEqual(['Console', 'Not found']);
+    expect(screen.queryByText(/No service provider/)).toBeNull();
+    expect(screen.getByRole('link', { name: 'Back to the Console' })).toBeDefined();
+    expect(fetch.mock.calls.map(([input]) => String(input))).toEqual(['/api/session']);
+  });
+
   it('shows Not found when the API has no answer for the screen', async () => {
     serveList(404);
     renderAt(LIST);

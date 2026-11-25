@@ -1,8 +1,8 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { entity, page, session, sp, stubApi } from '../test/api';
+import { EDIT, entity, page, session, sp, stubApi } from '../test/api';
 import { BAD, DELETE, chooseDelete, gone, withDialogs } from '../test/delete';
-import { openEdit } from '../test/edit';
+import { openEdit, serveEdit } from '../test/edit';
 import { renderAt } from '../test/render';
 import { LIST } from '../test/states';
 
@@ -35,6 +35,26 @@ describe('the confirmation text of an object never published', () => {
 
   it('does not say nodes serve an Unpublished Unreadable row', async () => {
     const row = sp(BAD, { state: 'Unpublished', unreadable: true, error: 'The stored document is not valid JSON.' });
+    stubApi({ '/api/session': { body: session }, [`/api${LIST}`]: { body: page([row]) } });
+    renderAt(LIST);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete…' }));
+
+    expect(text(screen.getByRole('dialog'))).toBe(`${BAD} is removed from the Console.`);
+  });
+
+  it('says neither that an Unreadable object is live nor that it is not', async () => {
+    serveEdit(entity({ state: 'Unreadable', php: null, unreadable: true, error: 'The document is not valid JSON.' }));
+    renderAt(EDIT);
+    await screen.findByRole('alert');
+
+    chooseDelete();
+
+    expect(text(screen.getByRole('dialog'))).toBe('Example is removed from the Console.');
+  });
+
+  it('says neither for an Unreadable row of the list', async () => {
+    const row = sp(BAD, { state: 'Unreadable', unreadable: true, error: 'The stored document is not valid JSON.' });
     stubApi({ '/api/session': { body: session }, [`/api${LIST}`]: { body: page([row]) } });
     renderAt(LIST);
 

@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router';
 import { spEntityOf } from '../../api/paths';
 import type { EditedEntity } from '../../api/types';
+import { Unknown } from '../../app/Unknown';
 import { useApi } from '../../app/useApi';
 import { EntityEditor } from './EntityEditor';
 import { UnreadableEntity } from './UnreadableEntity';
@@ -19,6 +20,9 @@ interface EditServiceProviderProps extends StoredProps {
 export function EditServiceProvider({ created, ...props }: EditServiceProviderProps) {
   const [params] = useSearchParams();
   const entityId = params.get('entityid') ?? '';
+  if (entityId === '') {
+    return <Unknown />;
+  }
   if (created?.entityId === entityId) {
     return <EntityEditor key={entityId} initial={created} saved {...props} />;
   }

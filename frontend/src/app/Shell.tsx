@@ -45,7 +45,7 @@ export function Shell({ session, pending, crumbs, end, children }: ShellProps) {
                   /
                 </span>
                 {to === undefined ? (
-                  <span aria-current="page" className="crumb-current">
+                  <span aria-current="page" className="crumb-current wrap-any">
                     {label}
                   </span>
                 ) : (

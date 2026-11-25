@@ -28,8 +28,7 @@ export function AddServiceProvider(props: AddServiceProviderProps) {
       {...props}
       onCancel={() => void navigate(SP_LIST)}
       onCreated={(entity) => {
-        announce({ created: entity });
-        void navigate(editPath(entity.entityId), { replace: true });
+        announce({ created: entity }, editPath(entity.entityId));
       }}
     />
   );

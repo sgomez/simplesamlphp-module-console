@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useLocation, useNavigationType } from 'react-router';
+import { useLocation } from 'react-router';
 import type { DatabaseRefusal, Session } from '../api/types';
 import { OutcomeMessage, runOf } from '../screens/RunMessage';
 import { StatePage, stateCrumb } from '../screens/StatePage';
 import { FailurePage, failureTrail, ReportFailure, type Failure } from './failure';
 import { LiveSnapshot } from './LiveSnapshot';
-import { Page, PageNotice, ReportOutcome, type Said } from './Page';
+import { Page, PageNotice, ReportOutcome, useCarried, type Said } from './Page';
 import { crumbsOf } from './crumbs';
 import { PUBLISH } from './paths';
 import { refusalOf, ReportRefusal } from './refusals';
@@ -22,7 +22,8 @@ export interface Outcome {
 interface ConsoleProps {
   session: ApiState<Session>;
   outcome: Outcome | null;
-  onOutcome: (said: Said, at: string) => void;
+  // to: where the outcome moves the admin.
+  onOutcome: (said: Said, at: string, to?: string) => void;
   // A save or a Publication changed what the session answers.
   onChange: () => void;
   onMove: (at: string | null) => void;
@@ -34,25 +35,25 @@ export function Console({ session: latest, outcome, onOutcome, onChange, onMove 
   const answer: ApiState<Session> = latest === stale ? { state: 'loading' } : latest;
   const [reported, setReported] = useState<DatabaseRefusal | null>(null);
   const { pathname, search, key } = useLocation();
-  const navigation = useNavigationType();
+  const carried = useCarried();
   const [failed, setFailed] = useState<{ key: string; failure: Failure } | null>(null);
   const report = useCallback((failure: Failure) => setFailed({ key, failure }), [key]);
   const failure = failed?.key === key ? failed.failure : null;
   const refusal = reported ?? (answer.state === 'failed' ? refusalOf(answer.status, answer.body) : null);
-  const said = outcome !== null && (outcome.at === key || navigation === 'REPLACE') ? outcome.said : null;
+  const said = outcome !== null && (outcome.at === key || carried) ? outcome.said : null;
   const run = runOf(said);
   const created = said !== null && typeof said === 'object' && 'created' in said ? said.created : null;
   const at = pathname + search;
   const [title, setTitle] = useState<{ at: string; text: string } | null>(null);
   const onTitle = useCallback((text: string) => setTitle({ at, text }), [at]);
-  const announce = useCallback((said: Said) => onOutcome(said, key), [onOutcome, key]);
+  const announce = useCallback((said: Said, to?: string) => onOutcome(said, key, to), [onOutcome, key]);
   const shown = title?.at === at ? title.text : (new URLSearchParams(search).get('entityid') ?? '');
 
   useEffect(() => {
     if (outcome !== null && outcome.at !== key) {
-      onMove(navigation === 'REPLACE' ? key : null);
+      onMove(carried ? key : null);
     }
-  }, [outcome, key, navigation, onMove]);
+  }, [outcome, key, carried, onMove]);
 
   const session = answer.state === 'ready' ? answer.data : null;
   const pending = session?.pendingCount ?? 0;
