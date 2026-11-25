@@ -96,6 +96,23 @@ describe('Card and Row', () => {
   });
 });
 
+describe('Card and Row as a list', () => {
+  it('renders a list card of list rows, with their extra classes', () => {
+    const { container } = render(
+      <Card list as="ul" className="marks">
+        <Row plain as="li" className="mark-row">
+          Mark
+        </Row>
+      </Card>,
+    );
+
+    expect(container.firstElementChild?.tagName).toBe('UL');
+    expect(container.firstElementChild?.className).toBe('card card-list marks');
+    expect(screen.getByText('Mark').tagName).toBe('LI');
+    expect(screen.getByText('Mark').className).toBe('row mark-row');
+  });
+});
+
 describe('Row targets', () => {
   it('takes exactly one of a route, an address or plain', () => {
     // @ts-expect-error a row without a target

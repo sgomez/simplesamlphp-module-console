@@ -21,6 +21,15 @@ describe('the service provider list', () => {
     expect(within(row).getByTitle('https://hr.example.edu/sp').textContent).toBe('https://hr.example.edu/sp');
   });
 
+  it('opens the edit screen in the Console, without reloading the page', async () => {
+    serve(page([sp('https://hr.example.edu/sp', { name: 'HR self-service' })]));
+    renderAt(LIST);
+
+    fireEvent.click(await screen.findByRole('link', { name: /HR self-service/ }));
+
+    await waitFor(() => expect(location()).toBe(`${LIST}/edit?entityid=https%3A%2F%2Fhr.example.edu%2Fsp`));
+  });
+
   it('heads the page with the set and the Add action', async () => {
     serve(page([]));
     renderAt(LIST);

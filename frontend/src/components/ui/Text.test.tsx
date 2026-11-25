@@ -70,4 +70,12 @@ describe('Editor', () => {
     expect(text.getAttribute('rows')).toBe('1');
     expect(onChange).toHaveBeenCalledWith('a\nb');
   });
+
+  it('is read-only and busy while busy', () => {
+    render(<Editor label="PHP" value="a" busy onChange={vi.fn()} />);
+    const text = screen.getByRole('textbox', { name: 'PHP' });
+
+    expect(text.hasAttribute('readonly')).toBe(true);
+    expect(text.getAttribute('aria-busy')).toBe('true');
+  });
 });

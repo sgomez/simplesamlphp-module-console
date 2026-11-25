@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router';
 import { consoleUrl } from '../api/client';
 import type { EntityPage } from '../api/types';
 import type { ApiState } from '../app/useApi';
-import { SP_LIST } from '../app/paths';
+import { Page } from '../app/Page';
+import { SP_EDIT, SP_LIST } from '../app/paths';
 import { useApi } from '../app/useApi';
 import { LinkButton } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -29,7 +30,7 @@ function Listing({ result }: { result: EntityPage }) {
     <>
       <Card list>
         {result.rows.map((row) => (
-          <EntityListRow key={row.entityId} row={row} editUrl={consoleUrl(`${SP_LIST}/edit`)} />
+          <EntityListRow key={row.entityId} row={row} editPath={SP_EDIT} />
         ))}
       </Card>
       <Pager result={result} />
@@ -68,7 +69,7 @@ export function ServiceProviders() {
   };
 
   return (
-    <>
+    <Page>
       <div className="page-head">
         <div className="title-block">
           <div className="title">
@@ -88,6 +89,6 @@ export function ServiceProviders() {
         </label>
       </form>
       <Result answer={answer} />
-    </>
+    </Page>
   );
 }

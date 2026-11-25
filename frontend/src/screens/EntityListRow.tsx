@@ -54,7 +54,7 @@ function RowNote({ row }: { row: EntityRow }) {
   );
 }
 
-export function EntityListRow({ row, editUrl }: { row: EntityRow; editUrl: string }) {
+export function EntityListRow({ row, editPath }: { row: EntityRow; editPath: string }) {
   const off = row.labels.some((label) => label.kind === 'disabled');
   const content = (
     <>
@@ -74,7 +74,7 @@ export function EntityListRow({ row, editUrl }: { row: EntityRow; editUrl: strin
   }
 
   return (
-    <Row wrap href={`${editUrl}?entityid=${encodeURIComponent(row.entityId)}`}>
+    <Row wrap to={`${editPath}?entityid=${encodeURIComponent(row.entityId)}`}>
       {content}
       <ChevronIcon />
     </Row>

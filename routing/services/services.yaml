@@ -15,5 +15,6 @@ services:
   SimpleSAML\Module\console\Infrastructure\Http\PageFactory: ~
   SimpleSAML\Module\console\Infrastructure\Http\EntityEditView: ~
   SimpleSAML\Module\console\Infrastructure\Http\EntityWarnings: ~
+  SimpleSAML\Module\console\Infrastructure\Http\EntityJson: ~
   SimpleSAML\Module\console\Infrastructure\Persistence\Repositories: ~
   SimpleSAML\Module\console\Infrastructure\Build\NodeBuild: ~

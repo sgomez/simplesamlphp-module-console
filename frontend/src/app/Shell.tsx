@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import { consoleUrl } from '../api/client';
 import type { SessionLinks } from '../api/types';
@@ -6,13 +6,15 @@ import { Button, LinkButton } from '../components/ui/Button';
 import { MenuIcon } from '../components/ui/icons';
 import { Sidebar } from './Sidebar';
 
+export interface Crumb {
+  label: string;
+  to?: string;
+}
+
 interface ShellProps {
   session: SessionLinks | null;
   pending: number;
-  crumb: string | undefined;
-  parent?: { label: string; to: string } | undefined;
-  // The width of a state or failure page.
-  narrow?: boolean;
+  crumbs: readonly Crumb[];
   children: ReactNode;
 }
 
@@ -25,7 +27,7 @@ function Review({ count }: { count: number }) {
   );
 }
 
-export function Shell({ session, pending, crumb, parent, narrow, children }: ShellProps) {
+export function Shell({ session, pending, crumbs, children }: ShellProps) {
   const { key } = useLocation();
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === key;
@@ -44,30 +46,26 @@ export function Shell({ session, pending, crumb, parent, narrow, children }: She
             <Link className="crumb" to="/">
               Console
             </Link>
-            {parent && (
-              <>
+            {crumbs.map(({ label, to }, index) => (
+              <Fragment key={index}>
                 <span aria-hidden="true" className="faint">
                   /
                 </span>
-                <Link className="crumb" to={parent.to}>
-                  {parent.label}
-                </Link>
-              </>
-            )}
-            {crumb && (
-              <>
-                <span aria-hidden="true" className="faint">
-                  /
-                </span>
-                <span aria-current="page" className="crumb-current">
-                  {crumb}
-                </span>
-              </>
-            )}
+                {to === undefined ? (
+                  <span aria-current="page" className="crumb-current">
+                    {label}
+                  </span>
+                ) : (
+                  <Link className="crumb" to={to}>
+                    {label}
+                  </Link>
+                )}
+              </Fragment>
+            ))}
           </nav>
           {pending > 0 && <Review count={pending} />}
         </header>
-        <main className={narrow ? 'page page-narrow' : 'page'}>{children}</main>
+        {children}
       </div>
     </div>
   );

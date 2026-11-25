@@ -325,6 +325,23 @@ a.row:focus-visible{outline-offset:-2px}
 .skel-row{display:flex;flex-direction:column;gap:8px;flex:1 1 auto}
 .skel-26{width:26%} .skel-34{width:34%} .skel-54{width:54%} .skel-62{width:62%}
 
+/* edit screen (FormPhp, PhpSyntax, PhpSaved, Form) */
+.page-wide{max-width:1240px}
+.obj-id{display:flex;align-items:center;gap:8px;min-width:0}
+.cols{display:flex;flex-wrap:wrap;align-items:flex-start;gap:24px 32px}
+.col-main{display:flex;flex-direction:column;gap:12px;flex:3 1 560px;min-width:0}
+.marks{list-style:none;margin:0;padding:0}
+.mark-row{padding:8px 16px;gap:12px;align-items:baseline}
+.mark-line{flex:0 0 60px}
+.mark-label{font-weight:600}
+.mark-row{flex-wrap:wrap}
+.mark-row .msg-error,.mark-row .msg-warning{flex-wrap:wrap;flex:1 1 220px;min-width:0}
+.ed-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:6px 8px 6px 16px;border-bottom:1px solid var(--border)}
+.save-bar{position:sticky;bottom:0;display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;padding:12px 32px;
+  background:var(--surface);border-top:1px solid var(--border-strong);box-shadow:var(--shadow-2)}
+.save-state{display:flex;flex-direction:column;flex:1 1 200px;min-width:0}
+@media (max-width:600px){.save-bar{padding-inline:16px}}
+
 /* last, so it wins over .input's font */
 .mono{font-family:var(--mono);font-size:12.5px}
 .input.mono{font-size:13px}

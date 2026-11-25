@@ -55,3 +55,44 @@ export interface EntityPage {
   perPage: number;
   query: string;
 }
+
+export interface EntityWarning {
+  label: string;
+  message: string;
+}
+
+export interface EntityNotice {
+  message: string;
+  option: string | null;
+  line: number | null;
+}
+
+export interface EntityError {
+  pointer: string;
+  message: string;
+  line: number | null;
+  column: number | null;
+}
+
+// The object of the edit screen; an Unreadable row has no text.
+export interface EditedEntity {
+  entityId: string;
+  name: string | null;
+  version: number;
+  state: string | null;
+  unreadable: boolean;
+  error: string | null;
+  php: string | null;
+  warnings: EntityWarning[];
+  notices: EntityNotice[];
+}
+
+export interface Refusal {
+  errors: EntityError[];
+  notices: EntityNotice[];
+  readable: boolean;
+}
+
+export interface Validation extends Refusal {
+  warnings: EntityWarning[];
+}

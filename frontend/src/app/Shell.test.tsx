@@ -106,7 +106,7 @@ describe('the shell', () => {
   it('links the parent of the current crumb', () => {
     render(
       <MemoryRouter>
-        <Shell session={session} pending={0} crumb="Not found" parent={{ label: 'Service providers', to: LIST }}>
+        <Shell session={session} pending={0} crumbs={[{ label: 'Service providers', to: LIST }, { label: 'Not found' }]}>
           {null}
         </Shell>
       </MemoryRouter>,

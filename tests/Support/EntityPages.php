@@ -14,8 +14,6 @@ final class EntityPages
 
     public const string SAVE = '/entities/saml20-sp-remote/save';
 
-    public const string EDIT = '/entities/saml20-sp-remote/edit?entityid=https%3A%2F%2Fsp.example.org';
-
 
     public static function opened(): array
     {
@@ -38,7 +36,7 @@ final class EntityPages
         [$client, $html] = self::opened();
         self::submitNew($client, $html, 'https://sp.example.org', "[\n" . SpText::ACS . "\n'name' => 'Example',\n]");
 
-        return [$client, $client->page(self::EDIT)];
+        return [$client, $client->page(self::NEW)];
     }
 
 
@@ -55,20 +53,5 @@ final class EntityPages
         $rows = $client->database()->query('SELECT COUNT(*) FROM ' . $table . ' WHERE ' . $where);
 
         return $rows === false ? -1 : (int) $rows->fetchColumn();
-    }
-
-
-    public static function submitEdit(
-        ConsoleClient $client,
-        string $html,
-        string $php,
-        ?string $version = null,
-    ): Response {
-        return $client->post(self::SAVE, [
-            '_token' => self::field($html, '_token'),
-            'entityid' => 'https://sp.example.org',
-            'version' => $version ?? self::field($html, 'version'),
-            'php' => $php,
-        ]);
     }
 }
