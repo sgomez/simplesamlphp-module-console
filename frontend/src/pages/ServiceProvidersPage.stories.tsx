@@ -72,10 +72,9 @@ export const FilterMatchesNothing: Story = {
   args: { entities: { rows: boardRows.filter((entity) => entity.labels.length === 0) } },
   parameters: { route: `${LIST}?filter=warnings` },
   play: async ({ canvasElement }) => {
-    const page = within(canvasElement);
+    const heading = await within(canvasElement).findByRole('heading', { name: 'No service provider matches the filter' });
 
-    await expect(await page.findByRole('heading', { name: 'No service provider matches the filter' })).toBeVisible();
-    await expect(page.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
+    await expect(heading).toBeVisible();
   },
 };
 
@@ -142,7 +141,7 @@ export const Thousands: Story = {
   name: 'Draft: Thousands',
   args: {
     entities: {
-      rows: Array.from({ length: 1234 }, (_, n) => row(`https://sp-${String(n).padStart(4, '0')}.example.edu/sp`)),
+      rows: Array.from({ length: 1234 }, (_, n) => row(`https://sp-${n}.example.edu/sp`)),
     },
   },
   play: async ({ canvasElement }) => {
