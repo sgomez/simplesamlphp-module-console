@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { Input } from './Input';
 
 const meta = {
@@ -34,10 +34,14 @@ export const Hover: Story = {
   play: async ({ canvasElement }) => {
     const input = within(canvasElement).getByRole('textbox', { name: 'Text input' });
 
-    await userEvent.hover(input);
-    await expect(input).toHaveAttribute('data-hovered', 'true');
+    // The real pointer's first move into the frame ends a synthetic hover, so hover until it holds.
+    await waitFor(async () => {
+      await userEvent.unhover(input);
+      await userEvent.hover(input);
+      await expect(input).toHaveAttribute('data-hovered', 'true');
+    });
     await userEvent.unhover(input);
-    await expect(input).not.toHaveAttribute('data-hovered');
+    await waitFor(() => expect(input).not.toHaveAttribute('data-hovered'));
   },
 };
 

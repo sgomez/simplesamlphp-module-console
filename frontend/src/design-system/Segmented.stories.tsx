@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { LinkSegmented, Segmented } from './Segmented';
 
 const select = fn();
@@ -54,8 +54,12 @@ export const Hover: Story = {
   play: async ({ canvasElement }) => {
     const php = within(canvasElement).getByRole('radio', { name: 'PHP' });
 
-    await userEvent.hover(php);
-    await expect(php).toHaveAttribute('data-hovered', 'true');
+    // The real pointer's first move into the frame ends a synthetic hover, so hover until it holds.
+    await waitFor(async () => {
+      await userEvent.unhover(php);
+      await userEvent.hover(php);
+      await expect(php).toHaveAttribute('data-hovered', 'true');
+    });
   },
 };
 
