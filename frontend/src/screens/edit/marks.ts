@@ -40,7 +40,7 @@ export function marksOf(result: Refusal & { warnings?: EntityWarning[] }): Mark[
   ]);
 }
 
-export function entityMarks(entity: EditedEntity): Mark[] {
+function entityMarks(entity: EditedEntity): Mark[] {
   return marksOf({ errors: [], notices: entity.notices, warnings: entity.warnings, readable: true });
 }
 
@@ -57,7 +57,7 @@ export function lineMarks(marks: readonly Mark[]): Record<number, LineMark> {
 }
 
 // The marks shown belong to the text they were computed for.
-export interface Checked {
+interface Checked {
   text: string;
   marks: Mark[];
 }

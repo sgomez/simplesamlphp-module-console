@@ -27,6 +27,15 @@ describe('adding a service provider, saved', () => {
     expect(fetch.mock.calls.some(([input]) => String(input).startsWith(`${ENTITY}?`))).toBe(false);
   });
 
+  it('asks for the session once after the create', async () => {
+    const fetch = await saveNew({ body: created });
+    await screen.findByText('Saved. Not live yet.');
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(fetch.mock.calls.filter(([input]) => String(input) === '/api/session')).toHaveLength(2);
+  });
+
   it('says Saved only once: the edit screen opened again shows no message', async () => {
     const list = { rows: [{ entityId: 'https://new.example.org', name: null, state: 'Unpublished', labels: [], unreadable: false, error: null }], total: 1, page: 1, pages: 1, perPage: 25, query: '' };
     await saveNew(

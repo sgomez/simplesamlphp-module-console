@@ -2252,7 +2252,7 @@ Code carries no descriptive comments or docblocks. A type annotation PHPStan nee
 
 ESLint enforces on the front end:
 
-- `<button>`, `<input>`, `<select>`, `<textarea>` and `<dialog>` only inside `frontend/src/components/ui/`;
+- `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, `<a>`, `<dl>`, `<details>` and `<summary>` only inside `frontend/src/components/ui/`;
 - no `style` prop and no `dangerouslySetInnerHTML` anywhere;
 - no import of a stylesheet from a module;
 - no import from `src/` or of PHP-side files; schemas only through the build's generated validators and types.

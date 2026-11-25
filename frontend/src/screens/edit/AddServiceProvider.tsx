@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router';
+import { API } from '../../api/paths';
 import type { EditedEntity } from '../../api/types';
 import { ReportOutcome } from '../../app/Page';
 import { editPath, SP_LIST } from '../../app/paths';
@@ -16,7 +17,7 @@ interface AddServiceProviderProps {
 export function AddServiceProvider(props: AddServiceProviderProps) {
   const navigate = useNavigate();
   const announce = useContext(ReportOutcome);
-  const answer = useApi<EditedEntity>('/entities/saml20-sp-remote/entity');
+  const answer = useApi<EditedEntity>(API.spEntity);
   if (answer.state !== 'ready') {
     return null;
   }

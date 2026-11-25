@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router';
+import { spEntityOf } from '../../api/paths';
 import type { EditedEntity } from '../../api/types';
 import { useApi } from '../../app/useApi';
 import { EntityEditor } from './EntityEditor';
@@ -27,9 +28,7 @@ export function EditServiceProvider({ created, ...props }: EditServiceProviderPr
 
 // useApi replaces the screen on 401, 403 and 404.
 function StoredServiceProvider({ entityId, pending, onSaved, onTitle }: StoredProps & { entityId: string }) {
-  const answer = useApi<EditedEntity>(`/entities/saml20-sp-remote/entity?entityid=${encodeURIComponent(entityId)}`, {
-    entityId,
-  });
+  const answer = useApi<EditedEntity>(spEntityOf(entityId), { entityId });
   if (answer.state !== 'ready') {
     return null;
   }

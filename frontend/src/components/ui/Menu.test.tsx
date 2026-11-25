@@ -3,12 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { Menu, MenuButton } from './Menu';
 
 describe('Menu', () => {
-  it('lists links and actions, a separated danger entry last, with no menu roles', () => {
+  it('lists actions, a separated danger entry last, with no menu roles', () => {
     const onSelect = vi.fn();
     const { container } = render(
       <Menu
         entries={[
-          { label: 'Download', href: '/download' },
+          { label: 'Download', onSelect: vi.fn() },
           { label: 'Delete…', onSelect, danger: true, separated: true },
         ]}
       />,
@@ -17,7 +17,7 @@ describe('Menu', () => {
     expect(container.firstElementChild?.className).toBe('card menu menu-card');
     expect(screen.queryByRole('menu')).toBeNull();
     expect(screen.queryByRole('menuitem')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Download' }).className).toBe('nav-item');
+    expect(screen.getByRole('button', { name: 'Download' }).className).toBe('nav-item');
     const action = screen.getByRole('button', { name: 'Delete…' });
     expect(action.className).toBe('nav-item is-danger');
     expect(action.getAttribute('type')).toBe('button');

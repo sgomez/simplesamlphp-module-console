@@ -1,9 +1,9 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { postJson } from '../api/client';
+import { API } from '../api/paths';
 import type { PublicationRefused, PublicationReview, Published } from '../api/types';
-import { useFailure } from '../app/failure';
 import { Page } from '../app/Page';
-import { refusalOf, ReportRefusal } from '../app/refusals';
+import { useSettle } from '../app/settle';
 import { useApi } from '../app/useApi';
 import { Callout } from '../components/ui/Callout';
 import { PublishChanges } from './PublishChanges';
@@ -11,18 +11,17 @@ import { Problems, Warnings } from './PublishNotes';
 import { Nothing, PublishOutcome, type Outcome } from './PublishOutcome';
 import { PublishPanel } from './PublishPanel';
 
-// 409 and 422 both mean the Pending changes or their problems changed (SPEC 10.14): the current review.
+// A 409, moved or blocked, means the Pending changes or their problems changed (SPEC 10.14): the current review.
 function movedReview(status: number, body: unknown): PublicationReview | null {
   const refused = body as Partial<PublicationRefused> | null;
 
-  return (status === 409 || status === 422) && refused?.review !== undefined ? refused.review : null;
+  return status === 409 && refused?.review !== undefined ? refused.review : null;
 }
 
 export function Publish({ onChange }: { onChange: () => void }) {
-  const fail = useFailure();
-  const refuse = useContext(ReportRefusal);
+  const settle = useSettle();
   const [revision, setRevision] = useState(0);
-  const answer = useApi<PublicationReview>('/publication', { revision });
+  const answer = useApi<PublicationReview>(API.publication, { revision });
   const [moved, setMoved] = useState<PublicationReview | null>(null);
   const [outcome, setOutcome] = useState<Outcome>(null);
   // The review answered before a Publication: a new revision keeps it until the new one arrives; it is not shown.
@@ -34,7 +33,7 @@ export function Publish({ onChange }: { onChange: () => void }) {
 
   const publish = async (hash: string) => {
     setSending(true);
-    const result = await postJson<Published>('/publication', { hash, comment });
+    const result = await postJson<Published>(API.publication, { hash, comment });
     setSending(false);
     if (result.ok) {
       setOutcome({ kind: 'published', published: result.data });
@@ -46,18 +45,9 @@ export function Publish({ onChange }: { onChange: () => void }) {
 
       return;
     }
-    if (fail(result.status)) {
-      return;
-    }
-    const refused = refusalOf(result.status, result.body);
-    if (refused) {
-      refuse(refused);
-
-      return;
-    }
     const current = movedReview(result.status, result.body);
     if (current === null) {
-      setOutcome({ kind: 'failed', status: result.status });
+      settle(result, (status) => setOutcome({ kind: 'failed', status }));
 
       return;
     }
@@ -69,7 +59,7 @@ export function Publish({ onChange }: { onChange: () => void }) {
   const nothing = review !== null && review.groups.length === 0 && review.problems.length === 0;
 
   return (
-    <Page publish={review !== null && !nothing}>
+    <Page width={review !== null && !nothing ? 'publish' : undefined}>
       <h1 className="h1">Publish</h1>
       <PublishOutcome outcome={outcome} />
       {review && nothing && <Nothing review={review} />}

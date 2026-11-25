@@ -14,7 +14,7 @@ export function UnreadableEntity({ entity, onTitle }: { entity: EditedEntity; on
   useEffect(() => onTitle(title), [title, onTitle]);
 
   return (
-    <Page wide>
+    <Page width="wide">
       <EditHeader title={title} entityId={entity.entityId} onDelete={deletion.ask} />
       {deletion.element}
       <Callout kind="error" title="Unreadable">

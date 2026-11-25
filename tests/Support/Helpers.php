@@ -20,7 +20,7 @@ final class Helpers
 
     public static function inspect(DatabaseSettings $settings, int $known = 9): DatabaseState
     {
-        return (new StateInspector(new ConnectionFactory(), $settings, $known))->inspect()->state;
+        return (new StateInspector(new ConnectionFactory(), $settings, $known))->read()->status->state;
     }
 
 

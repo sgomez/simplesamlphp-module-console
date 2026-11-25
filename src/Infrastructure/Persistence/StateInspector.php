@@ -22,12 +22,6 @@ final class StateInspector
     }
 
 
-    public function inspect(): DatabaseStatus
-    {
-        return $this->read()->status;
-    }
-
-
     public function read(): DatabaseReading
     {
         try {

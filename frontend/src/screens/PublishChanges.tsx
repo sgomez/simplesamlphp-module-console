@@ -1,6 +1,6 @@
-import { consoleUrl } from '../api/client';
 import type { ChangeState, CurrentSnapshot, PendingChange, PublicationReview } from '../api/types';
 import { changeCount, plural } from '../app/counts';
+import { editPath } from '../app/paths';
 import { Card } from '../components/ui/Card';
 import { Eid } from '../components/ui/Eid';
 import { Row } from '../components/ui/Row';
@@ -20,12 +20,12 @@ function ChangeRow({ state, change }: { state: ChangeState; change: PendingChang
     </>
   );
 
-  return change.edit === null ? (
-    <Row plain tight>
+  return change.opens ? (
+    <Row to={editPath(change.entityId)} tight>
       {content}
     </Row>
   ) : (
-    <Row href={consoleUrl(change.edit)} tight>
+    <Row plain tight>
       {content}
     </Row>
   );

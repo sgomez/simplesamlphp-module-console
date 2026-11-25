@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { postJson } from '../api/client';
+import { API } from '../api/paths';
 import type { DatabaseRefusal, MigrationRun } from '../api/types';
-import { useFailure } from '../app/failure';
-import { refusalOf } from '../app/refusals';
+import { plural } from '../app/counts';
+import { failureText, useSettle } from '../app/settle';
 import { Button } from '../components/ui/Button';
+import { Callout } from '../components/ui/Callout';
 import { Card } from '../components/ui/Card';
 import { Pre } from '../components/ui/Code';
 import { Disclosure } from '../components/ui/Disclosure';
@@ -25,10 +27,6 @@ export function stateCrumb(refusal: DatabaseRefusal): string {
   return titles[refusal.state];
 }
 
-function failedRun(reason: string): MigrationRun {
-  return { outcome: 'Failed', applied: [], failed: null, reason };
-}
-
 interface StatePageProps {
   refusal: DatabaseRefusal;
   // A callout sits above the card and takes the place of its offset.
@@ -36,37 +34,33 @@ interface StatePageProps {
   // The migration a failed run stopped at.
   failedAt: number | null;
   onRun: (run: MigrationRun) => void;
-  onRefused: (refusal: DatabaseRefusal) => void;
 }
 
-function Pending({ refusal, flush, failedAt, onRun, onRefused }: StatePageProps) {
+function Pending({ refusal, flush, failedAt, onRun }: StatePageProps) {
   const [running, setRunning] = useState(false);
-  const fail = useFailure();
-  const count = refusal.missing.length;
+  // A run the server did not carry out: no answer, or one that is not a run.
+  const [failed, setFailed] = useState<number | null>(null);
+  const settle = useSettle();
 
   const update = () => {
     setRunning(true);
-    void postJson<MigrationRun>('/migrate', {}).then((result) => {
+    setFailed(null);
+    void postJson<MigrationRun>(API.migrate, {}).then((result) => {
       setRunning(false);
       if (result.ok) {
         onRun(result.data);
-
-        return;
-      }
-      const refused = refusalOf(result.status, result.body);
-      if (refused) {
-        onRefused(refused);
-      } else if (!fail(result.status)) {
-        onRun(failedRun(result.status === 0 ? 'No answer from the server.' : `The server answered ${result.status}.`));
+      } else {
+        settle(result, setFailed);
       }
     });
   };
 
   return (
     <>
+      {failed !== null && <Callout kind="error" title={failureText('Migrations not run', failed)} />}
       <Empty
         state
-        flush={flush}
+        flush={flush || failed !== null}
         title="The database needs an update"
         text="A migration cannot be undone without restoring a backup. Sign-in is not affected."
         actions={
@@ -76,7 +70,7 @@ function Pending({ refusal, flush, failedAt, onRun, onRefused }: StatePageProps)
         }
       />
       <div className="section-head">
-        <h2 className="h2">{`${count} ${count === 1 ? 'migration' : 'migrations'} to apply`}</h2>
+        <h2 className="h2">{`${plural(refusal.missing.length, 'migration', 'migrations')} to apply`}</h2>
       </div>
       <Card list>
         {refusal.missing.map((migration) => (

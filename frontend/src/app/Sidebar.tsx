@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router';
 import type { SessionLinks } from '../api/types';
 import { IdentityCard } from '../components/ui/IdentityCard';
+import { plural } from './counts';
 import { PUBLISH, SP_LIST } from './paths';
 
 const navClass = ({ isActive }: { isActive: boolean }) => (isActive ? 'nav-item active' : 'nav-item');
@@ -32,7 +33,7 @@ export function Sidebar({ session, pending }: { session: SessionLinks | null; pe
           <NavLink className={navClass} to={PUBLISH}>
             <span>Publish</span>
             {pending > 0 && (
-              <span className="nav-badge" aria-label={`${pending} changes to publish`}>
+              <span className="nav-badge" aria-label={`${plural(pending, 'change', 'changes')} to publish`}>
                 {pending}
               </span>
             )}

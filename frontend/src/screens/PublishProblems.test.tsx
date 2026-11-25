@@ -10,8 +10,8 @@ describe('the problems and warnings of the Publish screen', () => {
         ...ready,
         canPublish: false,
         problems: [
-          { entityId: 'https://a.example.org', message: 'No ACS.', edit: EDIT_A },
-          { entityId: null, message: 'The Snapshot is too large.', edit: null },
+          { entityId: 'https://a.example.org', message: 'No ACS.' },
+          { entityId: null, message: 'The Snapshot is too large.' },
         ],
       }),
     ]);
@@ -34,7 +34,7 @@ describe('the problems and warnings of the Publish screen', () => {
   });
 
   it('names a single problem in the singular, as a line rather than a list', async () => {
-    const problem = { entityId: 'https://a.example.org', message: 'No ACS.', edit: EDIT_A };
+    const problem = { entityId: 'https://a.example.org', message: 'No ACS.' };
     servePublication([review({ ...ready, canPublish: false, problems: [problem] })]);
     const panel = await shown();
     const alert = screen.getByRole('alert');
@@ -51,8 +51,8 @@ describe('the problems and warnings of the Publish screen', () => {
       review({
         ...ready,
         warnings: [
-          { entityId: 'https://a.example.org', message: 'The certificate expires in 12 days.', edit: EDIT_A },
-          { entityId: null, message: 'A collision.', edit: null },
+          { entityId: 'https://a.example.org', message: 'The certificate expires in 12 days.' },
+          { entityId: null, message: 'A collision.' },
         ],
       }),
     ]);
@@ -72,7 +72,7 @@ describe('the problems and warnings of the Publish screen', () => {
   });
 
   it('counts a single warning in the singular', async () => {
-    servePublication([review({ ...ready, warnings: [{ entityId: null, message: 'A collision.', edit: null }] })]);
+    servePublication([review({ ...ready, warnings: [{ entityId: null, message: 'A collision.' }] })]);
     await shown();
 
     expect(screen.getByText('1 warning').className).toBe('row-name');

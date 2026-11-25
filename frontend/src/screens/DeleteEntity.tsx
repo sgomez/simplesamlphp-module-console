@@ -1,9 +1,9 @@
 import { useContext, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { postJson } from '../api/client';
-import { useFailure } from '../app/failure';
+import { API } from '../api/paths';
 import { ReportOutcome } from '../app/Page';
-import { refusalOf, ReportRefusal } from '../app/refusals';
+import { failureText, useSettle } from '../app/settle';
 import { Callout } from '../components/ui/Callout';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
@@ -28,14 +28,13 @@ export function useDeleteEntity({ entityId, name, state }: Deleted, then: string
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<number | null>(null);
   const navigate = useNavigate();
-  const fail = useFailure();
-  const refuse = useContext(ReportRefusal);
+  const settle = useSettle();
   const announce = useContext(ReportOutcome);
   const label = name ?? entityId;
 
   const confirm = async () => {
     setBusy(true);
-    const result = await postJson<unknown>('/entities/saml20-sp-remote/delete', { entityid: entityId });
+    const result = await postJson<unknown>(API.spDelete, { entityid: entityId });
     setBusy(false);
     setOpen(false);
     if (result.ok) {
@@ -44,27 +43,12 @@ export function useDeleteEntity({ entityId, name, state }: Deleted, then: string
 
       return;
     }
-    if (fail(result.status)) {
-      return;
-    }
-    const refused = refusalOf(result.status, result.body);
-    if (refused) {
-      refuse(refused);
-    } else {
-      setFailed(result.status);
-    }
+    settle(result, setFailed);
   };
 
   const element = (
     <>
-      {failed !== null && (
-        <Callout
-          kind="error"
-          title={
-            failed === 0 ? 'Not deleted: the Console could not be reached.' : `Not deleted: the server answered ${failed}.`
-          }
-        />
-      )}
+      {failed !== null && <Callout kind="error" title={failureText('Not deleted', failed)} />}
       <ConfirmDialog
         open={open}
         title={`Delete ${label}?`}

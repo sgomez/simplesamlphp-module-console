@@ -1,16 +1,16 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { postJson } from '../../api/client';
+import { API } from '../../api/paths';
 import type { EditedEntity, Refusal, Validation } from '../../api/types';
-import { useFailure } from '../../app/failure';
 import { Page } from '../../app/Page';
 import { SP_LIST } from '../../app/paths';
-import { refusalOf, ReportRefusal } from '../../app/refusals';
+import { useSettle } from '../../app/settle';
 import type { EditorHandle } from '../../components/ui/Editor';
 import { useDeleteEntity } from '../DeleteEntity';
 import { EditHeader } from './EditHeader';
 import { Marks } from './Marks';
 import { checkedOf, lineMarks, marksOf } from './marks';
-import { useValidation, VALIDATE_PATH } from './useValidation';
+import { useValidation } from './useValidation';
 import { Outcome, type SaveOutcome } from './Outcome';
 import { PhpCard } from './PhpCard';
 import { SaveBar } from './SaveBar';
@@ -37,8 +37,7 @@ export function EntityEditor({ initial, pending, onSaved, onTitle, onCreated, on
   const [saving, setSaving] = useState(false);
   const { checked, setChecked, current } = useValidation(initial, text, view.entityId);
   const editor = useRef<EditorHandle>(null);
-  const fail = useFailure();
-  const refuse = useContext(ReportRefusal);
+  const settle = useSettle();
   const title = onCreated ? 'New service provider' : (view.name ?? view.entityId);
   const dirty = text !== (view.php ?? '');
   const deletion = useDeleteEntity(view, SP_LIST);
@@ -55,15 +54,12 @@ export function EntityEditor({ initial, pending, onSaved, onTitle, onCreated, on
     setSaving(true);
     const sent = text;
     const result = await postJson<EditedEntity>(
-      `/entities/saml20-sp-remote/save`,
+      API.spSave,
       onCreated ? { php: sent } : { entityid: view.entityId, version: view.version, php: sent },
     );
     setSaving(false);
-    if (!result.ok && fail(result.status, view.entityId)) {
-      return;
-    }
+    // A create moves on with a one-shot outcome, which refreshes the session.
     if (result.ok && onCreated) {
-      onSaved();
       onCreated(result.data);
 
       return;
@@ -77,17 +73,12 @@ export function EntityEditor({ initial, pending, onSaved, onTitle, onCreated, on
       const refusal = result.body as Refusal;
       setChecked({ text: sent, marks: marksOf(refusal) });
       setOutcome({ text: sent, shown: { kind: 'invalid', count: refusal.errors.length, readable: refusal.readable } });
-      const check = await postJson<Validation>(VALIDATE_PATH, { entityid: view.entityId, php: sent });
+      const check = await postJson<Validation>(API.spValidate, { entityid: view.entityId, php: sent });
       if (check.ok && current.current === sent) {
         setChecked({ text: sent, marks: marksOf({ ...refusal, warnings: check.data.warnings }) });
       }
     } else {
-      const refused = refusalOf(result.status, result.body);
-      if (refused) {
-        refuse(refused);
-      } else {
-        setOutcome({ text: sent, shown: { kind: 'failed', status: result.status } });
-      }
+      settle(result, (status) => setOutcome({ text: sent, shown: { kind: 'failed', status } }), view.entityId);
     }
   };
 
@@ -98,7 +89,7 @@ export function EntityEditor({ initial, pending, onSaved, onTitle, onCreated, on
 
   return (
     <Page
-      wide
+      width="wide"
       bar={
         <SaveBar
           dirty={dirty}

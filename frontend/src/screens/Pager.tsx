@@ -1,4 +1,5 @@
 import type { EntityPage } from '../api/types';
+import { plural } from '../app/counts';
 import { SP_LIST } from '../app/paths';
 import { LinkButton } from '../components/ui/Button';
 
@@ -17,7 +18,7 @@ export function Pager({ result }: { result: EntityPage }) {
   return (
     <nav className="pager" aria-label="Pagination">
       <span className="small muted pager-total">
-        {`${first} to ${last} of ${total} ${total === 1 ? 'service provider' : 'service providers'}`}
+        {`${first} to ${last} of ${plural(total, 'service provider', 'service providers')}`}
       </span>
       {pages > 1 && (
         <>

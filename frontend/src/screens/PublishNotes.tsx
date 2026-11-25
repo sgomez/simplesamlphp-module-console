@@ -1,26 +1,21 @@
-import { consoleUrl } from '../api/client';
 import type { PublicationProblem } from '../api/types';
+import { plural } from '../app/counts';
+import { editPath } from '../app/paths';
 import { Callout } from '../components/ui/Callout';
 import { Disclosure } from '../components/ui/Disclosure';
 import { WarningIcon } from '../components/ui/icons';
 import { TextLink } from '../components/ui/TextLink';
-import { plural } from '../app/counts';
 
 function Note({ note }: { note: PublicationProblem }) {
   if (note.entityId === null) {
     return <>{note.message}</>;
   }
-  const name = <span className="mono">{note.entityId}</span>;
 
   return (
     <>
-      {note.edit === null ? (
-        name
-      ) : (
-        <TextLink href={consoleUrl(note.edit)} inherit>
-          {name}
-        </TextLink>
-      )}
+      <TextLink to={editPath(note.entityId)} inherit>
+        <span className="mono">{note.entityId}</span>
+      </TextLink>
       {`: ${note.message}`}
     </>
   );

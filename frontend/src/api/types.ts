@@ -16,11 +16,11 @@ export interface Session extends SessionLinks {
 
 export type ChangeState = 'Unpublished' | 'Modified' | 'Deleted' | 'Unreadable';
 
-// edit: a Console path; null for Deleted and Unreadable, which have nothing to open.
+// opens: false for Deleted and Unreadable, which have no edit screen to open.
 export interface PendingChange {
   entityId: string;
   loadError: string | null;
-  edit: string | null;
+  opens: boolean;
 }
 
 export interface ChangeGroup {
@@ -31,7 +31,6 @@ export interface ChangeGroup {
 export interface PublicationProblem {
   entityId: string | null;
   message: string;
-  edit: string | null;
 }
 
 export interface PublicationReview {
@@ -49,10 +48,10 @@ export interface Published {
   build: string | null;
 }
 
-export interface PublicationRefused {
-  error: 'moved' | 'blocked';
-  review: PublicationReview;
-}
+// The 409 of a confirming request: the Pending changes moved, or a new problem blocks them.
+export type PublicationRefused =
+  | { code: 'moved'; review: PublicationReview }
+  | { code: 'blocked'; problems: PublicationProblem[]; review: PublicationReview };
 
 export interface Migration {
   number: number;

@@ -32,7 +32,7 @@ describe('the confirming request of the Publish screen', () => {
 
   it('shows the current changes with a message, keeping the comment, when they moved', async () => {
     const moved = review({ ...ready, groups: ready.groups.slice(0, 1), hash: 'h2' });
-    const fetch = servePublication([ready], { status: 409, body: { error: 'moved', review: moved } });
+    const fetch = servePublication([ready], { status: 409, body: { code: 'moved', review: moved } });
     const panel = await shown();
 
     fireEvent.change(within(panel).getByRole('textbox'), { target: { value: 'Why' } });
@@ -49,8 +49,8 @@ describe('the confirming request of the Publish screen', () => {
   });
 
   it('says the changes moved and shows the new problem that blocks the confirming request', async () => {
-    const blocked = review({ ...ready, canPublish: false, problems: [{ entityId: null, message: 'Too large.', edit: null }] });
-    servePublication([ready], { status: 422, body: { error: 'blocked', problems: blocked.problems, review: blocked } });
+    const blocked = review({ ...ready, canPublish: false, problems: [{ entityId: null, message: 'Too large.' }] });
+    servePublication([ready], { status: 409, body: { code: 'blocked', problems: blocked.problems, review: blocked } });
     const panel = await shown();
 
     fireEvent.click(within(panel).getByRole('button', { name: 'Publish 4 changes' }));
