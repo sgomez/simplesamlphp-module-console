@@ -92,7 +92,7 @@ The Console does none of the following in v1.
 
 The module is the Composer package `sgomez/simplesamlphp-module-console` and installs as the SimpleSAMLphp module `console`. Its production dependencies beyond SimpleSAMLphp 2.5 are listed in section 3.7.
 
-The package ships the built front end under `public/assets/app/`, with Vite's manifest, and the JSON Schemas under `docs/spec/schemas/`. The front-end sources with their stories and reference screenshots, the Storybook configuration, `package.json`, `package-lock.json` and the Node tooling are `export-ignore`. Installing the module needs no Node.
+The package ships the built front end under `public/assets/app/`, with Vite's manifest, and the JSON Schemas under `docs/spec/schemas/`. The front-end sources with their stories, the Storybook configuration, `package.json`, `package-lock.json` and the Node tooling are `export-ignore`. Installing the module needs no Node.
 
 ### 2.2 Installation steps
 
@@ -341,7 +341,7 @@ The front end has a build step (section 10.17). Its npm dependencies are pinned 
 | `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`, `@types/react-dom` | Build and type checking |
 | `eslint`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, `eslint-plugin-boundaries`, `eslint-import-resolver-typescript` | Lint, including the rules of section 12.4 |
 | `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/dom`, `jsdom` | Unit tests in jsdom and the coverage of every test project |
-| `@vitest/browser`, `@vitest/browser-playwright`, `playwright` | Story tests and page screenshots in Chromium |
+| `@vitest/browser`, `@vitest/browser-playwright`, `playwright` | Story tests in Chromium |
 | `storybook`, `@storybook/react-vite`, `@storybook/addon-vitest`, `@storybook/addon-a11y`, `@storybook/addon-docs` | Stories, Foundations docs, and the axe check on every story |
 | `json-schema-to-typescript` | Types generated from the schemas |
 
@@ -2253,7 +2253,6 @@ The Console's link on core's Configuration tab never queries the database, so no
 | ESLint with `typescript-eslint` and the React plugins | Front-end lint and the rules of section 12.4 |
 | Vitest with Testing Library and jsdom, coverage through V8 | Unit tests of domain logic and the API client |
 | Vitest browser mode on Playwright's Chromium, through Storybook's Vitest addon, with axe | Every story as a test, its `play` function and its accessibility check |
-| Vitest `toMatchScreenshot`, with the browser in the official Playwright Docker image pinned by digest | Screenshots of page stories |
 
 There are no end-to-end tests against a running SimpleSAMLphp in v1: no Pest browser plugin, and stories run over the in-memory adapters. Node runs only in development and CI. Mago is not used. PHP test files are not under static analysis.
 
@@ -2278,7 +2277,7 @@ There are no end-to-end tests against a running SimpleSAMLphp in v1: no Pest bro
 
 **Story tests** cover every primitive, domain component and page. Every story renders in Chromium and passes axe with no violation; interactive stories drive the keyboard and check focus in a `play` function. Domain logic (the form engine's presence, `x-groups` counts, `x-when`, list rows and finder, and the use cases of each slice) has unit tests in jsdom. The HTTP adapters are tested against a stubbed `fetch`.
 
-**Page screenshots.** Every page story is compared with its committed reference screenshot, light and dark, at desktop width and at 400 px. The browser runs in the Playwright Docker image, locally and in CI, so that a reference taken on one machine matches on another. `npm run test:visual` runs it locally and `npm run test:visual -- --update` writes new references. Primitives and domain components have no screenshots.
+**No screenshot comparison.** The look of a page is reviewed by a person, against its board, in Storybook.
 
 ### 12.3 Thresholds
 
@@ -2298,7 +2297,7 @@ Every threshold blocks.
 
 Line coverage is measured in one process that runs the persistence, migration and Publication tests on every engine whose DSN is set (section 12.6), so the code of every engine counts towards the 90 %, engine-only branches included, with no exclusion and no merging of reports. The threshold binds in CI, where every engine runs (section 13.2). Locally it is reached only with every engine that has its own implementation running, which means the `postgres` profile next to the default MariaDB (section 12.7).
 
-The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, the page shell template, the stylesheet, generated types, the built output, lock files, fixtures and reference screenshots are exempt.
+The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, the page shell template, the stylesheet, generated types, the built output, lock files, and fixtures are exempt.
 
 PHP coverage thresholds are enforced by Pest, front-end ones by Vitest. No external coverage service is used.
 
@@ -2388,8 +2387,6 @@ The matrix is not the full product of PHP versions and engines. The SQL does not
 | Lowest dependencies: `composer update --prefer-lowest`, full suite | 8.4 | SQLite |
 | `composer audit --locked` | 8.4 | None |
 | Front end, on the Node version of `mise.toml`: `npm ci --ignore-scripts`, ESLint, `tsc`, Vitest in jsdom and in Chromium with its coverage threshold, generated types up to date, `vite build` with no difference from the committed `public/assets/app/` | | None |
-| Visual: the page screenshots of section 12.2, with the browser in the pinned Playwright image; on a failure the diffs are uploaded as a workflow artefact | | None |
-| Visual gate: fails when a pull request into `main` adds, changes or deletes a reference screenshot and does not carry the `visual-change` label. Only the maintainer applies the label | | None |
 | Package contents: `git archive` holds `public/assets/app/` with its manifest and `docs/spec/schemas/`, and none of `frontend/`, `package.json`, `package-lock.json` or `node_modules` | | None |
 | `npm audit --omit=dev` | | None |
 | CodeQL on the workflows and on `javascript-typescript` (section 14.5) | | None |

@@ -14,7 +14,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Board: Story = {
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await expect(await page.findByRole('heading', { name: 'Federation feed' })).toBeVisible();
@@ -43,7 +42,6 @@ export const NothingTicked: Story = {
 
 export const AllInSource: Story = {
   name: 'Draft: All of a source ticked',
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await userEvent.click(await page.findByRole('checkbox', { name: 'Select all 2,941 in this source' }));

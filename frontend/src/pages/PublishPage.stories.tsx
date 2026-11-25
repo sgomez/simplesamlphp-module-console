@@ -24,7 +24,6 @@ const blocked = {
 
 export const Ready: Story = {
   args: { publication: {}, pending: 7 },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await userEvent.click(await page.findByRole('button', { name: /Library catalogue/ }));
@@ -58,7 +57,6 @@ export const Moved: Story = {
     },
     pending: 7,
   },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     await publish(canvasElement);
 
@@ -75,7 +73,6 @@ export const Empty: Story = {
 
 export const Done: Story = {
   args: { publication: {}, live: 42 },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     await publish(canvasElement);
     const page = within(canvasElement);

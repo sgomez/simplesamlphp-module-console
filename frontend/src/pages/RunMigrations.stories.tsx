@@ -93,13 +93,11 @@ async function update(canvasElement: HTMLElement, text: string) {
 export const NotRun: Story = {
   name: 'Draft: Not run, server error',
   args: { after: boardRefusal(), database: { failure: { status: 500, body: null } } },
-  parameters: { screenshot: 'after-play' },
   play: ({ canvasElement }) => update(canvasElement, 'Migrations not run: the server answered 500.'),
 };
 
 export const Unreachable: Story = {
   name: 'Draft: Not run, no answer',
   args: { after: boardRefusal(), database: { failure: { status: 0, body: null } } },
-  parameters: { screenshot: 'after-play' },
   play: ({ canvasElement }) => update(canvasElement, 'Migrations not run: the Console could not be reached.'),
 };

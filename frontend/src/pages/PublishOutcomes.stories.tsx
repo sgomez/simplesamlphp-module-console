@@ -22,7 +22,6 @@ const served = {
 export const MovedServed: Story = {
   name: 'Draft: Moved, as the API serves it',
   args: { publication: { review: served, answer: { kind: 'moved', moved: { review: served } }, full: false }, pending: 7 },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     await publish(canvasElement);
 
@@ -33,7 +32,6 @@ export const MovedServed: Story = {
 export const Publishing: Story = {
   name: 'Draft: Publishing',
   args: { publication: {}, pending: 7, more: { publish: () => new Promise(() => undefined) } },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     await publish(canvasElement);
 
@@ -44,7 +42,6 @@ export const Publishing: Story = {
 export const NotPublished: Story = {
   name: 'Draft: Not published',
   args: { publication: { answer: { kind: 'failed', failed: { status: 500, body: null } } }, pending: 7 },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     await publish(canvasElement);
 
@@ -55,7 +52,6 @@ export const NotPublished: Story = {
 export const BuildFailed: Story = {
   name: 'Draft: Published, this node could not build it',
   args: { publication: { answer: { kind: 'published', published: { number: 42, build: 'This node could not build Snapshot #42: disk full.' } } }, live: 42 },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     await publish(canvasElement);
 
@@ -67,7 +63,6 @@ export const BuildFailed: Story = {
 export const DiscardAll: Story = {
   name: 'Draft: Discard all',
   args: { publication: {}, pending: 7 },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await userEvent.click(await page.findByRole('button', { name: 'Discard all 7 changes…' }));

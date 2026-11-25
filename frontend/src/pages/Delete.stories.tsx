@@ -43,7 +43,7 @@ function Framed({ inSnapshot = false, removal, review }: Frame) {
 const meta = {
   title: 'Pages/Delete',
   component: Framed,
-  parameters: { route: '/entities/saml20-sp-remote?q=example', screenshot: 'after-play' },
+  parameters: { route: '/entities/saml20-sp-remote?q=example' },
 } satisfies Meta<typeof Framed>;
 
 export default meta;

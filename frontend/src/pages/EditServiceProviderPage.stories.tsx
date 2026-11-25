@@ -6,7 +6,7 @@ import { EDIT_ROUTE, EditFrame, editAndSave } from '../app/test/EditFrame';
 const meta = {
   title: 'Pages/Edit service provider',
   component: EditFrame,
-  parameters: { route: EDIT_ROUTE, screenshot: 'after-play' },
+  parameters: { route: EDIT_ROUTE },
 } satisfies Meta<typeof EditFrame>;
 
 export default meta;

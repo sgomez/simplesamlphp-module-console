@@ -51,7 +51,7 @@ The shell contains no chrome. It references the entry script and its stylesheet 
 - **Tokens and fonts.** No colour, size or font is written outside the token definitions, and fonts are system stacks, whatever a board names.
 - **Storybook.** Every primitive, domain component and page has stories next to it, rendered over the in-memory adapters. Tokens appear as Foundations docs generated from the custom properties of `console.css`, light and dark. Storybook is the review surface: every state of every page has its own URL, with no backend.
 - **Tests on the stories.** Every story runs as a Vitest browser test in Playwright's Chromium (`@storybook/addon-vitest`) with an axe check that fails on any violation. Interactive stories have `play` functions for keyboard and focus. Domain logic keeps jsdom unit tests.
-- **Visual regression.** Page stories, and only page stories, are compared with Vitest's `toMatchScreenshot`, light and dark, at desktop width and at 400 px. Reference screenshots are committed. The browser runs in the official Playwright Docker image, pinned by digest, locally and in CI, so fonts and rendering are the same everywhere. A CI job fails when a pull request changes reference screenshots without the `visual-change` label, which only the maintainer applies.
+- **No visual regression.** The look of a page is reviewed by a person, against its board, in Storybook.
 - **Dependencies.** The npm set is pinned exactly:
   - at runtime: React, React DOM, a router and `react-aria-components`;
   - at build and test time: Vite with its React plugin, TypeScript, ESLint with its TypeScript, React and boundaries plugins, Vitest with Testing Library, jsdom and browser mode on Playwright, Storybook with its Vitest, accessibility and docs addons, Ajv, and a JSON-Schema-to-TypeScript generator.
@@ -101,14 +101,14 @@ Both sides read the same files in `docs/spec/schemas`.
 - **dependency-cruiser**: rejected; ESLint already runs in CI, and `eslint-plugin-boundaries` enforces the layers there.
 - **Code snapshots** (`toMatchSnapshot` of rendered HTML): rejected; they do not see `console.css`, break on any markup change and get updated without review.
 - **Hosted visual review** (Chromatic, Percy, Applitools, Lost Pixel's platform): rejected; no proprietary software is used and nothing is sent to an external service.
-- **Playwright Test `toHaveScreenshot`**: not chosen; more mature, but a second test runner next to Vitest. It is the fallback if Vitest's comparison proves unstable.
+- **Committed reference screenshots** (Vitest `toMatchScreenshot` or Playwright Test, in a pinned Playwright image): tried and dropped. Every page story, light and dark, at two widths, came to about 450 images and 36 MB, a Docker image for every run, and a review nobody could do image by image.
 
 ## Consequences
 
 - **New security surface.** The JSON API is new attack surface. Every API route goes through the gate, and the request forgery walk covers every API POST.
 - **Two test stacks.** The HTTP tests that asserted Twig HTML become API tests that assert status, JSON and headers. Front-end code gets Vitest tests in jsdom and in a real browser.
-- **CI.** CI gains a front-end job: lint, type check, tests in jsdom and in the browser, build-and-compare, generated types up to date, and a package-contents check. A visual job runs the page screenshots in the Playwright image, and a gate job checks the `visual-change` label. Dependabot gains the `npm` ecosystem, and CodeQL gains `javascript-typescript`.
-- **Screenshots are reviewed by a person.** A pull request that changes the look of a page waits for the maintainer, who compares it with its board in Storybook before applying the label.
+- **CI.** CI gains a front-end job: lint, type check, tests in jsdom and in the browser, build-and-compare, generated types up to date, and a package-contents check. Dependabot gains the `npm` ecosystem, and CodeQL gains `javascript-typescript`.
+- **The look is reviewed by a person.** A pull request that changes the look of a page waits for the maintainer, who compares it with its board in Storybook.
 - **React Aria's pressable style.** `usePress` adds a `<style>` element for `touch-action` unless an element with the id `react-aria-pressable-style` exists. Core's CSP would block that element, so the shell's stylesheet link carries that id and `console.css` holds the rule.
 - **Node** is a development and CI dependency, never an installation one.
 - **The semantics of ADR 0007 survive in the client's form engine, specified in SPEC section 10.10.** Only set root options are shown, presence is the existence of the key, `x-groups`, `x-when`, the `x-widget` allowlist, booleans starting opposite their `default`, `default` never written, and `extra` alone in the last group.

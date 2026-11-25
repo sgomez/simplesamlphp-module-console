@@ -55,7 +55,6 @@ export const SnapshotRows: Story = {
       ],
     },
   },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await userEvent.click(await page.findByRole('button', { name: /Rolled back/ }));
@@ -70,7 +69,6 @@ export const SnapshotRows: Story = {
 export const FullDocument: Story = {
   name: 'Draft: Full document after a change',
   args: { audit: { entries: boardEntries.slice(0, 1) } },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await userEvent.click(await page.findByRole('button', { name: 'Full document after this change' }));

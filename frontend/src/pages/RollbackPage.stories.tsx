@@ -28,7 +28,6 @@ export const Board: Story = {
 export const LostRace: Story = {
   name: 'Draft: Lost race',
   args: { history: { rollback: 'moved' } },
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await userEvent.click(await page.findByRole('button', { name: 'Roll back to #40' }));
@@ -63,7 +62,6 @@ export const ModulesMissing: Story = {
 
 export const RolledBack: Story = {
   name: 'Draft: Rolled back',
-  parameters: { screenshot: 'after-play' },
   play: async ({ canvasElement }) => {
     const page = within(canvasElement);
     await userEvent.click(await page.findByRole('button', { name: 'Roll back to #40' }));
