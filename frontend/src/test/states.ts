@@ -18,7 +18,7 @@ export function serveState(more: RefusalFields) {
 }
 
 // Pending migrations until the run; then the state `after` describes, or a ready database when it is null.
-export function serveRun(run: MigrationRun | { status: number; body: unknown }, after: RefusalFields | null) {
+export function serveRun(run: MigrationRun | { status?: number; body: unknown }, after: RefusalFields | null) {
   let ran = false;
 
   return stubApi({

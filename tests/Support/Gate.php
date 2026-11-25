@@ -22,6 +22,21 @@ final class Gate
     }
 
 
+    /**
+     * A gate over a SQLite library that reports the given version.
+     */
+    public static function withSqlite(string $version): ApiGate
+    {
+        $session = Session::getSessionFromRequest();
+
+        return new ApiGate(
+            new AdminAccess($session),
+            new DatabaseGate(static fn (): string => $version),
+            new CsrfToken($session),
+        );
+    }
+
+
     public static function post(array $headers, string $body = '{}'): Request
     {
         return Request::create('/module.php/console/api/x', 'POST', [], [], [], $headers, $body);

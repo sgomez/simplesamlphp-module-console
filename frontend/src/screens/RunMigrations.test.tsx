@@ -35,11 +35,12 @@ describe('the outcome of Run migrations', () => {
   it('reports a run that lost the race over the state as it now stands', async () => {
     const reason = 'Another run is applying the migrations at the same time.';
     serveRun({ outcome: 'Concurrent', applied: [], failed: null, reason }, { missing: PENDING.slice(2) });
-    renderAt(LIST);
+    const { container } = renderAt(LIST);
 
     await update();
 
     expect(await screen.findByRole('heading', { level: 2, name: '1 migration to apply' })).toBeDefined();
+    expect(container.querySelector('.state-card')).toBeNull();
     const message = screen.getByRole('status');
     expect(message.className).toBe('callout callout-warning');
     expect(message.textContent).toBe(reason);
@@ -56,6 +57,7 @@ describe('the outcome of Run migrations', () => {
     expect(alert.className).toBe('callout callout-error');
     expect(alert.querySelector('.callout-title')?.textContent).toBe('Migration 7 failed: Create console_audit');
     expect(within(alert).getByText(reason).className).toBe('mono wrap-any');
+    await screen.findByText('Failed');
     expect(container.querySelector('.state-card')).toBeNull();
     const failed = container.querySelectorAll('.card-list .status');
     expect(failed).toHaveLength(1);

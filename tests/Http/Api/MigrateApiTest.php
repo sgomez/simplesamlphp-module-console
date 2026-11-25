@@ -5,6 +5,7 @@ declare(strict_types=1);
 use SimpleSAML\Module\console\Tests\Support\Api;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\Db;
+use SimpleSAML\Module\console\Tests\Support\Gate;
 
 it('applies the pending migrations and lets the Console through', function (array|null $applied): void {
     $client = (new ConsoleClient())->withDatabase($applied);
@@ -82,4 +83,23 @@ it('writes nothing for a run without a valid token', function (): void {
 
     expect($response->getStatusCode())->toBe(403)
         ->and(Db::tableExists($client->database(), 'console_schema_version'))->toBeFalse();
+});
+
+it('applies only what is missing when the numbers are not exactly 1 to N', function (): void {
+    $client = (new ConsoleClient())->withDatabase(null);
+    Api::migrate($client);
+    $client->database()->exec('DROP TABLE console_snapshot; DELETE FROM console_schema_version WHERE version = 3');
+
+    expect(Api::migrate($client)['applied'])->toBe([3])
+        ->and(Db::applied($client->database(), 'console_schema_version'))->toBe(range(1, 9));
+});
+
+it('refuses to run on a SQLite older than the minimum', function (): void {
+    (new ConsoleClient())->loginAsAdmin();
+    $gate = Gate::withSqlite('3.22.0');
+
+    $response = $gate->guard(Gate::post(['CONTENT_TYPE' => 'application/json']), migrating: true);
+
+    expect($response?->getStatusCode())->toBe(503)
+        ->and(Api::json($response)['state'])->toBe('SqliteTooOld');
 });

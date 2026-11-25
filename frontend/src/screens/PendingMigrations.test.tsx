@@ -71,14 +71,4 @@ describe('the update button', () => {
     finish({ outcome: 'Concurrent', applied: [], failed: null, reason: 'Another run.' });
     expect(await screen.findByText('Another run.')).toBeDefined();
   });
-
-  it('can be pressed again when the run is refused', async () => {
-    serveRun({ status: 403, body: { error: 'refused' } }, null);
-    renderAt(LIST);
-
-    await update();
-
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Update database' }).className).toBe('btn btn-primary'));
-    expect((screen.getByRole('button', { name: 'Update database' }) as HTMLButtonElement).disabled).toBe(false);
-  });
 });

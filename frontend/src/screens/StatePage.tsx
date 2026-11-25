@@ -1,11 +1,15 @@
-import { Fragment, type ReactNode } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
+import { postJson } from '../api/client';
 import type { DatabaseRefusal, MigrationRun } from '../api/types';
+import { useFailure } from '../app/failure';
+import { refusalOf } from '../app/refusals';
 import { Button } from '../components/ui/Button';
-import { Callout } from '../components/ui/Callout';
 import { Card } from '../components/ui/Card';
+import { Pre } from '../components/ui/Code';
+import { Disclosure } from '../components/ui/Disclosure';
+import { Empty } from '../components/ui/Empty';
 import { Row } from '../components/ui/Row';
 import { Status } from '../components/ui/Status';
-import { cx } from '../components/ui/classes';
 
 const PACKAGE = 'sgomez/simplesamlphp-module-console';
 
@@ -18,10 +22,6 @@ const titles: Record<DatabaseRefusal['state'], string> = {
 
 export function stateCrumb(refusal: DatabaseRefusal): string {
   return titles[refusal.state];
-}
-
-function StateCard({ offset = true, children }: { offset?: boolean; children: ReactNode }) {
-  return <div className={cx('card empty', offset && 'state-card')}>{children}</div>;
 }
 
 function Facts({ facts }: { facts: [string, ReactNode, string?][] }) {
@@ -37,34 +37,56 @@ function Facts({ facts }: { facts: [string, ReactNode, string?][] }) {
   );
 }
 
-interface PendingProps {
-  refusal: DatabaseRefusal;
-  failure: MigrationRun | null;
-  running: boolean;
-  onUpdate: () => void;
+function failedRun(reason: string): MigrationRun {
+  return { outcome: 'Failed', applied: [], failed: null, reason };
 }
 
-function Pending({ refusal, failure, running, onUpdate }: PendingProps) {
+interface StatePageProps {
+  refusal: DatabaseRefusal;
+  // A callout sits above the card and takes the place of its offset.
+  flush: boolean;
+  // The migration a failed run stopped at.
+  failedAt: number | null;
+  onRun: (run: MigrationRun) => void;
+  onRefused: (refusal: DatabaseRefusal) => void;
+}
+
+function Pending({ refusal, flush, failedAt, onRun, onRefused }: StatePageProps) {
+  const [running, setRunning] = useState(false);
+  const fail = useFailure();
   const count = refusal.missing.length;
-  const failedAt = failure?.failed?.number;
+
+  const update = () => {
+    setRunning(true);
+    void postJson<MigrationRun>('/migrate', {}).then((result) => {
+      setRunning(false);
+      if (result.ok) {
+        onRun(result.data);
+
+        return;
+      }
+      const refused = refusalOf(result.status, result.body);
+      if (refused) {
+        onRefused(refused);
+      } else if (!fail(result.status)) {
+        onRun(failedRun(result.status === 0 ? 'No answer from the server.' : `The server answered ${result.status}.`));
+      }
+    });
+  };
 
   return (
     <>
-      {failure && (
-        <Callout
-          kind="error"
-          title={failure.failed ? `Migration ${failure.failed.number} failed: ${failure.failed.title}` : 'Migrations failed'}
-        >
-          <span className="mono wrap-any">{failure.reason}</span>
-        </Callout>
-      )}
-      <StateCard offset={!failure}>
-        <h1 className="h1">The database needs an update</h1>
-        <p className="muted empty-text">A migration cannot be undone without restoring a backup. Sign-in is not affected.</p>
-        <Button variant="primary" loading={running} disabled={running} onClick={onUpdate}>
-          Update database
-        </Button>
-      </StateCard>
+      <Empty
+        state
+        flush={flush}
+        title="The database needs an update"
+        text="A migration cannot be undone without restoring a backup. Sign-in is not affected."
+        actions={
+          <Button variant="primary" loading={running} disabled={running} onClick={update}>
+            Update database
+          </Button>
+        }
+      />
       <div className="section-head">
         <h2 className="h2">{`${count} ${count === 1 ? 'migration' : 'migrations'} to apply`}</h2>
       </div>
@@ -85,42 +107,38 @@ function Pending({ refusal, failure, running, onUpdate }: PendingProps) {
   );
 }
 
-export function StatePage(props: PendingProps) {
-  const { refusal } = props;
+export function StatePage(props: StatePageProps) {
+  const { refusal, flush } = props;
   switch (refusal.state) {
     case 'Unreachable':
       return (
-        <StateCard>
-          <h1 className="h1">Database unreachable</h1>
-          <p className="muted empty-text">The Console cannot reach its database. Nodes keep serving their local Snapshot.</p>
+        <Empty
+          state
+          flush={flush}
+          title="Database unreachable"
+          text="The Console cannot reach its database. Nodes keep serving their local Snapshot."
+        >
           {refusal.detail && (
-            <details className="grp">
-              <summary>
-                <span className="small">Technical detail</span>
-              </summary>
-              <pre className="code" tabIndex={0} aria-label="Technical detail">
-                {refusal.detail}
-              </pre>
-            </details>
+            <Disclosure summary="Technical detail">
+              <Pre label="Technical detail">{refusal.detail}</Pre>
+            </Disclosure>
           )}
-        </StateCard>
+        </Empty>
       );
     case 'SqliteTooOld':
       return (
-        <StateCard>
-          <h1 className="h1">SQLite too old</h1>
+        <Empty state flush={flush} title="SQLite too old">
           <Facts
             facts={[
               ['Found', refusal.sqliteVersion, 'mono is-strong'],
               ['Minimum', refusal.sqliteMinimum, 'mono'],
             ]}
           />
-        </StateCard>
+        </Empty>
       );
     case 'ConsoleOlder':
       return (
-        <StateCard>
-          <h1 className="h1">Console older than the database</h1>
+        <Empty state flush={flush} title="Console older than the database">
           <Facts
             facts={[
               ['This Console knows', `Schema ${refusal.known}`],
@@ -130,7 +148,7 @@ export function StatePage(props: PendingProps) {
           <p className="muted empty-text">
             Update <span className="mono">{PACKAGE}</span> on this node.
           </p>
-        </StateCard>
+        </Empty>
       );
     case 'MigrationsPending':
       return <Pending {...props} />;

@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Eid } from './Eid';
+import { Pre } from './Code';
+import { Disclosure } from './Disclosure';
 import { Empty } from './Empty';
 import { Skeleton } from './Skeleton';
 
@@ -34,6 +36,58 @@ describe('Empty', () => {
     const { container } = render(<Empty title="None" />);
 
     expect(container.querySelector('p, .empty-actions')).toBeNull();
+  });
+
+  it('heads a state page, its content between the text and the actions', () => {
+    const { container } = render(
+      <Empty state title="Down" text="Why." actions={<a href="/">Back</a>}>
+        <dl className="facts" />
+      </Empty>,
+    );
+
+    expect(container.firstElementChild?.className).toBe('card empty state-card');
+    expect(screen.getByRole('heading', { level: 1, name: 'Down' }).className).toBe('h1');
+    expect([...(container.firstElementChild?.children ?? [])].map((el) => el.className)).toEqual([
+      'h1',
+      'muted empty-text',
+      'facts',
+      'empty-actions',
+    ]);
+  });
+
+  it('drops the offset of a state page that sits under a callout', () => {
+    const { container } = render(<Empty state flush title="Down" />);
+
+    expect(container.firstElementChild?.className).toBe('card empty');
+  });
+});
+
+describe('Disclosure', () => {
+  it('folds its content under a small summary', () => {
+    const { container } = render(
+      <Disclosure summary="Technical detail">
+        <p>inside</p>
+      </Disclosure>,
+    );
+
+    const details = container.firstElementChild as HTMLDetailsElement;
+    expect(details.tagName).toBe('DETAILS');
+    expect(details.className).toBe('grp');
+    expect(details.open).toBe(false);
+    expect(details.querySelector('summary > span.small')?.textContent).toBe('Technical detail');
+    expect(details.querySelector('p')?.textContent).toBe('inside');
+  });
+});
+
+describe('Pre', () => {
+  it('holds text that scrolls, reachable from the keyboard and named', () => {
+    render(<Pre label="Technical detail">SQLSTATE[HY000]</Pre>);
+
+    const pre = screen.getByLabelText('Technical detail');
+    expect(pre.tagName).toBe('PRE');
+    expect(pre.className).toBe('code');
+    expect(pre.tabIndex).toBe(0);
+    expect(pre.textContent).toBe('SQLSTATE[HY000]');
   });
 });
 

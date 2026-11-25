@@ -301,7 +301,8 @@ a.row:focus-visible{outline-offset:-2px}
 .facts dd{margin:0}
 .facts .is-strong{font-weight:600}
 .section-head{display:flex;align-items:baseline;gap:10px;margin-top:8px}
-.state-card .grp{align-self:stretch;min-width:0;text-align:start}
+.empty .grp{align-self:stretch;min-width:0;text-align:start}
+.empty .grp>summary{justify-content:center}
 
 /* component layout (DesignSystem) */
 .field{display:flex;flex-direction:column;gap:6px}

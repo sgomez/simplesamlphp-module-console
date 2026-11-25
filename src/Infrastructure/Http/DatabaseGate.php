@@ -12,9 +12,22 @@ use SimpleSAML\Module\console\Infrastructure\Persistence\StateInspector;
 
 final class DatabaseGate
 {
+    /**
+     * @param \Closure(): string|null $sqliteVersion stands in for the library's version, so tests can age it
+     */
+    public function __construct(private readonly ?\Closure $sqliteVersion = null)
+    {
+    }
+
+
     public function reading(): DatabaseReading
     {
-        $inspector = new StateInspector(new ConnectionFactory(), ModuleConfig::database(), SchemaVersion::LATEST);
+        $inspector = new StateInspector(
+            new ConnectionFactory(),
+            ModuleConfig::database(),
+            SchemaVersion::LATEST,
+            $this->sqliteVersion,
+        );
 
         return $inspector->read();
     }
