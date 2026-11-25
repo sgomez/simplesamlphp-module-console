@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Button, Disclosure as AriaDisclosure, DisclosurePanel } from 'react-aria-components';
 
 interface DisclosureProps {
   summary: string;
@@ -8,19 +9,12 @@ interface DisclosureProps {
 }
 
 export function Disclosure({ summary, card, children }: DisclosureProps) {
-  return card ? (
-    <details className="grp card">
-      <summary>
-        <span className="row-name">{summary}</span>
-      </summary>
-      <div className="grp-body">{children}</div>
-    </details>
-  ) : (
-    <details className="grp">
-      <summary>
-        <span className="small">{summary}</span>
-      </summary>
-      {children}
-    </details>
+  return (
+    <AriaDisclosure className={card ? 'grp card' : 'grp'}>
+      <Button slot="trigger">
+        <span className={card ? 'row-name' : 'small'}>{summary}</span>
+      </Button>
+      <DisclosurePanel>{card ? <div className="grp-body">{children}</div> : children}</DisclosurePanel>
+    </AriaDisclosure>
   );
 }

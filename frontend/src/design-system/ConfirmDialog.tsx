@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { Dialog, Heading, Text } from 'react-aria-components';
 import { Button } from './Button';
 
 interface ConfirmDialogProps {
@@ -13,10 +14,12 @@ interface ConfirmDialogProps {
   busy?: boolean;
 }
 
+// React Aria's Dialog inside the native modal <dialog>, which keeps the top layer, the backdrop and inertness.
+// The native dialog would focus React Aria's container first; the safe choice, Cancel, takes it instead.
 export function ConfirmDialog({ open, title, text, cancel, confirm, onCancel, onConfirm, busy = false }: ConfirmDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
-  const textId = useId();
+  const cancelButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const element = dialog.current;
@@ -26,6 +29,7 @@ export function ConfirmDialog({ open, title, text, cancel, confirm, onCancel, on
     if (open) {
       opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       element.showModal();
+      cancelButton.current?.focus();
     } else {
       element.close();
       opener.current?.focus();
@@ -43,24 +47,34 @@ export function ConfirmDialog({ open, title, text, cancel, confirm, onCancel, on
       ref={dialog}
       className="card dialog"
       aria-label={title}
-      aria-describedby={textId}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          cancelUnlessBusy();
+        }
+      }}
+      // Close requests without a key, such as a back gesture.
       onCancel={(event) => {
         event.preventDefault();
         cancelUnlessBusy();
       }}
     >
-      <h3 className="h2 wrap-any">{title}</h3>
-      <p id={textId} className="small muted dialog-text wrap-any">
-        {text}
-      </p>
-      <div className="dialog-actions">
-        <Button disabled={busy} onPress={cancelUnlessBusy}>
-          {cancel}
-        </Button>
-        <Button variant="danger-solid" loading={busy} disabled={busy} onPress={onConfirm}>
-          {confirm}
-        </Button>
-      </div>
+      <Dialog role="alertdialog">
+        <Heading slot="title" level={3} className="h2 wrap-any">
+          {title}
+        </Heading>
+        <Text slot="description" elementType="p" className="small muted dialog-text wrap-any">
+          {text}
+        </Text>
+        <div className="dialog-actions">
+          <Button ref={cancelButton} disabled={busy} onPress={cancelUnlessBusy}>
+            {cancel}
+          </Button>
+          <Button variant="danger-solid" loading={busy} onPress={onConfirm}>
+            {confirm}
+          </Button>
+        </div>
+      </Dialog>
     </dialog>
   );
 }

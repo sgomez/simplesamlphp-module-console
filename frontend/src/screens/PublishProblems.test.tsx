@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { review } from '../app/test/api';
 import { EDIT_A, ready, servePublication, shown } from '../app/test/publication';
@@ -58,11 +58,12 @@ describe('the problems and warnings of the Publish screen', () => {
     ]);
     await shown();
 
-    const summary = screen.getByText('2 warnings');
-    const group = summary.closest('details') as HTMLDetailsElement;
+    const fold = screen.getByRole('button', { name: '2 warnings' });
+    const group = fold.closest('.grp') as HTMLElement;
 
     expect(group.className).toBe('grp card');
-    expect(group.open).toBe(false);
+    expect(fold.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(fold);
     expect(Array.from(group.querySelectorAll('.msg-warning')).map((w) => w.textContent)).toEqual([
       'https://a.example.org: The certificate expires in 12 days.',
       'A collision.',

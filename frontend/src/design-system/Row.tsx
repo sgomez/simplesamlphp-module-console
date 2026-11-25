@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-aria-components';
 import { cx } from './classes';
 
 type RowTarget =
@@ -14,7 +14,7 @@ export function Row(props: RowProps) {
   const className = cx('row', wrap && 'row-wrap', tight && 'row-tight', props.className);
   if (props.to !== undefined) {
     return (
-      <Link className={className} to={props.to}>
+      <Link className={className} href={props.to}>
         {children}
       </Link>
     );

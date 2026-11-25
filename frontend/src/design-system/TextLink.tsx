@@ -1,5 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-aria-components';
 import type { LinkTarget } from './Button';
 import { cx } from './classes';
 
@@ -15,7 +15,7 @@ export function TextLink(props: TextLinkProps) {
   const className = cx('link', props.inherit && 'link-inherit', props.className);
 
   return props.to !== undefined ? (
-    <Link className={className} to={props.to} onClick={props.onClick}>
+    <Link className={className} href={props.to}>
       {props.children}
     </Link>
   ) : (
