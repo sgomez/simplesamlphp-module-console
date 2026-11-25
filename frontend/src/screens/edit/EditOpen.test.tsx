@@ -11,6 +11,15 @@ describe('the edit screen, opened', () => {
     expect(fetch).toHaveBeenCalledWith(`${ENTITY}?entityid=https%3A%2F%2Fsp.example.org`, expect.anything());
   });
 
+  it('marks the errors a stored object has against the current schema, when it is opened', async () => {
+    await openEdit(
+      entity({ errors: [{ pointer: '/AssertionConsumerService', message: 'Missing.', line: 2, column: null }] }),
+    );
+
+    expect([...document.querySelectorAll('.ed-ln.err')].map((line) => line.textContent)).toEqual(['×2']);
+    expect(within(screen.getByRole('main')).getByText('Missing.')).not.toBeNull();
+  });
+
   it('heads the page with the name, the kind, the set and the entity ID with Copy', async () => {
     const writeText = vi.fn(async () => undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText } });

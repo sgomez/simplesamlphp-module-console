@@ -79,7 +79,7 @@ export interface MigrationRun {
 
 export interface EntityLabel {
   text: string;
-  kind: 'disabled' | 'warning';
+  kind: 'disabled' | 'warning' | 'error';
   title: string | null;
 }
 
@@ -135,6 +135,8 @@ export interface EditedEntity {
   unreadable: boolean;
   error: string | null;
   php: string | null;
+  // What the current schema rejects in the stored document.
+  errors: EntityError[];
   warnings: EntityWarning[];
   notices: EntityNotice[];
 }

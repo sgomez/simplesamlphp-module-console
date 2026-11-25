@@ -41,7 +41,7 @@ export function marksOf(result: Refusal & { warnings?: EntityWarning[] }): Mark[
 }
 
 function entityMarks(entity: EditedEntity): Mark[] {
-  return marksOf({ errors: [], notices: entity.notices, warnings: entity.warnings, readable: true });
+  return marksOf({ errors: entity.errors, notices: entity.notices, warnings: entity.warnings, readable: true });
 }
 
 // An error outweighs a warning on the same line.

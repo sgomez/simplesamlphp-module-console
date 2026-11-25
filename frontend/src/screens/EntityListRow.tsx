@@ -22,7 +22,13 @@ const cycle: Record<string, Omit<Note, 'text'>> = {
   Modified: { tone: 'pending', mark: 'half' },
 };
 
-// One line per row: Unreadable and the publish cycle first, then warnings; the rest is counted.
+const order: Partial<Record<StatusTone, number>> = { danger: 0, warn: 2 };
+
+function rank(note: Note): number {
+  return order[note.tone] ?? 1;
+}
+
+// One line per row: Unreadable and errors, then the publish cycle, then warnings; the rest is counted.
 function notesOf(row: EntityRow): Note[] {
   const notes: Note[] = [];
   const state = row.state === null ? undefined : cycle[row.state];
@@ -32,14 +38,17 @@ function notesOf(row: EntityRow): Note[] {
     notes.push({ ...state, text: row.state });
   }
   for (const label of row.labels) {
+    const title = label.title === null ? {} : { title: label.title };
     notes.push(
       label.kind === 'disabled'
         ? { tone: 'pending', mark: 'minus', text: label.text }
-        : { tone: 'warn', mark: 'warning', text: label.text, ...(label.title === null ? {} : { title: label.title }) },
+        : label.kind === 'error'
+          ? { tone: 'danger', mark: 'full', text: label.text, ...title }
+          : { tone: 'warn', mark: 'warning', text: label.text, ...title },
     );
   }
 
-  return notes.sort((a, b) => Number(a.tone === 'warn') - Number(b.tone === 'warn'));
+  return notes.sort((a, b) => rank(a) - rank(b));
 }
 
 function RowNote({ row }: { row: EntityRow }) {

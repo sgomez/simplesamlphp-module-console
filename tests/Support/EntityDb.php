@@ -50,9 +50,21 @@ final class EntityDb
      */
     public static function seed(ConsoleClient $client, string $id, array $extra = []): void
     {
-        $endpoint = ['Binding' => 'urn:a:b', 'Location' => 'https://a.example.org/acs'];
+        $endpoint = [
+            'Binding' => 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+            'Location' => 'https://a.example.org/acs',
+        ];
         $repository = new PdoEntityRepository($client->database(), '');
         $repository->create(self::SET, $id, ['AssertionConsumerService' => [$endpoint]] + $extra, 'seed');
+    }
+
+
+    /**
+     * A valid JSON document that the current schema rejects: it has an unknown option and no endpoint.
+     */
+    public static function seedInvalid(ConsoleClient $client, string $id): void
+    {
+        (new PdoEntityRepository($client->database(), ''))->create(self::SET, $id, ['bogus' => true], 'seed');
     }
 
 

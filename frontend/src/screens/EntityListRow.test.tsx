@@ -58,6 +58,16 @@ describe('a row of the list', () => {
     expect(within(row).getByText('+2 more').className).toBe('xs faint row-more');
   });
 
+  it('shows the errors of a stored object against the current schema first, with their message', async () => {
+    const errors = { text: 'Errors', kind: 'error', title: '/AssertionConsumerService: Missing.' } as const;
+    const row = await rowOf(sp('https://a.example.org', { state: 'Modified', labels: [warning, errors] }));
+    const status = row.querySelector('.status') as HTMLElement;
+
+    expect(status.className).toBe('status s-danger');
+    expect(status.getAttribute('title')).toBe('/AssertionConsumerService: Missing.');
+    expect(status.textContent).toBe('Errors');
+  });
+
   it('strikes through the name of a disabled object and marks it with a minus', async () => {
     const row = await rowOf(
       sp('https://a.example.org', { name: 'Old intranet', labels: [{ text: 'Disabled', kind: 'disabled', title: null }] }),
