@@ -35,10 +35,12 @@ describe('the edit screen, opened', () => {
     await waitFor(() => expect(within(crumbs).getByText('Example').getAttribute('aria-current')).toBe('page'));
   });
 
-  it('titles an entity without a name with its entity ID', async () => {
+  it('titles an entity without a name with its entity ID, wrapping anywhere', async () => {
     await openEdit(entity({ name: null }));
 
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('https://sp.example.org');
+    const title = screen.getByRole('heading', { level: 1 });
+    expect(title.textContent).toBe('https://sp.example.org');
+    expect(title.className).toBe('h1 wrap-any');
   });
 
   it('shows the PHP text in the editor with its line numbers, on a wide page', async () => {

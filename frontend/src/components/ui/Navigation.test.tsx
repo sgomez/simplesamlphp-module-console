@@ -1,7 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import { Menu } from './Menu';
 import { Segmented } from './Segmented';
 import { Tabs } from './Tabs';
 
@@ -76,24 +75,5 @@ describe('Tabs', () => {
 
     expect(onSelect).toHaveBeenCalledOnce();
     expect(screen.getByRole('button', { name: 'A' }).className).toBe('on');
-  });
-});
-
-describe('Menu', () => {
-  it('lists its entries, a separated danger entry last', () => {
-    const { container } = render(
-      <Menu
-        label="More actions"
-        entries={[
-          { label: 'Replace from…', href: '/replace' },
-          { label: 'Delete…', href: '/delete', danger: true, separated: true },
-        ]}
-      />,
-    );
-
-    expect(screen.getByRole('menu', { name: 'More actions' }).className).toBe('card menu menu-card');
-    expect(screen.getByRole('menuitem', { name: 'Replace from…' }).className).toBe('nav-item');
-    expect(screen.getByRole('menuitem', { name: 'Delete…' }).className).toBe('nav-item is-danger');
-    expect(container.querySelectorAll('hr')).toHaveLength(1);
   });
 });

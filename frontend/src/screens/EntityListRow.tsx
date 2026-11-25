@@ -1,9 +1,13 @@
+import type { ReactNode } from 'react';
+import { useLocation } from 'react-router';
 import type { EntityRow } from '../api/types';
+import { Button } from '../components/ui/Button';
 import { cx } from '../components/ui/classes';
 import { Eid } from '../components/ui/Eid';
 import { ChevronIcon } from '../components/ui/icons';
 import { Row } from '../components/ui/Row';
 import { Status, type StatusMark, type StatusTone } from '../components/ui/Status';
+import { useDeleteEntity } from './DeleteEntity';
 
 interface Note {
   tone: StatusTone;
@@ -54,6 +58,26 @@ function RowNote({ row }: { row: EntityRow }) {
   );
 }
 
+// Deleting it keeps the admin on the page and search the list is at; a failure shows below the row.
+function UnreadableRow({ row, children }: { row: EntityRow; children: ReactNode }) {
+  const { pathname, search } = useLocation();
+  const deletion = useDeleteEntity(row, pathname + search);
+
+  return (
+    <>
+      <Row wrap plain>
+        {children}
+        <div className="row-slot">
+          <Button variant="danger" small onClick={deletion.ask}>
+            Delete…
+          </Button>
+        </div>
+      </Row>
+      {deletion.element}
+    </>
+  );
+}
+
 export function EntityListRow({ row, editPath }: { row: EntityRow; editPath: string }) {
   const off = row.labels.some((label) => label.kind === 'disabled');
   const content = (
@@ -66,17 +90,15 @@ export function EntityListRow({ row, editPath }: { row: EntityRow; editPath: str
     </>
   );
   if (row.unreadable) {
-    return (
-      <Row wrap plain>
-        {content}
-      </Row>
-    );
+    return <UnreadableRow row={row}>{content}</UnreadableRow>;
   }
 
   return (
     <Row wrap to={`${editPath}?entityid=${encodeURIComponent(row.entityId)}`}>
       {content}
-      <ChevronIcon />
+      <div className="row-slot">
+        <ChevronIcon />
+      </div>
     </Row>
   );
 }

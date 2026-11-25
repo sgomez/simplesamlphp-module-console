@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import { Link } from 'react-router';
 import { cx } from './classes';
 
@@ -21,16 +21,18 @@ interface ButtonProps extends Look {
   disabled?: boolean;
   loading?: boolean;
   menu?: boolean;
+  ref?: Ref<HTMLButtonElement>;
   controls?: string;
   expanded?: boolean;
   onClick?: () => void;
 }
 
 export function Button(props: ButtonProps) {
-  const { type = 'button', disabled, loading, menu, controls, expanded, onClick, label, children } = props;
+  const { type = 'button', disabled, loading, menu, ref, controls, expanded, onClick, label, children } = props;
 
   return (
     <button
+      ref={ref}
       type={type}
       className={buttonClass(props, loading && 'is-loading', menu && 'menu-btn')}
       disabled={disabled}

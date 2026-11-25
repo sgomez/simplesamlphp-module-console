@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigationType } from 'react-router';
 import type { DatabaseRefusal, MigrationRun, Session } from '../api/types';
-import { RunMessage } from '../screens/RunMessage';
+import { OutcomeMessage } from '../screens/RunMessage';
 import { StatePage, stateCrumb } from '../screens/StatePage';
 import { FailurePage, failureTrail, ReportFailure, type Failure } from './failure';
 import { LiveSnapshot } from './LiveSnapshot';
-import { Page, PageNotice } from './Page';
+import { Page, PageNotice, ReportOutcome } from './Page';
 import { crumbsOf } from './crumbs';
 import { PUBLISH } from './paths';
 import { refusalOf, ReportRefusal } from './refusals';
@@ -13,19 +13,21 @@ import { Screens } from './Screens';
 import { Shell } from './Shell';
 import { useApi } from './useApi';
 
-// The outcome of Run migrations and the location it is shown at; redirects carry it along, the admin's next move ends it.
+// A one-shot message and the location it shows at; redirects carry it along, the admin's next move ends it.
+type Said = MigrationRun | string;
+
 interface Outcome {
   at: string;
-  run: MigrationRun;
+  said: Said;
 }
 
 interface ConsoleProps {
   outcome: Outcome | null;
-  onRun: (run: MigrationRun, at: string) => void;
+  onOutcome: (said: Said, at: string) => void;
   onMove: (at: string | null) => void;
 }
 
-function Console({ outcome, onRun, onMove }: ConsoleProps) {
+function Console({ outcome, onOutcome, onMove }: ConsoleProps) {
   const [revision, setRevision] = useState(0);
   const answer = useApi<Session>('/session', { revision });
   const [reported, setReported] = useState<DatabaseRefusal | null>(null);
@@ -35,11 +37,13 @@ function Console({ outcome, onRun, onMove }: ConsoleProps) {
   const report = useCallback((failure: Failure) => setFailed({ key, failure }), [key]);
   const failure = failed?.key === key ? failed.failure : null;
   const refusal = reported ?? (answer.state === 'failed' ? refusalOf(answer.status, answer.body) : null);
-  const run = outcome !== null && (outcome.at === key || navigation === 'REPLACE') ? outcome.run : null;
+  const said = outcome !== null && (outcome.at === key || navigation === 'REPLACE') ? outcome.said : null;
+  const run = typeof said === 'string' ? null : said;
   const at = pathname + search;
   const [title, setTitle] = useState<{ at: string; text: string } | null>(null);
   const onTitle = useCallback((text: string) => setTitle({ at, text }), [at]);
   const changed = useCallback(() => setRevision((n) => n + 1), []);
+  const announce = useCallback((said: Said) => onOutcome(said, key), [onOutcome, key]);
   const shown = title?.at === at ? title.text : (new URLSearchParams(search).get('entityid') ?? '');
 
   useEffect(() => {
@@ -50,7 +54,7 @@ function Console({ outcome, onRun, onMove }: ConsoleProps) {
 
   const session = answer.state === 'ready' ? answer.data : null;
   const pending = session?.pendingCount ?? 0;
-  const message = run && <RunMessage run={run} />;
+  const message = said && <OutcomeMessage said={said} />;
 
   if (failure !== null) {
     const { crumb, parent } = failureTrail(failure);
@@ -74,7 +78,7 @@ function Console({ outcome, onRun, onMove }: ConsoleProps) {
               refusal={refusal}
               flush={run !== null}
               failedAt={run?.outcome === 'Failed' ? (run.failed?.number ?? null) : null}
-              onRun={(done) => onRun(done, key)}
+              onRun={announce}
               onRefused={setReported}
             />
           </ReportFailure>
@@ -98,7 +102,9 @@ function Console({ outcome, onRun, onMove }: ConsoleProps) {
         <PageNotice value={message}>
           <ReportRefusal value={setReported}>
             <ReportFailure value={report}>
-              <Screens pending={pending} onChange={changed} onTitle={onTitle} />
+              <ReportOutcome value={announce}>
+                <Screens pending={pending} onChange={changed} onTitle={onTitle} />
+              </ReportOutcome>
             </ReportFailure>
           </ReportRefusal>
         </PageNotice>
@@ -114,16 +120,10 @@ export function ConsoleRoutes() {
     (at: string | null) => setOutcome((current) => (current === null || at === null ? null : { ...current, at })),
     [],
   );
+  const report = useCallback((said: Said, at: string) => {
+    setOutcome({ at, said });
+    setRound((n) => n + 1);
+  }, []);
 
-  return (
-    <Console
-      key={round}
-      outcome={outcome}
-      onRun={(run, at) => {
-        setOutcome({ at, run });
-        setRound(round + 1);
-      }}
-      onMove={move}
-    />
-  );
+  return <Console key={round} outcome={outcome} onOutcome={report} onMove={move} />;
 }

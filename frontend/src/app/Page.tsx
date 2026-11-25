@@ -4,6 +4,9 @@ import { cx } from '../components/ui/classes';
 // A message the Console shows at the top of whatever page comes next, such as the outcome of Run migrations.
 export const PageNotice = createContext<ReactNode>(null);
 
+// Hands the outcome of a POST to the screen that follows; call it just before moving there with replace.
+export const ReportOutcome = createContext<(text: string) => void>(() => undefined);
+
 interface PageProps {
   wide?: boolean;
   // The width of a state or failure page.

@@ -9,7 +9,9 @@ use SimpleSAML\Module\console\Tests\Support\Routes;
 it('finds the API POST routes to walk', function (): void {
     expect(array_keys(Routes::apiPost()))
         ->toContain('console-api-entity-save')
-        ->toContain('console-api-entity-validate');
+        ->toContain('console-api-entity-validate')
+        ->toContain('console-api-entity-delete')
+        ->toContain('console-api-migrate');
 });
 
 it('answers 403 to every API POST route without a valid token', function (string $path, array $server): void {

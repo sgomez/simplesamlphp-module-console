@@ -42,7 +42,6 @@ final class EntityEditView
             'errorLines' => array_values(array_unique($lines)),
             'lineCount' => substr_count($text, "\n") + 1,
             'saveUrl' => Module::getModuleURL('console/entities/' . SpRemote::SET . '/save'),
-            'deleteUrl' => Module::getModuleURL('console/entities/' . SpRemote::SET . '/delete'),
             'listUrl' => Module::getModuleURL('console/entities/' . SpRemote::SET),
             'set' => SpRemote::SET,
         ], $status);

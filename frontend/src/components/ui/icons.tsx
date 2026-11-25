@@ -17,6 +17,14 @@ export function ChevronIcon() {
   );
 }
 
+export function ChevronDownIcon() {
+  return (
+    <svg {...line} width="12" height="12" viewBox="0 0 12 12" strokeWidth="1.75">
+      <path d="M2.5 4.5 6 8l3.5-3.5" />
+    </svg>
+  );
+}
+
 export function MenuIcon() {
   return (
     <svg {...line} width="16" height="16" viewBox="0 0 16 16" strokeWidth="1.75">

@@ -336,8 +336,13 @@ a.row:focus-visible{outline-offset:-2px}
 .code-head{display:flex;align-items:center}
 .code-label{flex:1 1 auto}
 .menu-card{align-self:flex-start}
+.menu-anchor{position:relative}
+.menu-pop{position:absolute;top:100%;inset-inline-end:0;margin-top:4px;z-index:10}
+.menu button.nav-item{width:100%;border:0;background:none;font-family:inherit;text-align:start;cursor:pointer}
+.row-slot{display:flex;justify-content:flex-end;flex:0 0 76px}
+@media (max-width:600px){.menu-pop{inset-inline-end:auto;inset-inline-start:0}.row-slot{flex-basis:auto}}
 .nav-item.is-danger{color:var(--danger-text)}
-.dialog{flex-direction:column;gap:12px;padding:20px;box-shadow:var(--shadow-2);max-width:460px;color:var(--text)}
+.dialog{flex-direction:column;gap:12px;padding:20px;box-shadow:var(--shadow-2);max-width:min(460px,calc(100vw - 32px));color:var(--text)}
 .dialog[open]{display:flex}
 .dialog-text{margin:0}
 .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}

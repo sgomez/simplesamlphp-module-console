@@ -11,7 +11,7 @@ beforeEach(() => {
   });
 });
 
-function dialog(open: boolean, onCancel = vi.fn(), onConfirm = vi.fn()) {
+function dialog(open: boolean, onCancel = vi.fn(), onConfirm = vi.fn(), busy = false) {
   return (
     <ConfirmDialog
       open={open}
@@ -21,6 +21,7 @@ function dialog(open: boolean, onCancel = vi.fn(), onConfirm = vi.fn()) {
       confirm="Discard 7 changes"
       onCancel={onCancel}
       onConfirm={onConfirm}
+      busy={busy}
     />
   );
 }
@@ -32,7 +33,10 @@ describe('ConfirmDialog', () => {
     const element = screen.getByRole('dialog', { name: 'Discard all 7 changes?' });
     expect(element.className).toBe('card dialog');
     expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalledOnce();
-    expect(screen.getByText('This cannot be undone.').className).toBe('small muted dialog-text');
+    const text = screen.getByText('This cannot be undone.');
+    expect(text.className).toBe('small muted dialog-text wrap-any');
+    expect(element.getAttribute('aria-describedby')).toBe(text.id);
+    expect(screen.getByRole('heading', { name: 'Discard all 7 changes?' }).className).toBe('h2 wrap-any');
     expect(screen.getByRole('button', { name: 'Discard 7 changes' }).className).toBe('btn btn-danger-solid');
   });
 
@@ -57,5 +61,31 @@ describe('ConfirmDialog', () => {
 
     expect(HTMLDialogElement.prototype.close).toHaveBeenCalledOnce();
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('keeps the confirming button loading and ignores Cancel and Escape while busy', () => {
+    const onCancel = vi.fn();
+    render(dialog(true, onCancel, vi.fn(), true));
+
+    const confirm = screen.getByRole('button', { name: 'Discard 7 changes' });
+    fireEvent.click(screen.getByRole('button', { name: 'Keep changes' }));
+    fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+
+    expect(confirm.className).toBe('btn btn-danger-solid is-loading');
+    expect((confirm as HTMLButtonElement).disabled).toBe(true);
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  it('hands the focus back to what had it once closed', () => {
+    const opener = document.createElement('button');
+    document.body.append(opener);
+    opener.focus();
+    const { rerender } = render(dialog(true));
+    screen.getByRole('button', { name: 'Keep changes' }).focus();
+
+    rerender(dialog(false));
+
+    expect(document.activeElement).toBe(opener);
+    opener.remove();
   });
 });

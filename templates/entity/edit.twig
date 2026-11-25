@@ -13,13 +13,6 @@
     <h1 class="h1">{{ name|default(isNew ? 'New service provider' : entityId) }}</h1>
     <span class="small muted">Service provider</span><span class="mono faint">{{ set }}</span>
   </div>
-  {% if not isNew %}
-  <form method="post" action="{{ deleteUrl }}">
-    <input type="hidden" name="_token" value="{{ csrfToken }}">
-    <input type="hidden" name="entityid" value="{{ entityId }}">
-    <button type="submit" class="btn btn-danger" data-confirm="Delete {{ entityId }}? This removes the service provider from the Console.">Delete</button>
-  </form>
-  {% endif %}
 </div>
 {% if not isNew and name is defined and name %}<span class="eid">{{ entityId }}</span>{% endif %}
 

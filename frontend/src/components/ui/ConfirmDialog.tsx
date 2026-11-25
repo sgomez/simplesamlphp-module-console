@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { Button } from './Button';
 
 interface ConfirmDialogProps {
@@ -9,10 +9,14 @@ interface ConfirmDialogProps {
   confirm: string;
   onCancel: () => void;
   onConfirm: () => void;
+  // The confirmed request is running: the dialog waits for its answer.
+  busy?: boolean;
 }
 
-export function ConfirmDialog({ open, title, text, cancel, confirm, onCancel, onConfirm }: ConfirmDialogProps) {
+export function ConfirmDialog({ open, title, text, cancel, confirm, onCancel, onConfirm, busy = false }: ConfirmDialogProps) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const textId = useId();
 
   useEffect(() => {
     const element = dialog.current;
@@ -20,27 +24,40 @@ export function ConfirmDialog({ open, title, text, cancel, confirm, onCancel, on
       return;
     }
     if (open) {
+      opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       element.showModal();
     } else {
       element.close();
+      opener.current?.focus();
     }
   }, [open]);
+
+  const cancelUnlessBusy = () => {
+    if (!busy) {
+      onCancel();
+    }
+  };
 
   return (
     <dialog
       ref={dialog}
       className="card dialog"
       aria-label={title}
+      aria-describedby={textId}
       onCancel={(event) => {
         event.preventDefault();
-        onCancel();
+        cancelUnlessBusy();
       }}
     >
-      <h3 className="h2">{title}</h3>
-      <p className="small muted dialog-text">{text}</p>
+      <h3 className="h2 wrap-any">{title}</h3>
+      <p id={textId} className="small muted dialog-text wrap-any">
+        {text}
+      </p>
       <div className="dialog-actions">
-        <Button onClick={onCancel}>{cancel}</Button>
-        <Button variant="danger-solid" onClick={onConfirm}>
+        <Button disabled={busy} onClick={cancelUnlessBusy}>
+          {cancel}
+        </Button>
+        <Button variant="danger-solid" loading={busy} disabled={busy} onClick={onConfirm}>
           {confirm}
         </Button>
       </div>
