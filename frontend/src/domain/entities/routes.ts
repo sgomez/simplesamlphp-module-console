@@ -2,6 +2,7 @@ import type { EntitySet } from './sets';
 import type { ListFilter } from './types';
 
 const SP: EntitySet = 'saml20-sp-remote';
+export const EXTERNAL = '/external';
 
 export function listRoute(set: EntitySet): string {
   return `/entities/${set}`;

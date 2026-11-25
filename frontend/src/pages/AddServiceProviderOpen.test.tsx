@@ -1,9 +1,9 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { ENTITY, VALIDATE, posted } from '../../app/test/api';
-import { STARTER, TYPED, openNew } from '../../app/test/add';
-import { editor, saveBar } from '../../app/test/edit';
-import { location } from '../../app/test/render';
+import { ENTITY, VALIDATE, posted } from '../app/test/api';
+import { STARTER, TYPED, openNew } from '../app/test/add';
+import { editor, saveBar } from '../app/test/edit';
+import { location } from '../app/test/render';
 
 describe('adding a service provider, opened', () => {
   it('opens the editor with the starter text the API gives', async () => {
@@ -13,24 +13,24 @@ describe('adding a service provider, opened', () => {
     expect(editor().value).toBe(STARTER);
   });
 
-  it('heads the page as a new service provider, with no entity ID beside it', async () => {
+  it('heads the page Add service provider, with no entity ID beside it', async () => {
     await openNew();
     const main = screen.getByRole('main');
 
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('New service provider');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Add service provider');
     expect(within(main).getByText('Service provider').className).toBe('small muted');
     expect(within(main).getByText('saml20-sp-remote').className).toBe('mono faint');
     expect(main.querySelector('.obj-id')).toBeNull();
   });
 
-  it('puts New in the breadcrumb, under a link to the list', async () => {
+  it('puts Add in the breadcrumb, under a link to the list', async () => {
     await openNew();
     const crumbs = screen.getByRole('navigation', { name: 'Breadcrumb' });
 
     expect(within(crumbs).getByRole('link', { name: 'Service providers' }).getAttribute('href')).toBe(
       '/entities/saml20-sp-remote',
     );
-    expect(within(crumbs).getByText('New').getAttribute('aria-current')).toBe('page');
+    expect(within(crumbs).getByText('Add').getAttribute('aria-current')).toBe('page');
   });
 
   it('says Unsaved, and offers Cancel and Save before any edit', async () => {

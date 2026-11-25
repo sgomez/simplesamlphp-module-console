@@ -12,7 +12,7 @@ export function crumbsOf(pathname: string, title: string): Crumb[] {
     case SP_EDIT:
       return [{ label: 'Service providers', to: SP_LIST }, { label: title }];
     case SP_NEW:
-      return [{ label: 'Service providers', to: SP_LIST }, { label: 'New' }];
+      return [{ label: 'Service providers', to: SP_LIST }, { label: 'Add' }];
     default:
       return [];
   }

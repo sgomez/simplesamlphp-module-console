@@ -12,6 +12,9 @@ export interface ListQuery {
 // A new object has no entity ID or version until it is saved.
 export type Draft = { php: string } | { entityId: string; version: number; php: string };
 
+// How pasted configuration is read (SPEC 9.6).
+export type PastedFormat = 'xml' | 'php';
+
 export interface SavedBy {
   identity: string;
   at: Date;
@@ -36,6 +39,8 @@ export interface EntitiesPort {
   discard?(entityId: string): Promise<Result<EditedEntity>>;
   promote?(entityId: string): Promise<Result<EditedEntity>>;
   replacePath?(entityId: string): string;
+  // Pasted configuration as the editor's text of a new object, unsaved.
+  readPasted?: (text: string, format: PastedFormat) => Promise<Result<EditedEntity>>;
   // Stops the notice that a save tidied the text.
   hideTidied?(): void;
 }
