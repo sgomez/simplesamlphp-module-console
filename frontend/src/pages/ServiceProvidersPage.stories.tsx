@@ -73,11 +73,6 @@ export const FilterMatchesNothing: Story = {
   parameters: { route: `${LIST}?filter=warnings` },
 };
 
-export const WithoutFilter: Story = {
-  name: 'Draft: Without filter counts',
-  args: { entities: { rows: boardList, counts: false }, pending: 7 },
-};
-
 export const Unreadable: Story = {
   name: 'Draft: Unreadable row',
   args: {

@@ -36,7 +36,7 @@ describe('deleting from the edit screen', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 
     expect(screen.queryByRole('dialog')).toBeNull();
-    expect(fetch.mock.calls.some(([input]) => String(input) === DELETE)).toBe(false);
+    expect(posted(fetch, DELETE)).toBeUndefined();
     expect(location()).toBe(EDIT);
   });
 

@@ -24,8 +24,8 @@ export interface EntityPage {
   pages: number;
   perPage: number;
   query: string;
-  // The rows each filter matches; absent while the server does not filter.
-  counts?: ListCounts;
+  // The rows each filter matches, within the search.
+  counts: ListCounts;
 }
 
 export interface EntityWarning {

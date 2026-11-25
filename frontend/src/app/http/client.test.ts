@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { consoleBase, getJson, postJson } from './client';
+import { getJson, postJson } from './client';
 
 function answer(response: Response | Error) {
   vi.stubGlobal(
@@ -122,13 +122,5 @@ describe('a POST to the API', () => {
     answer(new TypeError('Failed to fetch'));
 
     expect(await postJson('/publication', {})).toEqual({ ok: false, status: 0, body: null });
-  });
-});
-
-describe('consoleBase', () => {
-  it('finds the Console under the module path, wherever SimpleSAMLphp is installed', () => {
-    expect(consoleBase('/simplesaml/module.php/console/entities/saml20-sp-remote')).toBe('/simplesaml/module.php/console');
-    expect(consoleBase('/module.php/console')).toBe('/module.php/console');
-    expect(consoleBase('/elsewhere')).toBe('');
   });
 });

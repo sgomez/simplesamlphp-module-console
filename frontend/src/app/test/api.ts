@@ -52,7 +52,16 @@ export function review(more: Partial<PublicationReview> = {}): PublicationReview
 }
 
 export function page(rows: EntityRow[], more: Partial<EntityPage> = {}): EntityPage {
-  return { rows, total: rows.length, page: 1, pages: 1, perPage: 25, query: '', ...more };
+  return {
+    rows,
+    total: rows.length,
+    page: 1,
+    pages: 1,
+    perPage: 12,
+    query: '',
+    counts: { all: rows.length, 'not-live': 0, warnings: 0 },
+    ...more,
+  };
 }
 
 export function refusal(more: Partial<DatabaseRefusal> = {}): Answer {

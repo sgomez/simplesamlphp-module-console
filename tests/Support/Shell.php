@@ -36,7 +36,7 @@ final class Shell
 
     public static function stylesheets(string $html): array
     {
-        preg_match_all('/<link rel="stylesheet" href="([^"]+)">/', $html, $matches);
+        preg_match_all('/<link rel="stylesheet" id="react-aria-pressable-style" href="([^"]+)">/', $html, $matches);
         preg_match_all('/rel="stylesheet"/', $html, $all);
 
         return count($all[0]) === count($matches[1]) ? $matches[1] : ['unexpected stylesheet'];

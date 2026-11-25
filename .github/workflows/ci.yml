@@ -2,6 +2,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   push:
     branches: [main]
 
@@ -191,12 +192,56 @@ jobs:
           test -z "$(git status --porcelain -- frontend/src/domain/documents/generated)"
       - run: npm run lint
       - run: npm run typecheck
+      - name: Chromium for the story tests, at the version the lock file pins
+        run: npx playwright install --with-deps chromium
       - run: npm test
       - run: npm run build
       - name: The committed build is up to date
         run: |
           git status --porcelain -- public/assets/app
           test -z "$(git status --porcelain -- public/assets/app)"
+
+  visual:
+    name: Visual
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          install_args: node
+      - run: npm ci --ignore-scripts
+      - name: Page screenshots, with the browser in the pinned Playwright image
+        run: npm run test:visual
+      - name: The screenshots that differ
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: visual-diffs
+          path: .vitest/attachments/
+          if-no-files-found: ignore
+
+  visual-gate:
+    name: Visual gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name == 'pull_request'
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: A change to a reference screenshot carries the visual-change label
+        if: github.event_name == 'pull_request'
+        env:
+          APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'visual-change') }}
+        run: |
+          changed="$(git diff --name-only HEAD^1 HEAD | grep '/__screenshots__/' || true)"
+          if [ -n "$changed" ] && [ "$APPROVED" != "true" ]; then
+            echo "$changed"
+            echo "Reference screenshots changed: the maintainer reviews them and applies the visual-change label."
+            exit 1
+          fi
 
   package-contents:
     name: Package contents
@@ -211,7 +256,7 @@ jobs:
           grep -qx 'public/assets/app/.vite/manifest.json' "$RUNNER_TEMP/contents.txt"
           grep -q '^public/assets/app/assets/' "$RUNNER_TEMP/contents.txt"
           grep -q '^docs/spec/schemas/' "$RUNNER_TEMP/contents.txt"
-          if grep -E '^(frontend/|node_modules/|package\.json$|package-lock\.json$)' "$RUNNER_TEMP/contents.txt"; then
+          if grep -E '^(frontend/|\.storybook/|node_modules/|package\.json$|package-lock\.json$)' "$RUNNER_TEMP/contents.txt"; then
             exit 1
           fi
 
@@ -260,6 +305,8 @@ jobs:
       - lowest-dependencies
       - composer-audit
       - frontend
+      - visual
+      - visual-gate
       - package-contents
       - npm-audit
       - codeql

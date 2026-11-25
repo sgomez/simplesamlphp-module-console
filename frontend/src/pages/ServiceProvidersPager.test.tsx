@@ -21,7 +21,7 @@ describe('the pagination of the list', () => {
   });
 
   it('pages forward keeping the search, with Previous disabled on the first page', async () => {
-    serve(page([sp('https://a.example.org')], { total: 30, pages: 2, query: 'example' }));
+    serve(page([sp('https://a.example.org')], { total: 30, pages: 2, perPage: 25, query: 'example' }));
     renderAt(`${LIST}?q=example`);
 
     expect((await screen.findByText('1 to 25 of 30 service providers')).className).toBe('at-wide');
@@ -33,7 +33,7 @@ describe('the pagination of the list', () => {
   });
 
   it('pages back from the last page, with Next disabled', async () => {
-    serve(page([sp('https://a.example.org')], { total: 30, page: 2, pages: 2 }));
+    serve(page([sp('https://a.example.org')], { total: 30, page: 2, pages: 2, perPage: 25 }));
     renderAt(`${LIST}?page=2`);
 
     expect(await screen.findByText('26 to 30 of 30 service providers')).toBeDefined();

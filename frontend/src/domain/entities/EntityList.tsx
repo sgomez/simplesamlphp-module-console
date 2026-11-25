@@ -23,10 +23,9 @@ function Filter({ query, filter, counts }: { query: string; filter: ListFilter; 
   return <Segmented label="Filter" segments={segments} current={filter} />;
 }
 
-// The filter shows only where the server counts what each one matches.
 export function ListToolbar({ list }: { list: EntityList }) {
   const { query, filter, answer, search } = list;
-  const counts = answer.state === 'ready' ? answer.data.counts : undefined;
+  const counts = answer.state === 'ready' ? answer.data.counts : null;
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     search(String(new FormData(event.currentTarget).get('q') ?? ''));

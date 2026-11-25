@@ -21,3 +21,9 @@ it('places each narrow-screen override after the base rule it overrides', functi
         expect($base[0][1] ?? PHP_INT_MAX)->toBeLessThan($at, $selector);
     }
 });
+
+it('holds the touch-action rule React Aria would otherwise add as a style element', function (): void {
+    $css = (string) file_get_contents(dirname(__DIR__, 2) . '/frontend/src/console.css');
+
+    expect($css)->toContain("\n[data-react-aria-pressable]{touch-action:pan-x pan-y pinch-zoom}\n");
+});

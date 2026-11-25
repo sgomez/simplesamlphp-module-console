@@ -2,12 +2,14 @@ import type { EntitiesPort, EntityPage } from '../../domain/entities';
 import { getJson, postJson } from './client';
 import { API, spListOf } from './paths';
 
-// The server does not filter yet: it answers without counts, so the list shows no filter.
 export const httpEntities: EntitiesPort = {
-  list: ({ q, page }) => {
+  list: ({ q, page, filter }) => {
     const search = new URLSearchParams();
     if (q !== '') {
       search.set('q', q);
+    }
+    if (filter !== 'all') {
+      search.set('filter', filter);
     }
     if (page !== null) {
       search.set('page', page);

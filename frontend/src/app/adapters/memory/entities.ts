@@ -4,8 +4,8 @@ import type { Failed } from '../../../lib/result';
 export interface MemoryEntities {
   rows?: EntityRow[];
   perPage?: number;
-  // false: answer as the server does today, without counts.
-  counts?: boolean | ListCounts;
+  // The board's counts, in place of the ones the rows give.
+  counts?: ListCounts;
   failure?: Failed;
   // The list never answers.
   pending?: boolean;
@@ -23,7 +23,7 @@ function searched(rows: EntityRow[], q: string): EntityRow[] {
   return rows.filter((row) => row.entityId.toLowerCase().includes(needle) || (row.name ?? '').toLowerCase().includes(needle));
 }
 
-export function memoryEntities({ rows = [], perPage = 12, counts = true, failure, pending }: MemoryEntities = {}): EntitiesPort {
+export function memoryEntities({ rows = [], perPage = 12, counts, failure, pending }: MemoryEntities = {}): EntitiesPort {
   let stored = [...rows];
 
   return {
@@ -45,12 +45,12 @@ export function memoryEntities({ rows = [], perPage = 12, counts = true, failure
         pages,
         perPage,
         query: q,
+        counts: counts ?? {
+          all: found.length,
+          'not-live': found.filter(MATCHES['not-live']).length,
+          warnings: found.filter(MATCHES.warnings).length,
+        },
       };
-      if (counts === true) {
-        data.counts = { all: found.length, 'not-live': found.filter(MATCHES['not-live']).length, warnings: found.filter(MATCHES.warnings).length };
-      } else if (counts !== false) {
-        data.counts = counts;
-      }
 
       return { ok: true, data };
     },
