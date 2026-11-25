@@ -14,6 +14,15 @@ describe('the lint rules of the front end', () => {
     expect(await messages('RawButton.tsx')).toEqual(['no-restricted-syntax@2']);
   });
 
+  it('reject a raw link, facts list or disclosure outside components/ui', async () => {
+    expect(await messages('RawMarkup.tsx')).toEqual([
+      'no-restricted-syntax@1',
+      'no-restricted-syntax@2',
+      'no-restricted-syntax@3',
+      'no-restricted-syntax@3',
+    ]);
+  });
+
   it('reject a stylesheet import, a style prop, raw HTML and a raw dialog', async () => {
     expect(await messages('Violations.tsx')).toEqual([
       'no-restricted-imports@1',

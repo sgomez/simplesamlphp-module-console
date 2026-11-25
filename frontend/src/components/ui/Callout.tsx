@@ -9,10 +9,11 @@ interface CalloutProps {
   kind: CalloutKind;
   title: string;
   children?: ReactNode;
+  items?: ReactNode[];
   action?: ReactNode;
 }
 
-export function Callout({ kind, title, children, action }: CalloutProps) {
+export function Callout({ kind, title, children, items, action }: CalloutProps) {
   const Icon = icons[kind];
 
   return (
@@ -21,6 +22,15 @@ export function Callout({ kind, title, children, action }: CalloutProps) {
       <div className="callout-body">
         <span className="callout-title">{title}</span>
         {children && <span className="small">{children}</span>}
+        {items && (
+          <ul className="callout-list">
+            {items.map((item, index) => (
+              <li key={index} className="small">
+                {item}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       {action}
     </div>

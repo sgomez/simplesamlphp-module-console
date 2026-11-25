@@ -289,7 +289,25 @@ a.row:focus-visible{outline-offset:-2px}
 .pager-total{flex:1 1 auto}
 .empty-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .empty-text{margin:0;max-width:48ch}
-@media (max-width:600px){.page,.shell-head{padding-inline:16px}.row-main{flex-basis:300px}.row-note{flex:0 1 auto}}
+
+/* two columns, facts and Publish (Publish, PublishBlocked, PublishMoved) */
+.page-publish{max-width:1180px;gap:24px}
+.cols{display:flex;flex-wrap:wrap;align-items:flex-start;gap:24px 32px}
+.col-main{display:flex;flex-direction:column;gap:12px;flex:3 1 560px;min-width:0}
+.callout-list{margin:0;padding-inline-start:18px;display:flex;flex-direction:column;gap:2px}
+.link-inherit{color:inherit}
+.publish-main{gap:16px;flex-basis:520px}
+.publish-panel{display:flex;flex-direction:column;gap:16px;padding:20px;flex:1 1 300px;max-width:380px;box-shadow:var(--shadow-1)}
+.publish-panel .btn-primary{height:40px}
+.status-when{font-weight:400}
+.grp-body{display:flex;flex-direction:column;gap:10px;padding:0 16px 16px 44px}
+.row-tight{flex-wrap:wrap;gap:4px 10px}
+.change-sign{width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-weight:600;
+  font-size:14px;background:var(--surface-2);border:1px solid var(--border)}
+.change-verb{flex:0 0 82px;font-size:13px}
+.change-end{margin-inline-start:auto}
+@media (max-width:600px){.page,.shell-head{padding-inline:16px}.row-main{flex-basis:300px}.row-note{flex:0 1 auto}
+  .grp-body{padding-inline-start:16px}.status-when{display:none}}
 
 /* page width and state card (Migration: 760px, margin-top 48px), wrapping identifiers (Form) */
 .page-narrow{max-width:760px}
@@ -308,9 +326,10 @@ a.row:focus-visible{outline-offset:-2px}
 .field{display:flex;flex-direction:column;gap:6px}
 .switch-field{display:flex;align-items:center;gap:10px}
 .check-field{display:flex;align-items:center;gap:8px}
-.msg-error svg{flex:none;margin-top:2px}
+.msg-error svg,.msg-warning svg{flex:none;margin-top:2px}
 .status-note{font-weight:400}
 .seg-count{font-weight:400}
+.label-optional{font-weight:400}
 .callout-body{display:flex;flex-direction:column;flex:1 1 auto}
 .callout-title{font-weight:600}
 .code-block{display:flex;flex-direction:column;gap:6px}

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { Callout, type CalloutKind } from './Callout';
@@ -27,6 +27,17 @@ describe('Callout', () => {
     expect(callout.querySelector('.callout-title')?.textContent).toBe('Not saved');
     expect(screen.getByText('Someone else changed this meanwhile.').className).toBe('small');
     expect(screen.getByRole('link', { name: 'Review' })).toBeDefined();
+  });
+
+  it('renders a list of items under the title', () => {
+    render(<Callout kind="error" title="2 problems" items={[<b key="a">a</b>, <b key="b">b</b>]} />);
+
+    const list = screen.getByRole('list');
+    expect(list.className).toBe('callout-list');
+    expect(within(list).getAllByRole('listitem').map((item) => [item.className, item.textContent])).toEqual([
+      ['small', 'a'],
+      ['small', 'b'],
+    ]);
   });
 });
 

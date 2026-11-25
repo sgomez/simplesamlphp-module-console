@@ -1,5 +1,6 @@
 import { Card } from '../../components/ui/Card';
 import { Row } from '../../components/ui/Row';
+import { TextLink } from '../../components/ui/TextLink';
 import type { Mark } from './marks';
 
 interface MarksProps {
@@ -13,8 +14,8 @@ function At({ line, onLine }: { line: number | null; onLine: (line: number) => v
   }
 
   return (
-    <a
-      className="link mono mark-line"
+    <TextLink
+      className="mono mark-line"
       href={`#line-${line}`}
       onClick={(event) => {
         event.preventDefault();
@@ -22,7 +23,7 @@ function At({ line, onLine }: { line: number | null; onLine: (line: number) => v
       }}
     >
       {`Line ${line}`}
-    </a>
+    </TextLink>
   );
 }
 

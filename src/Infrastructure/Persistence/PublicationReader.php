@@ -38,6 +38,24 @@ final class PublicationReader
 
 
     /**
+     * @return array{number: int, createdAt: ?string}|null
+     */
+    public function current(): ?array
+    {
+        $rows = $this->rows(
+            'SELECT s.number, s.created_at FROM ' . $this->table('pointer') . ' p JOIN ' . $this->table('snapshot')
+            . ' s ON s.number = p.current_number',
+        );
+
+        $number = $rows[0]['number'] ?? null;
+
+        return is_numeric($number)
+            ? ['number' => (int) $number, 'createdAt' => self::text($rows[0]['created_at'] ?? null)]
+            : null;
+    }
+
+
+    /**
      * @return list<array<array-key, mixed>>
      */
     private function rows(string $sql): array

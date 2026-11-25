@@ -7,11 +7,11 @@ type RowTarget =
   | { href: string; to?: never; plain?: never }
   | { plain: true; to?: never; href?: never; as?: 'div' | 'li' };
 
-type RowProps = RowTarget & { wrap?: boolean; className?: string; children: ReactNode };
+type RowProps = RowTarget & { wrap?: boolean; tight?: boolean; className?: string; children: ReactNode };
 
 export function Row(props: RowProps) {
-  const { wrap, children } = props;
-  const className = cx('row', wrap && 'row-wrap', props.className);
+  const { wrap, tight, children } = props;
+  const className = cx('row', wrap && 'row-wrap', tight && 'row-tight', props.className);
   if (props.to !== undefined) {
     return (
       <Link className={className} to={props.to}>
