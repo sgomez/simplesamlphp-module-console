@@ -595,7 +595,7 @@ No advisory locks and no global edit counter are used. Races are settled by cond
 
 **Saving an object.** A save sends the `version` the object was loaded with. The save is `UPDATE … SET version = version + 1 … WHERE version = ?`. Zero rows means the object changed or was deleted meanwhile, and the save is rejected. Every change that can become a Pending change increments `version`, enabling and disabling included.
 
-**Creating an object that already exists.** On save the Console first checks whether the (set, entity ID) or the authsource id exists. If it does, the editor keeps what was typed and shows an "already exists" error at the identity field and a link to the existing object. A primary-key clash on `console_entity` or `console_authsource` after that check passed, a lost race, gives the same field error and not the conflict error below, which would reload someone else's object and throw away what was typed. In a multi-entity create (section 9.6) such an entity is skipped with the reason "already exists".
+**Creating an object that already exists.** On save the Console first checks whether the (set, entity ID) or the authsource id exists. If it does, the editor keeps what was typed and shows an "already exists" error at the line that holds the entity ID or authsource id, with a link to the existing object. A primary-key clash on `console_entity` or `console_authsource` after that check passed, a lost race, gives the same error and not the conflict error below, which would reload someone else's object and throw away what was typed. In a multi-entity create (section 9.6) such an entity is skipped with the reason "already exists".
 
 **Publication.** One transaction:
 
