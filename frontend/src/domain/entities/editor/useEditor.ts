@@ -34,9 +34,9 @@ export function useEditor(initial: EditedEntity, { onCreated, saved, onSaved }: 
     setChecked(checkedOf(entity));
   };
 
-  const save = async () => {
+  // sent: the text of the Settings view, translated just before.
+  const save = async (sent = text) => {
     setSaving(true);
-    const sent = text;
     const result = await port.save(onCreated ? { php: sent } : { entityId: view.entityId, version: view.version, php: sent });
     setSaving(false);
     switch (result.kind) {
@@ -83,6 +83,7 @@ export function useEditor(initial: EditedEntity, { onCreated, saved, onSaved }: 
     text,
     setText,
     checked,
+    setChecked,
     saving,
     dirty: text !== (view.php ?? ''),
     outcome: outcome?.text === text ? outcome.shown : null,

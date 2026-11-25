@@ -1,6 +1,8 @@
 import type { Draft, EditedEntity, EntitiesPort, PastedFormat, SaveResult, Validation } from '../../../domain/entities';
 import type { Failed, Result } from '../../../lib/result';
 import { travelbooker } from './added';
+import { formCapabilities } from './forms';
+import { phpOf } from './translate';
 
 export interface MemoryEditing {
   entities?: EditedEntity[];
@@ -28,6 +30,8 @@ function missing<T>(): Result<T> {
 
 export function memoryEditing({ entities = [], starter, save, validate, reading, served, failing, pasted }: MemoryEditing): Editing {
   const stored = new Map(entities.map((entity) => [entity.entityId, entity]));
+  // What the translator gave, both ways, so that a document and its PHP find each other again.
+  const documents = new Map(entities.flatMap((entity) => (entity.document && entity.php ? [[entity.php, entity.document] as const] : [])));
   const keep = (entity: EditedEntity): Result<EditedEntity> => {
     stored.set(entity.entityId, entity);
 
@@ -57,7 +61,16 @@ export function memoryEditing({ entities = [], starter, save, validate, reading,
       const answer: SaveResult = save
         ? save(draft, entity)
         : entity
-          ? { kind: 'saved', entity: { ...entity, php: draft.php, version: entity.version + 1, state: entity.state === 'Up to date' ? 'Modified' : entity.state } }
+          ? {
+              kind: 'saved',
+              entity: {
+                ...entity,
+                php: draft.php,
+                ...(documents.has(draft.php) && { document: documents.get(draft.php) ?? {} }),
+                version: entity.version + 1,
+                state: entity.state === 'Up to date' ? 'Modified' : entity.state,
+              },
+            }
           : { kind: 'failed', failed: { status: 404, body: null } };
       if (answer.kind === 'saved' || answer.kind === 'race') {
         stored.set(answer.entity.entityId, answer.entity);
@@ -81,5 +94,22 @@ export function memoryEditing({ entities = [], starter, save, validate, reading,
     replacePath: (entityId) => `/entities/saml20-sp-remote/replace?entityid=${encodeURIComponent(entityId)}`,
     hideTidied: () => undefined,
     readPasted: async (text, format) => (pasted ? pasted(text, format) : { ok: true, data: travelbooker }),
+    form: formCapabilities,
+    view: async (request) => {
+      const id = request.entityId ?? '';
+      if ('document' in request) {
+        const php = phpOf(id, request.document);
+        documents.set(php, request.document);
+
+        return { ok: true, data: { php, document: request.document } };
+      }
+      const check = validate?.(request.php);
+      if (check && !check.readable) {
+        return { ok: false, status: 422, body: check };
+      }
+      const document = documents.get(request.php) ?? stored.get(id)?.document ?? {};
+
+      return { ok: true, data: { php: request.php, document } };
+    },
   };
 }

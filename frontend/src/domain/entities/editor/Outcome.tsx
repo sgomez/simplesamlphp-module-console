@@ -21,6 +21,8 @@ interface OutcomeProps {
   review: ReactNode;
   // Stops the tidied notice, when the port offers it.
   onHideTidied?: (() => void) | undefined;
+  // Under a refusal, each error with a link to its field.
+  items?: ReactNode[];
 }
 
 const relative = new Intl.RelativeTimeFormat('en', { numeric: 'always' });
@@ -66,13 +68,13 @@ function Saved({ state, review, tidied, onHideTidied }: { state: string | null; 
   );
 }
 
-export function Outcome({ outcome, title, state, review, onHideTidied }: OutcomeProps) {
+export function Outcome({ outcome, title, state, review, onHideTidied, items }: OutcomeProps) {
   switch (outcome?.kind) {
     case 'saved':
       return <Saved state={state} review={review} tidied={outcome.tidied} onHideTidied={onHideTidied} />;
     case 'invalid':
       return outcome.readable ? (
-        <Callout kind="error" title={`Not saved: ${plural(outcome.count, 'error', 'errors')}`} />
+        <Callout kind="error" title={`Not saved: ${plural(outcome.count, 'error', 'errors')}`} {...(items && items.length > 0 && { items })} />
       ) : (
         <Callout kind="error" title="Not saved: the text could not be read">
           Nothing else is checked until this is fixed.

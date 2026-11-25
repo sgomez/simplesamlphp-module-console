@@ -6,7 +6,7 @@ const SLICES = {
   session: ['database'],
   documents: [],
   forms: ['documents'],
-  entities: ['session', 'documents'],
+  entities: ['session', 'documents', 'forms'],
   publication: ['session', 'entities'],
   nodes: ['session'],
   audit: ['session'],
