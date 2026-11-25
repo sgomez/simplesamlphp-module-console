@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { EDIT, ENTITY, entity, session, stubApi } from '../../test/api';
-import { renderAt } from '../../test/render';
+import { EDIT, ENTITY, entity, session, stubApi } from '../../app/test/api';
+import { renderAt } from '../../app/test/render';
 
 describe('the edit screen of an unreadable entity', () => {
   it('shows the stored bytes of an unreadable entity as they are, read-only', async () => {

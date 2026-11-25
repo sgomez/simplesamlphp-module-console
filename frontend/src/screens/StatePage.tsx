@@ -1,18 +1,19 @@
 import { useState } from 'react';
-import { postJson } from '../api/client';
-import { API } from '../api/paths';
-import type { DatabaseRefusal, MigrationRun } from '../api/types';
-import { plural } from '../app/counts';
-import { failureText, useSettle } from '../app/settle';
-import { Button } from '../components/ui/Button';
-import { Callout } from '../components/ui/Callout';
-import { Card } from '../components/ui/Card';
-import { Pre } from '../components/ui/Code';
-import { Disclosure } from '../components/ui/Disclosure';
-import { Empty } from '../components/ui/Empty';
-import { Facts } from '../components/ui/Facts';
-import { Row } from '../components/ui/Row';
-import { Status } from '../components/ui/Status';
+import { postJson } from '../app/http/client';
+import { API } from '../app/http/paths';
+import type { DatabaseRefusal, MigrationRun } from '../domain/database';
+import { plural } from '../lib/plural';
+import { useSettle } from '../domain/session';
+import { failureText } from '../lib/failureText';
+import { Button } from '../design-system/Button';
+import { Callout } from '../design-system/Callout';
+import { Card } from '../design-system/Card';
+import { Pre } from '../design-system/Code';
+import { Disclosure } from '../design-system/Disclosure';
+import { Empty } from '../design-system/Empty';
+import { Facts } from '../design-system/Facts';
+import { Row } from '../design-system/Row';
+import { Status } from '../design-system/Status';
 
 const PACKAGE = 'sgomez/simplesamlphp-module-console';
 
@@ -64,7 +65,7 @@ function Pending({ refusal, flush, failedAt, onRun }: StatePageProps) {
         title="The database needs an update"
         text="A migration cannot be undone without restoring a backup. Sign-in is not affected."
         actions={
-          <Button variant="primary" loading={running} disabled={running} onClick={update}>
+          <Button variant="primary" loading={running} disabled={running} onPress={update}>
             Update database
           </Button>
         }

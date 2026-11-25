@@ -1,7 +1,7 @@
 import { fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PHP, entity } from '../../test/api';
-import { editor, openEdit, saveBar } from '../../test/edit';
+import { PHP, entity } from '../../app/test/api';
+import { editor, openEdit, saveBar } from '../../app/test/edit';
 
 describe('the bars of the edit screen', () => {
   it('copies and downloads what is in the editor', async () => {

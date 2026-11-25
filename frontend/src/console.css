@@ -81,10 +81,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 .btn-sm{height:28px;padding:0 10px;font-size:13px}
 .btn-icon{width:28px;height:28px;padding:0}
 .btn[disabled],.btn.is-disabled{opacity:.5;cursor:not-allowed}
-.btn.is-loading::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid currentColor;
+.btn[data-pending]::before{content:"";width:12px;height:12px;border-radius:50%;border:2px solid currentColor;
   border-inline-end-color:transparent;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.btn.is-loading::before{animation:none}*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){.btn[data-pending]::before{animation:none}*{transition:none!important}}
 
 /* inputs */
 .input{width:100%;min-width:0;height:36px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--r-md);
@@ -227,7 +227,7 @@ a.row:focus-visible{outline-offset:-2px}
 .empty{display:flex;flex-direction:column;align-items:center;gap:14px;padding:56px 24px;text-align:center}
 .skel{height:12px;border-radius:4px;background:var(--hover)}
 .menu{display:flex;flex-direction:column;gap:2px;padding:4px;min-width:200px;box-shadow:var(--shadow-2);border-radius:8px}
-.menu hr{width:100%;border:0;border-top:1px solid var(--border);margin:2px 0}
+.menu [role=separator]{width:100%;border:0;border-top:1px solid var(--border);margin:2px 0}
 
 /* shell B below 900px: the sidebar becomes an overlay opened from a button */
 .menu-btn{display:none}
@@ -329,12 +329,11 @@ a.row:focus-visible{outline-offset:-2px}
 .code-block{display:flex;flex-direction:column;gap:6px}
 .code-head{display:flex;align-items:center}
 .code-label{flex:1 1 auto}
-.menu-card{align-self:flex-start}
-.menu-anchor{position:relative}
-.menu-pop{position:absolute;top:100%;inset-inline-end:0;margin-top:4px;z-index:10}
-.menu button.nav-item{width:100%;border:0;background:none;font-family:inherit;text-align:start;cursor:pointer}
+.menu .nav-item[role=menuitem]{width:100%;cursor:pointer}
+.menu .nav-item[data-focused]{background:var(--hover);color:var(--text)}
+.menu .nav-item[data-focus-visible]{outline:2px solid var(--accent-solid);outline-offset:-2px}
 .row-slot{display:flex;justify-content:flex-end;flex:0 0 76px}
-@media (max-width:600px){.menu-pop{inset-inline-end:auto;inset-inline-start:0}.row-slot{flex-basis:auto}}
+@media (max-width:600px){.row-slot{flex-basis:auto}}
 .nav-item.is-danger{color:var(--danger-text)}
 .dialog{flex-direction:column;gap:12px;padding:20px;box-shadow:var(--shadow-2);max-width:min(460px,calc(100vw - 32px));color:var(--text)}
 .dialog[open]{display:flex}
@@ -363,3 +362,12 @@ a.row:focus-visible{outline-offset:-2px}
 /* last, so it wins over .input's font */
 .mono{font-family:var(--mono);font-size:12.5px}
 .input.mono{font-size:13px}
+
+/* phone-width wording (MobileList): both texts render, one shows */
+.at-wide{display:inline}
+.at-narrow{display:none}
+@media (max-width:600px){.at-wide{display:none}.at-narrow{display:inline}.toolbar .seg{display:none}
+  .page-head{align-items:center;gap:12px}.title-block{flex:1 1 auto}}
+
+/* React Aria's rule for pressable elements, which it would otherwise add as a <style> element core's CSP blocks */
+[data-react-aria-pressable]{touch-action:pan-x pan-y pinch-zoom}

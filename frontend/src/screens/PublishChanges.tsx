@@ -1,9 +1,11 @@
-import type { ChangeState, CurrentSnapshot, PendingChange, PublicationReview } from '../api/types';
-import { changeCount, plural } from '../app/counts';
+import type { ChangeState, PendingChange, PublicationReview } from '../domain/publication';
+import type { CurrentSnapshot } from '../domain/session';
+import { changeCount } from '../app/counts';
+import { plural } from '../lib/plural';
 import { editPath } from '../app/paths';
-import { Card } from '../components/ui/Card';
-import { Eid } from '../components/ui/Eid';
-import { Row } from '../components/ui/Row';
+import { Card } from '../design-system/Card';
+import { Eid } from '../design-system/Eid';
+import { Row } from '../design-system/Row';
 
 const signs: Record<ChangeState, string> = { Unpublished: '+', Modified: '~', Deleted: '×', Unreadable: '!' };
 

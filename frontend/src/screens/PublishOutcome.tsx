@@ -1,7 +1,7 @@
-import type { PublicationReview, Published } from '../api/types';
-import { failureText } from '../app/settle';
-import { Callout } from '../components/ui/Callout';
-import { Empty } from '../components/ui/Empty';
+import type { PublicationReview, Published } from '../domain/publication';
+import { failureText } from '../lib/failureText';
+import { Callout } from '../design-system/Callout';
+import { Empty } from '../design-system/Empty';
 
 // What the last confirming request came to; null before any.
 export type Outcome = { kind: 'published'; published: Published } | { kind: 'failed'; status: number } | null;

@@ -8,7 +8,7 @@
   <title>Console</title>
   <link rel="icon" type="image/svg+xml" href="{{ asset('img/favicon.svg', 'console') }}">
 {% for href in stylesheets %}
-  <link rel="stylesheet" href="{{ href }}">
+  <link rel="stylesheet"{% if loop.first %} id="react-aria-pressable-style"{% endif %} href="{{ href }}">
 {% endfor %}
 {% for src in scripts %}
   <script type="module" src="{{ src }}"></script>

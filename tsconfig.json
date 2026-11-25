@@ -17,5 +17,5 @@
     "types": ["vite/client"]
   },
   "include": ["frontend"],
-  "exclude": ["frontend/lint/fixtures"]
+  "exclude": ["frontend/lint/fixtures", "frontend/visual"]
 }

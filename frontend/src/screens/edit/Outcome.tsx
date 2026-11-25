@@ -1,7 +1,7 @@
-import { plural } from '../../app/counts';
+import { plural } from '../../lib/plural';
 import { ReviewChanges } from '../../app/ReviewChanges';
-import { failureText } from '../../app/settle';
-import { Callout } from '../../components/ui/Callout';
+import { failureText } from '../../lib/failureText';
+import { Callout } from '../../design-system/Callout';
 
 // What the last save came to; null before any.
 export type SaveOutcome =

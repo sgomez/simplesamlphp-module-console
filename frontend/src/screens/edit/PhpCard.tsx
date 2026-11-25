@@ -1,8 +1,8 @@
 import type { Ref } from 'react';
-import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
-import { downloadText } from '../../components/ui/download';
-import { Editor, type EditorHandle, type LineMark } from '../../components/ui/Editor';
+import { Button } from '../../design-system/Button';
+import { Card } from '../../design-system/Card';
+import { downloadText } from '../../design-system/download';
+import { Editor, type EditorHandle, type LineMark } from '../../design-system/Editor';
 
 interface PhpCardProps {
   value: string;
@@ -21,10 +21,10 @@ export function PhpCard({ value, marks, editor, busy, onChange }: PhpCardProps) 
     <Card list>
       <div className="ed-bar">
         <span className="small muted code-label">Literal values only. Comments are not kept.</span>
-        <Button variant="quiet" small onClick={() => void navigator.clipboard.writeText(value)}>
+        <Button variant="quiet" small onPress={() => void navigator.clipboard.writeText(value)}>
           Copy
         </Button>
-        <Button variant="quiet" small onClick={() => download(value)}>
+        <Button variant="quiet" small onPress={() => download(value)}>
           Download
         </Button>
       </div>

@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { renderAt } from '../test/render';
-import { LIST, PENDING, serveRun, update, withToken } from '../test/states';
+import { renderAt } from '../app/test/render';
+import { LIST, PENDING, serveRun, update, withToken } from '../app/test/states';
 
 describe('the outcome of Run migrations', () => {
   withToken();

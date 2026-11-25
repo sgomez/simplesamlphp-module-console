@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { SAVE, entity, refusal, saveRefusal } from '../../test/api';
-import { EDITED, editor, openEdit, saveBar, saveWith } from '../../test/edit';
+import { SAVE, entity, refusal, saveRefusal } from '../../app/test/api';
+import { EDITED, editor, openEdit, saveBar, saveWith } from '../../app/test/edit';
 
 describe('the outcome of a save', () => {
   it('says the server answered with another status, and keeps the edits', async () => {

@@ -1,5 +1,5 @@
-import type { EditedEntity, EntityError, EntityNotice, EntityWarning, ExistingEntity, Refusal } from '../../api/types';
-import type { LineMark } from '../../components/ui/Editor';
+import type { EditedEntity, EntityError, EntityNotice, EntityWarning, ExistingEntity, Refusal } from '../../domain/entities';
+import type { LineMark } from '../../design-system/Editor';
 
 export interface Mark {
   kind: LineMark;

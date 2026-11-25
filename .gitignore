@@ -6,3 +6,5 @@
 .phpcs.cache
 /node_modules/
 /coverage/
+/storybook-static/
+/.vitest/

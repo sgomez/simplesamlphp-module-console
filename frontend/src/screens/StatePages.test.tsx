@@ -1,8 +1,8 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { refusal, session, stubApi } from '../test/api';
-import { renderAt } from '../test/render';
-import { crumb, expectStateShell, LIST, serveState } from '../test/states';
+import { refusal, session, stubApi } from '../app/test/api';
+import { renderAt } from '../app/test/render';
+import { crumb, expectStateShell, LIST, serveState } from '../app/test/states';
 
 function buttons() {
   return screen.queryAllByRole('button').filter((button) => button.textContent !== '');

@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { review } from '../test/api';
-import { EDIT_A, ready, servePublication, shown } from '../test/publication';
+import { review } from '../app/test/api';
+import { EDIT_A, ready, servePublication, shown } from '../app/test/publication';
 
 describe('the problems and warnings of the Publish screen', () => {
   it('lists the problems first, each linking to its object, and says why Publish is not offered', async () => {

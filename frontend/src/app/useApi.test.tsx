@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { stubApi } from '../test/api';
+import { stubApi } from './test/api';
 import { useApi } from './useApi';
 
 describe('useApi', () => {

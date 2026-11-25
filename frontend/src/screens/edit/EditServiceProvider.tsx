@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router';
-import { spEntityOf } from '../../api/paths';
-import type { EditedEntity } from '../../api/types';
+import { spEntityOf } from '../../app/http/paths';
+import type { EditedEntity } from '../../domain/entities';
 import { Unknown } from '../../app/Unknown';
 import { useApi } from '../../app/useApi';
 import { EntityEditor } from './EntityEditor';

@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router';
-import { API } from '../../api/paths';
-import type { EditedEntity } from '../../api/types';
+import { API } from '../../app/http/paths';
+import type { EditedEntity } from '../../domain/entities';
 import { ReportOutcome } from '../../app/Page';
 import { editPath, SP_LIST } from '../../app/paths';
 import { useApi } from '../../app/useApi';

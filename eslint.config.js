@@ -1,13 +1,14 @@
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
+import { layers } from './frontend/lint/layers.js';
 
 const NATIVE = 'button|input|select|textarea|dialog|a|dl|details|summary';
 
 export default tseslint.config(
-  { ignores: ['frontend/lint/fixtures/**', 'frontend/src/generated/**', 'public/**', 'vendor/**', 'coverage/**'] },
+  { ignores: ['frontend/lint/fixtures/**', 'storybook-static/**', '.vitest/**', 'frontend/src/domain/documents/generated/**', 'public/**', 'vendor/**', 'coverage/**'] },
   {
-    files: ['frontend/**/*.{ts,tsx}', '*.{js,ts}'],
+    files: ['frontend/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}', '*.{js,ts}'],
     extends: [tseslint.configs.strict],
   },
   {
@@ -22,15 +23,15 @@ export default tseslint.config(
         'error',
         {
           selector: `JSXOpeningElement[name.name=/^(${NATIVE})$/]`,
-          message: 'Render native form, dialog, link, list and disclosure elements through a primitive of components/ui.',
+          message: 'Render native form, dialog, link, list and disclosure elements through a primitive of design-system.',
         },
         {
           selector: `CallExpression[callee.name='createElement'][arguments.0.value=/^(${NATIVE})$/]`,
-          message: 'Render native form, dialog, link, list and disclosure elements through a primitive of components/ui.',
+          message: 'Render native form, dialog, link, list and disclosure elements through a primitive of design-system.',
         },
         {
           selector: `CallExpression[callee.property.name='createElement'][arguments.0.value=/^(${NATIVE})$/]`,
-          message: 'Render native form, dialog, link, list and disclosure elements through a primitive of components/ui.',
+          message: 'Render native form, dialog, link, list and disclosure elements through a primitive of design-system.',
         },
       ],
       'no-restricted-imports': [
@@ -55,7 +56,9 @@ export default tseslint.config(
     },
   },
   {
-    files: ['frontend/src/components/ui/**/*.{ts,tsx}'],
+    files: ['frontend/src/design-system/**/*.{ts,tsx}', 'frontend/lint/fixtures/layers/design-system/**/*.{ts,tsx}'],
     rules: { 'no-restricted-syntax': 'off' },
   },
+  layers('frontend/src'),
+  layers('frontend/lint/fixtures/layers'),
 );

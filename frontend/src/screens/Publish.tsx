@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { postJson } from '../api/client';
-import { API } from '../api/paths';
-import type { PublicationRefused, PublicationReview, Published } from '../api/types';
-import { Page } from '../app/Page';
-import { useSettle } from '../app/settle';
+import { postJson } from '../app/http/client';
+import { API } from '../app/http/paths';
+import type { PublicationRefused, PublicationReview, Published } from '../domain/publication';
+import { Page } from '../design-system/Page';
+import { useSettle } from '../domain/session';
 import { useApi } from '../app/useApi';
-import { Callout } from '../components/ui/Callout';
+import { Callout } from '../design-system/Callout';
 import { PublishChanges } from './PublishChanges';
 import { Problems, Warnings } from './PublishNotes';
 import { Nothing, PublishOutcome, type Outcome } from './PublishOutcome';

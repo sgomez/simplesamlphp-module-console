@@ -1,9 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { MigrationRun } from '../api/types';
-import { refusal, stubApi } from '../test/api';
-import { renderAt } from '../test/render';
-import { crumb, expectStateShell, LIST, PENDING, serveRun, serveState, update, withToken } from '../test/states';
+import type { MigrationRun } from '../domain/database';
+import { refusal, stubApi } from '../app/test/api';
+import { renderAt } from '../app/test/render';
+import { crumb, expectStateShell, LIST, PENDING, serveRun, serveState, update, withToken } from '../app/test/states';
 
 describe('the pending migrations page', () => {
   it('warns, lists the migrations and offers the update', async () => {
@@ -66,7 +66,7 @@ describe('the update button', () => {
     await update();
 
     const button = screen.getByRole('button', { name: 'Update database' }) as HTMLButtonElement;
-    expect(button.className).toBe('btn btn-primary is-loading');
+    expect(button.getAttribute('data-pending')).toBe('true');
     expect(button.disabled).toBe(true);
     finish({ outcome: 'Concurrent', applied: [], failed: null, reason: 'Another run.' });
     expect(await screen.findByText('Another run.')).toBeDefined();

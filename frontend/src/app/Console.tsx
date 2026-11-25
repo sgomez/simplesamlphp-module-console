@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
-import type { DatabaseRefusal, Session } from '../api/types';
+import { refusalOf, ReportRefusal, type DatabaseRefusal } from '../domain/database';
+import { ReportFailure, type Failure, type Session } from '../domain/session';
 import { OutcomeMessage, runOf } from '../screens/RunMessage';
 import { StatePage, stateCrumb } from '../screens/StatePage';
-import { FailurePage, failureTrail, ReportFailure, type Failure } from './failure';
+import { FailurePage, failureTrail } from './failure';
 import { LiveSnapshot } from './LiveSnapshot';
-import { Page, PageNotice, ReportOutcome, useCarried, type Said } from './Page';
+import { Page, PageNotice } from '../design-system/Page';
+import { useCarried, type Said } from './Page';
+import { Ports } from './Ports';
 import { crumbsOf } from './crumbs';
 import { PUBLISH } from './paths';
-import { refusalOf, ReportRefusal } from './refusals';
 import { Screens } from './Screens';
 import { Shell } from './Shell';
 import type { ApiState } from './useApi';
@@ -106,9 +108,9 @@ export function Console({ session: latest, outcome, onOutcome, onChange, onMove 
         <PageNotice value={message}>
           <ReportRefusal value={setReported}>
             <ReportFailure value={report}>
-              <ReportOutcome value={announce}>
+              <Ports announce={announce}>
                 <Screens pending={pending} onChange={onChange} onTitle={onTitle} created={created} />
-              </ReportOutcome>
+              </Ports>
             </ReportFailure>
           </ReportRefusal>
         </PageNotice>

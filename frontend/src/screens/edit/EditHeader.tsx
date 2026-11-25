@@ -1,5 +1,5 @@
-import { Button } from '../../components/ui/Button';
-import { MenuButton } from '../../components/ui/Menu';
+import { Button } from '../../design-system/Button';
+import { MenuButton } from '../../design-system/Menu';
 
 // A new object has no entity ID until it is saved, and nothing to delete.
 export function EditHeader({ title, entityId, onDelete }: { title: string; entityId: string | null; onDelete?: () => void }) {
@@ -14,7 +14,7 @@ export function EditHeader({ title, entityId, onDelete }: { title: string; entit
         {entityId !== null && (
           <div className="obj-id">
             <span className="mono muted wrap-any">{entityId}</span>
-            <Button variant="quiet" small onClick={() => void navigator.clipboard.writeText(entityId)}>
+            <Button variant="quiet" small onPress={() => void navigator.clipboard.writeText(entityId)}>
               Copy
             </Button>
           </div>

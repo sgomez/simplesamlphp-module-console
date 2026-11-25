@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
-import { page, session, sp, stubApi } from '../test/api';
-import { location, renderAt } from '../test/render';
+import { page, session, sp, stubApi } from './test/api';
+import { location, renderAt } from './test/render';
 import { FailurePage, failureTrail } from './failure';
 
 const LIST = '/entities/saml20-sp-remote';

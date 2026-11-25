@@ -1,8 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { review, session, stubApi } from '../test/api';
-import { PUBLISH, calls, ready, servePublication, shown } from '../test/publication';
-import { renderAt } from '../test/render';
+import { review, session, stubApi } from '../app/test/api';
+import { PUBLISH, calls, ready, servePublication, shown } from '../app/test/publication';
+import { renderAt } from '../app/test/render';
 
 describe('the confirming request of the Publish screen', () => {
   it('publishes with the hash and the comment, then says so and shows what is now live', async () => {
@@ -67,7 +67,7 @@ describe('the confirming request of the Publish screen', () => {
 
     fireEvent.click(button);
 
-    expect(button.className).toBe('btn btn-primary is-loading');
+    expect(button.getAttribute('data-pending')).toBe('true');
     expect(button.disabled).toBe(true);
     await waitFor(() => expect(button.disabled).toBe(false));
     expect(screen.getByText('Ready to publish')).toBeDefined();
