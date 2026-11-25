@@ -1,6 +1,13 @@
+// Core's admin pages, which the sidebar's System group leaves for.
+export interface CoreLinks {
+  configuration: string;
+  test: string;
+  federation: string;
+}
+
 export interface SessionLinks {
   identity: string;
-  adminUrl: string;
+  core: CoreLinks;
   logoutUrl: string;
 }
 

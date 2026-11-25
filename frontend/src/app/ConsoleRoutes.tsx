@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { API } from './http/paths';
-import type { Session } from '../domain/session';
+import { httpSession } from './http/session';
+import { SessionPortContext, type Session } from '../domain/session';
 import { Console, type Outcome } from './Console';
 import { CARRY, type Said } from './Page';
 import { useApi } from './useApi';
@@ -30,5 +31,9 @@ export function ConsoleRoutes() {
     [changed, navigate],
   );
 
-  return <Console key={round} session={session} outcome={outcome} onOutcome={report} onChange={changed} onMove={move} />;
+  return (
+    <SessionPortContext value={httpSession}>
+      <Console key={round} session={session} outcome={outcome} onOutcome={report} onChange={changed} onMove={move} />
+    </SessionPortContext>
+  );
 }

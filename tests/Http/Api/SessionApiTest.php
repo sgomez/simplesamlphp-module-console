@@ -7,12 +7,17 @@ use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\EntityDb;
 use SimpleSAML\Module\console\Tests\Support\PublishFixtures;
 
-it('answers the identity and the two links to core', function (): void {
+it('answers the identity, logout and the links to core\'s three admin pages', function (): void {
     $session = Api::get((new ConsoleClient())->loginAsAdmin(), '/session');
 
     expect($session['identity'])->toBe('admin')
-        ->and($session['adminUrl'])->toBe('http://localhost/simplesaml/module.php/admin/')
-        ->and($session['logoutUrl'])->toContain('/module.php/core/logout/admin');
+        ->and($session['core'])->toBe([
+            'configuration' => 'http://localhost/simplesaml/module.php/admin/',
+            'test' => 'http://localhost/simplesaml/module.php/admin/test',
+            'federation' => 'http://localhost/simplesaml/module.php/admin/federation',
+        ])
+        ->and($session['logoutUrl'])->toContain('/module.php/core/logout/admin')
+        ->and($session)->not->toHaveKey('adminUrl');
 });
 
 it('answers the first value of useridattr as the identity', function (): void {

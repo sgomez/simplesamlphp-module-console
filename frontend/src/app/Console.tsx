@@ -5,7 +5,7 @@ import { ReportFailure, type Failure, type Session } from '../domain/session';
 import { OutcomeMessage, runOf } from '../screens/RunMessage';
 import { StatePage, stateCrumb } from '../screens/StatePage';
 import { FailurePage, failureTrail } from './failure';
-import { LiveSnapshot } from './LiveSnapshot';
+import { LiveSnapshot } from '../domain/publication';
 import { Page, PageNotice } from '../design-system/Page';
 import { useCarried, type Said } from './Page';
 import { Ports } from './Ports';
@@ -101,6 +101,7 @@ export function Console({ session: latest, outcome, onOutcome, onChange, onMove 
     <Shell
       session={session}
       pending={pending}
+      counts={session?.counts ?? {}}
       crumbs={crumbsOf(pathname, shown)}
       {...(pathname === PUBLISH ? { end: live } : {})}
     >

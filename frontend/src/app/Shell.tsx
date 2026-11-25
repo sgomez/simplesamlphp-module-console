@@ -2,7 +2,8 @@ import { Fragment, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import type { SessionLinks } from '../domain/database';
 import { Shell as Layout } from '../design-system/Shell';
-import { ReviewChanges } from './ReviewChanges';
+import { ReviewChanges } from '../domain/publication';
+import type { Counts } from '../domain/session';
 import { Sidebar } from './Sidebar';
 
 export interface Crumb {
@@ -13,6 +14,7 @@ export interface Crumb {
 interface ShellProps {
   session: SessionLinks | null;
   pending: number;
+  counts?: Counts;
   crumbs: readonly Crumb[];
   // The end of the header; the Review button when not given.
   end?: ReactNode;
@@ -45,7 +47,7 @@ function Crumbs({ crumbs }: { crumbs: readonly Crumb[] }) {
   );
 }
 
-export function Shell({ session, pending, crumbs, end, children }: ShellProps) {
+export function Shell({ session, pending, counts = {}, crumbs, end, children }: ShellProps) {
   const { key } = useLocation();
   const head = (
     <>
@@ -55,7 +57,7 @@ export function Shell({ session, pending, crumbs, end, children }: ShellProps) {
   );
 
   return (
-    <Layout side={<Sidebar session={session} pending={pending} />} head={head} navKey={key}>
+    <Layout side={<Sidebar session={session} pending={pending} counts={counts} />} head={head} navKey={key}>
       {children}
     </Layout>
   );

@@ -1,20 +1,37 @@
-import { Link, NavLink } from 'react-router';
+import { Link } from 'react-router';
 import type { SessionLinks } from '../domain/database';
+import { navigation, useSessionPort, type Counts, type NavEntry } from '../domain/session';
 import { IdentityCard } from '../design-system/IdentityCard';
+import { NavItem } from '../design-system/NavItem';
 import { plural } from '../lib/plural';
-import { PUBLISH, SP_LIST } from './paths';
+import { SCREENS } from './paths';
 
-const navClass = ({ isActive }: { isActive: boolean }) => (isActive ? 'nav-item active' : 'nav-item');
+function Entry({ entry }: { entry: NavEntry }) {
+  if ('href' in entry) {
+    return <NavItem href={entry.href} label={entry.label} />;
+  }
+  const { screen, label, count, badge } = entry;
 
-function SideFoot({ session }: { session: SessionLinks }) {
   return (
-    <div className="side-foot">
-      <IdentityCard identity={session.identity} adminUrl={session.adminUrl} logoutUrl={session.logoutUrl} />
-    </div>
+    <NavItem
+      to={SCREENS[screen]}
+      end={screen === 'overview'}
+      label={label}
+      count={count}
+      badge={badge === null ? null : { count: badge, label: `${plural(badge, 'change', 'changes')} to publish` }}
+    />
   );
 }
 
-export function Sidebar({ session, pending }: { session: SessionLinks | null; pending: number }) {
+interface SidebarProps {
+  session: SessionLinks | null;
+  pending: number;
+  counts: Counts;
+}
+
+export function Sidebar({ session, pending, counts }: SidebarProps) {
+  const { screens } = useSessionPort();
+
   return (
     <nav className="side-nav" aria-label="Main">
       <div className="side-body">
@@ -22,25 +39,20 @@ export function Sidebar({ session, pending }: { session: SessionLinks | null; pe
           <span className="brand-name">SimpleSAMLphp</span>
           <span className="brand-host">{window.location.hostname}</span>
         </Link>
-        <div className="nav-group">
-          <h2 className="nav-head">Entities</h2>
-          <NavLink className={navClass} to={SP_LIST}>
-            <span>Service providers</span>
-          </NavLink>
-        </div>
-        <div className="nav-group">
-          <h2 className="nav-head">Changes</h2>
-          <NavLink className={navClass} to={PUBLISH}>
-            <span>Publish</span>
-            {pending > 0 && (
-              <span className="nav-badge" aria-label={`${plural(pending, 'change', 'changes')} to publish`}>
-                {pending}
-              </span>
-            )}
-          </NavLink>
-        </div>
+        {navigation(screens, counts, pending, session?.core ?? null).map(({ head, entries }) => (
+          <div className="nav-group" key={head ?? ''}>
+            {head !== null && <h2 className="nav-head">{head}</h2>}
+            {entries.map((entry) => (
+              <Entry key={entry.label} entry={entry} />
+            ))}
+          </div>
+        ))}
       </div>
-      {session && <SideFoot session={session} />}
+      {session && (
+        <div className="side-foot">
+          <IdentityCard identity={session.identity} logoutUrl={session.logoutUrl} />
+        </div>
+      )}
     </nav>
   );
 }
