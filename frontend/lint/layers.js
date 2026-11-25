@@ -10,6 +10,8 @@ const SLICES = {
   nodes: ['session'],
   audit: ['session'],
   overrides: ['session', 'entities'],
+  overview: ['session', 'entities', 'publication', 'nodes', 'overrides'],
+  authsources: ['session', 'entities'],
 };
 
 const types = (...names) => ({ element: { types: names } });

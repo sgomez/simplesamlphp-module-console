@@ -6,7 +6,7 @@ import { boardList } from '../app/adapters/memory/rows';
 import { memorySession } from '../app/adapters/memory/session';
 import { StoryFrame } from '../app/test/StoryFrame';
 import type { Counts, SessionPort } from '../domain/session';
-import { ServiceProvidersPage } from './ServiceProvidersPage';
+import { EntityListPage } from './EntityListPage';
 
 interface Frame {
   pending: number;
@@ -19,7 +19,7 @@ function Framed({ pending, session = memorySession, counts }: Frame) {
 
   return (
     <StoryFrame crumbs={[{ label: 'Service providers' }]} pending={pending} entities={port} session={session} {...(counts ? { counts } : {})}>
-      <ServiceProvidersPage />
+      <EntityListPage set="saml20-sp-remote" />
     </StoryFrame>
   );
 }

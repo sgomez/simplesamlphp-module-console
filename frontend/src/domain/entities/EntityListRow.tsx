@@ -6,12 +6,13 @@ import { Eid } from '../../design-system/Eid';
 import { ChevronIcon } from '../../design-system/icons';
 import { Row } from '../../design-system/Row';
 import { Status } from '../../design-system/Status';
-import { isDisabled, notesOf } from './notes';
+import { isDisabled, notesOf, type Labelled } from './notes';
 import { editPath } from './routes';
+import type { EntitySet } from './sets';
 import type { EntityRow } from './types';
 import { useDeleteEntity } from './useDeleteEntity';
 
-function RowNote({ row }: { row: EntityRow }) {
+export function RowNote({ row }: { row: Labelled }) {
   const [first, ...rest] = notesOf(row);
   const more = row.error ?? (rest.length > 0 ? `+${rest.length} more` : null);
   if (first === undefined) {
@@ -48,7 +49,7 @@ function UnreadableRow({ row, children }: { row: EntityRow; children: ReactNode 
   );
 }
 
-export function EntityListRow({ row }: { row: EntityRow }) {
+export function EntityListRow({ row, set = 'saml20-sp-remote' }: { row: EntityRow; set?: EntitySet }) {
   const content = (
     <>
       <div className="row-main">
@@ -63,7 +64,7 @@ export function EntityListRow({ row }: { row: EntityRow }) {
   }
 
   return (
-    <Row wrap to={editPath(row.entityId)}>
+    <Row wrap to={editPath(row.entityId, set)}>
       {content}
       <ChevronIcon />
     </Row>

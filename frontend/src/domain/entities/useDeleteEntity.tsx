@@ -2,6 +2,7 @@ import { useContext, useState, type ReactNode } from 'react';
 import { Callout } from '../../design-system/Callout';
 import { ConfirmDialog } from '../../design-system/ConfirmDialog';
 import { failureText } from '../../lib/failureText';
+import type { Result } from '../../lib/result';
 import { ReportMessage, useSettle } from '../session';
 import { useEntitiesPort } from './port';
 
@@ -26,7 +27,8 @@ function deleteTexts({ entityId, name, inSnapshot }: Deleted): { title: string; 
 }
 
 // Deleting asks first; once done the interface moves to `then` with the one-shot message.
-export function useDeleteEntity(deleted: Deleted, then: string): Deletion {
+// remove: how another kind of managed object, such as an authsource, is deleted.
+export function useDeleteEntity(deleted: Deleted, then: string, remove?: (id: string) => Promise<Result<unknown>>): Deletion {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState<number | null>(null);
@@ -36,7 +38,7 @@ export function useDeleteEntity(deleted: Deleted, then: string): Deletion {
 
   const confirm = async () => {
     setBusy(true);
-    const result = await port.remove(deleted.entityId);
+    const result = await (remove ?? port.remove)(deleted.entityId);
     setBusy(false);
     setOpen(false);
     if (result.ok) {

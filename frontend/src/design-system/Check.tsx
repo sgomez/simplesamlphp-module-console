@@ -5,18 +5,21 @@ import { useToggleState } from 'react-stately';
 interface CheckProps {
   label: string;
   checked: boolean;
+  // The label is read, not shown, where the row beside it names the object.
+  hideLabel?: boolean;
+  disabled?: boolean;
   onChange: (checked: boolean) => void;
 }
 
-export function Check({ label, checked, onChange }: CheckProps) {
+export function Check({ label, checked, hideLabel, disabled = false, onChange }: CheckProps) {
   const ref = useRef<HTMLInputElement>(null);
-  const aria = { children: label, isSelected: checked, onChange };
+  const aria = { children: label, isSelected: checked, isDisabled: disabled, onChange };
   const { labelProps, inputProps } = useCheckbox(aria, useToggleState(aria), ref);
 
   return (
     <label className="check-field" {...labelProps}>
       <input className="check" {...inputProps} ref={ref} />
-      <span>{label}</span>
+      <span className={hideLabel ? 'sr-only' : undefined}>{label}</span>
     </label>
   );
 }

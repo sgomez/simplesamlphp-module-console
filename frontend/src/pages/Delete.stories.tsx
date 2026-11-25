@@ -6,7 +6,7 @@ import { boardRows, row } from '../app/adapters/memory/rows';
 import { StoryFrame } from '../app/test/StoryFrame';
 import { StoryMessages } from '../app/test/StoryMessages';
 import { ConfirmDialog } from '../design-system/ConfirmDialog';
-import { ServiceProvidersPage } from './ServiceProvidersPage';
+import { EntityListPage } from './EntityListPage';
 
 const BAD = 'https://bad.example.org/sp';
 const SERVED = ' Nodes keep serving it until the next Publication, which withdraws it.';
@@ -31,7 +31,7 @@ function Framed({ inSnapshot = false, removal, review }: Frame) {
   return (
     <StoryFrame crumbs={[{ label: 'Service providers' }]} pending={2} entities={port}>
       <StoryMessages>
-        <ServiceProvidersPage />
+        <EntityListPage set="saml20-sp-remote" />
       </StoryMessages>
       {review && (
         <ConfirmDialog open title={`Delete ${BAD}?`} cancel="Cancel" {...review} onCancel={noop} onConfirm={noop} />
