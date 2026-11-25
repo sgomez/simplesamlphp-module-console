@@ -47,7 +47,7 @@ body{margin:0;background:var(--bg);color:var(--text);
 *,*::before,*::after{box-sizing:border-box}
 
 /* focus ring: one treatment everywhere */
-a:focus-visible,button:focus-visible,
+a:focus-visible,button:focus-visible,[role=tab][data-focus-visible],
 input:focus-visible,select:focus-visible,textarea:focus-visible{
   outline:2px solid var(--accent-solid); outline-offset:2px;
 }
@@ -215,11 +215,11 @@ a.row:focus-visible{outline-offset:-2px}
 .tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--border)}
 .tabs a{padding:8px 12px;margin-bottom:-1px;border-bottom:2px solid transparent;color:var(--text-2);text-decoration:none;font-weight:500}
 .tabs a:hover{color:var(--text)}
-.tabs a.on{color:var(--text);border-bottom-color:var(--accent-solid)}
-.tabs button{padding:10px 12px;margin-bottom:-1px;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-2);
+.tabs a[data-current]{color:var(--text);border-bottom-color:var(--accent-solid)}
+.tabs [role=tab]{padding:10px 12px;margin-bottom:-1px;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-2);
   font-family:var(--sans);font-size:14px;font-weight:500;cursor:pointer;min-height:44px}
-.tabs button:hover{color:var(--text)}
-.tabs button.on{color:var(--text);border-bottom-color:var(--accent-solid)}
+.tabs [role=tab][data-hovered]{color:var(--text)}
+.tabs [role=tab][data-selected]{color:var(--text);border-bottom-color:var(--accent-solid)}
 .vtab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;min-height:44px;padding:10px 12px;border:1px solid transparent;border-radius:var(--r-md);
   background:none;color:var(--text-2);font-family:var(--sans);font-size:14px;text-align:start;cursor:pointer}
 .vtab:hover{background:var(--hover);color:var(--text)}
