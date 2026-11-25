@@ -101,7 +101,7 @@ export const Links: Story = {
     const notLive = page.getByRole('link', { name: /^Not live/ });
 
     await expect(page.getByRole('navigation', { name: 'Filter' })).toHaveClass('seg');
-    await expect(all).toHaveClass('on');
+    await expect(all).toHaveAttribute('data-current', 'true');
     await expect(all).toHaveAttribute('aria-current', 'true');
     await expect(notLive).not.toHaveAttribute('aria-current');
     await expect(notLive).toHaveAttribute('href', '/?f=not-live');

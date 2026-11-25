@@ -1,5 +1,4 @@
-import { ToggleButton, ToggleButtonGroup, type Key } from 'react-aria-components';
-import { Link } from 'react-router';
+import { Link, ToggleButton, ToggleButtonGroup, type Key } from 'react-aria-components';
 
 interface SegmentLook {
   key: string;
@@ -25,7 +24,7 @@ export function LinkSegmented({ label, segments, current }: SegmentedProps<LinkS
   return (
     <nav className="seg" aria-label={label}>
       {segments.map(({ key, label: text, count, to }) => (
-        <Link key={key} className={key === current ? 'on' : undefined} to={to} aria-current={key === current || undefined}>
+        <Link key={key} href={to} {...(key === current ? { 'aria-current': 'true' } : {})}>
           {text}
           <Count count={count} />
         </Link>

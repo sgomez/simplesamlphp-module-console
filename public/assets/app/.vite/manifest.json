@@ -1,6 +1,6 @@
 {
   "src/console.css": {
-    "file": "assets/console-IxvJrHUB.css",
+    "file": "assets/console-ByaWjlRs.css",
     "name": "console",
     "names": [
       "console.css"
@@ -9,7 +9,7 @@
     "isEntry": true
   },
   "src/main.tsx": {
-    "file": "assets/main-BBSOmmj9.js",
+    "file": "assets/main-CylUj68A.js",
     "name": "main",
     "src": "src/main.tsx",
     "isEntry": true
