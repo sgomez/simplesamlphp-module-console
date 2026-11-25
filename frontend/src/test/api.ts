@@ -1,5 +1,14 @@
 import { vi } from 'vitest';
-import type { DatabaseRefusal, EditedEntity, EntityPage, EntityRow, Refusal, Session, Validation } from '../api/types';
+import type {
+  DatabaseRefusal,
+  EditedEntity,
+  EntityPage,
+  EntityRow,
+  PublicationReview,
+  Refusal,
+  Session,
+  Validation,
+} from '../api/types';
 
 type Answer = { status?: number; body: unknown };
 
@@ -28,10 +37,24 @@ export const session: Session = {
   adminUrl: 'http://localhost/simplesaml/module.php/admin/',
   logoutUrl: 'http://localhost/simplesaml/module.php/core/logout/admin',
   pendingCount: 0,
+  current: null,
 };
 
 export function sp(entityId: string, more: Partial<EntityRow> = {}): EntityRow {
   return { entityId, name: null, state: 'Up to date', labels: [], unreadable: false, error: null, ...more };
+}
+
+export function review(more: Partial<PublicationReview> = {}): PublicationReview {
+  return {
+    groups: [],
+    problems: [],
+    warnings: [],
+    hash: 'h1',
+    nextNumber: 1,
+    current: null,
+    canPublish: false,
+    ...more,
+  };
 }
 
 export function page(rows: EntityRow[], more: Partial<EntityPage> = {}): EntityPage {

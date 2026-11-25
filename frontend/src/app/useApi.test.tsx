@@ -39,14 +39,16 @@ describe('useApi', () => {
     await waitFor(() => expect(result.current).toEqual({ state: 'ready', data: 'b' }));
   });
 
-  it('asks again for a new revision of the same path', async () => {
+  it('asks again for a new revision of the same path, keeping the last answer until the new one arrives', async () => {
     let n = 0;
-    stubApi({ '/api/a': () => ({ body: (n += 1) }) });
+    const fetch = stubApi({ '/api/a': () => ({ body: (n += 1) }) });
     const { result, rerender } = renderHook(({ revision }) => useApi('/a', { revision }), { initialProps: { revision: 0 } });
     await waitFor(() => expect(result.current).toEqual({ state: 'ready', data: 1 }));
 
     rerender({ revision: 1 });
 
+    expect(result.current).toEqual({ state: 'ready', data: 1 });
     await waitFor(() => expect(result.current).toEqual({ state: 'ready', data: 2 }));
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });

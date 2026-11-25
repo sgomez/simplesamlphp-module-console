@@ -8,17 +8,19 @@ interface PageProps {
   wide?: boolean;
   // The width of a state or failure page.
   narrow?: boolean;
+  // The width and spacing of the Publish boards.
+  publish?: boolean;
   bar?: ReactNode;
   children: ReactNode;
 }
 
 // The content of a screen, and the bar that sticks below it.
-export function Page({ wide, narrow, bar, children }: PageProps) {
+export function Page({ wide, narrow, publish, bar, children }: PageProps) {
   const notice = useContext(PageNotice);
 
   return (
     <>
-      <main className={cx('page', wide && 'page-wide', narrow && 'page-narrow')}>
+      <main className={cx('page', wide && 'page-wide', narrow && 'page-narrow', publish && 'page-publish')}>
         {notice}
         {children}
       </main>

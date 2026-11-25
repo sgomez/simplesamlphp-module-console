@@ -77,6 +77,19 @@ describe('Disclosure', () => {
     expect(details.querySelector('summary > span.small')?.textContent).toBe('Technical detail');
     expect(details.querySelector('p')?.textContent).toBe('inside');
   });
+
+  it('folds a card under a bold summary, its content indented', () => {
+    const { container } = render(
+      <Disclosure card summary="2 warnings">
+        <p>inside</p>
+      </Disclosure>,
+    );
+
+    const details = container.firstElementChild as HTMLDetailsElement;
+    expect(details.className).toBe('grp card');
+    expect(details.querySelector('summary > span.row-name')?.textContent).toBe('2 warnings');
+    expect(details.querySelector('.grp-body > p')?.textContent).toBe('inside');
+  });
 });
 
 describe('Pre', () => {

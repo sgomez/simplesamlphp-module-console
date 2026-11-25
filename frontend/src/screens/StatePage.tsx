@@ -1,4 +1,4 @@
-import { Fragment, useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { postJson } from '../api/client';
 import type { DatabaseRefusal, MigrationRun } from '../api/types';
 import { useFailure } from '../app/failure';
@@ -8,6 +8,7 @@ import { Card } from '../components/ui/Card';
 import { Pre } from '../components/ui/Code';
 import { Disclosure } from '../components/ui/Disclosure';
 import { Empty } from '../components/ui/Empty';
+import { Facts } from '../components/ui/Facts';
 import { Row } from '../components/ui/Row';
 import { Status } from '../components/ui/Status';
 
@@ -22,19 +23,6 @@ const titles: Record<DatabaseRefusal['state'], string> = {
 
 export function stateCrumb(refusal: DatabaseRefusal): string {
   return titles[refusal.state];
-}
-
-function Facts({ facts }: { facts: [string, ReactNode, string?][] }) {
-  return (
-    <dl className="facts">
-      {facts.map(([term, value, className]) => (
-        <Fragment key={term}>
-          <dt className="muted">{term}</dt>
-          <dd className={className}>{value}</dd>
-        </Fragment>
-      ))}
-    </dl>
-  );
 }
 
 function failedRun(reason: string): MigrationRun {
@@ -130,8 +118,8 @@ export function StatePage(props: StatePageProps) {
         <Empty state flush={flush} title="SQLite too old">
           <Facts
             facts={[
-              ['Found', refusal.sqliteVersion, 'mono is-strong'],
-              ['Minimum', refusal.sqliteMinimum, 'mono'],
+              { term: 'Found', value: refusal.sqliteVersion, className: 'mono is-strong' },
+              { term: 'Minimum', value: refusal.sqliteMinimum, className: 'mono' },
             ]}
           />
         </Empty>
@@ -141,8 +129,8 @@ export function StatePage(props: StatePageProps) {
         <Empty state flush={flush} title="Console older than the database">
           <Facts
             facts={[
-              ['This Console knows', `Schema ${refusal.known}`],
-              ['The database holds', `Schema ${refusal.highest}`, 'is-strong'],
+              { term: 'This Console knows', value: `Schema ${refusal.known}` },
+              { term: 'The database holds', value: `Schema ${refusal.highest}`, className: 'is-strong' },
             ]}
           />
           <p className="muted empty-text">

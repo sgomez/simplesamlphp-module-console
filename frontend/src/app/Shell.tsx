@@ -1,9 +1,9 @@
 import { Fragment, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
-import { consoleUrl } from '../api/client';
 import type { SessionLinks } from '../api/types';
 import { Button, LinkButton } from '../components/ui/Button';
 import { MenuIcon } from '../components/ui/icons';
+import { PUBLISH } from './paths';
 import { Sidebar } from './Sidebar';
 
 export interface Crumb {
@@ -15,19 +15,21 @@ interface ShellProps {
   session: SessionLinks | null;
   pending: number;
   crumbs: readonly Crumb[];
+  // The end of the header; the Review button when not given.
+  end?: ReactNode;
   children: ReactNode;
 }
 
 function Review({ count }: { count: number }) {
   return (
-    <LinkButton variant="global" small href={consoleUrl('/publish')}>
+    <LinkButton variant="global" small to={PUBLISH}>
       <span className="dot dot-half" aria-hidden="true" />
       {`Review ${count} ${count === 1 ? 'change' : 'changes'}`}
     </LinkButton>
   );
 }
 
-export function Shell({ session, pending, crumbs, children }: ShellProps) {
+export function Shell({ session, pending, crumbs, end, children }: ShellProps) {
   const { key } = useLocation();
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === key;
@@ -63,7 +65,7 @@ export function Shell({ session, pending, crumbs, children }: ShellProps) {
               </Fragment>
             ))}
           </nav>
-          {pending > 0 && <Review count={pending} />}
+          {end === undefined ? pending > 0 && <Review count={pending} /> : end}
         </header>
         {children}
       </div>

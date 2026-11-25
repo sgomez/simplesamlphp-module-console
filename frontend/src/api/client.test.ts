@@ -89,3 +89,38 @@ describe('the API client', () => {
     expect(await postJson('/x', {})).toEqual({ ok: false, status: 0, body: null });
   });
 });
+
+describe('a POST to the API', () => {
+  it('sends the body as JSON with the request-forgery token of the page', async () => {
+    const meta = document.createElement('meta');
+    meta.name = 'console-token';
+    meta.content = 'abc';
+    document.head.append(meta);
+    answer(new Response('{"number":1}', { status: 200 }));
+
+    expect(await postJson('/publication', { hash: 'h' })).toEqual({ ok: true, data: { number: 1 } });
+    expect(fetch).toHaveBeenCalledWith('/api/publication', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-Console-Token': 'abc' },
+      credentials: 'same-origin',
+      body: '{"hash":"h"}',
+    });
+    meta.remove();
+  });
+
+  it('sends an empty token when the page carries none', async () => {
+    answer(new Response('{"error":"refused"}', { status: 403 }));
+
+    expect(await postJson('/publication', {})).toEqual({ ok: false, status: 403, body: { error: 'refused' } });
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/publication',
+      expect.objectContaining({ headers: expect.objectContaining({ 'X-Console-Token': '' }) }),
+    );
+  });
+
+  it('answers a network failure with status 0', async () => {
+    answer(new TypeError('Failed to fetch'));
+
+    expect(await postJson('/publication', {})).toEqual({ ok: false, status: 0, body: null });
+  });
+});

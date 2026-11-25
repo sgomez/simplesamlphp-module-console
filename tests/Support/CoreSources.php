@@ -45,7 +45,7 @@ final class CoreSources
         [$entityId] = SpFixtures::flatFile($fixture);
         $client = (new ConsoleClient())->loginAsAdmin();
         PublishFixtures::seed($client, $entityId, SpFixtures::document($fixture));
-        PublishFixtures::publish($client, $client->page(PublishFixtures::PATH));
+        PublishFixtures::publish($client);
 
         return $client;
     }

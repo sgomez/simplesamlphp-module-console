@@ -1,4 +1,4 @@
-import { consoleUrl } from '../../api/client';
+import { PUBLISH } from '../../app/paths';
 import { LinkButton } from '../../components/ui/Button';
 import { Callout } from '../../components/ui/Callout';
 
@@ -19,7 +19,7 @@ interface OutcomeProps {
 
 function Review({ count }: { count: number }) {
   return (
-    <LinkButton small href={consoleUrl('/publish')}>
+    <LinkButton small to={PUBLISH}>
       <span className="dot dot-half" aria-hidden="true" />
       {`Review ${count} ${count === 1 ? 'change' : 'changes'}`}
     </LinkButton>

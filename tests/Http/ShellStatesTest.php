@@ -19,7 +19,9 @@ it('answers with the shell whatever the state of the database', function (string
 
 it('sends a Twig screen or form post to the shell while the database is not ready', function (string $method): void {
     $client = (new ConsoleClient())->withDatabase(null)->loginAsAdmin();
-    $response = $method === 'GET' ? $client->get('/publish') : $client->post('/publish', []);
+    $response = $method === 'GET'
+        ? $client->get('/entities/saml20-sp-remote/new')
+        : $client->post('/entities/saml20-sp-remote/save', []);
 
     expect($response->getStatusCode())->toBe(302)
         ->and($response->headers->get('Location'))->toBe(ConsoleClient::BASE . '/');

@@ -2,7 +2,7 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
-const NATIVE = 'button|input|select|textarea|dialog';
+const NATIVE = 'button|input|select|textarea|dialog|a|dl|details|summary';
 
 export default tseslint.config(
   { ignores: ['frontend/lint/fixtures/**', 'public/**', 'vendor/**', 'coverage/**'] },
@@ -22,15 +22,15 @@ export default tseslint.config(
         'error',
         {
           selector: `JSXOpeningElement[name.name=/^(${NATIVE})$/]`,
-          message: 'Render native form and dialog elements through a primitive of components/ui.',
+          message: 'Render native form, dialog, link, list and disclosure elements through a primitive of components/ui.',
         },
         {
           selector: `CallExpression[callee.name='createElement'][arguments.0.value=/^(${NATIVE})$/]`,
-          message: 'Render native form and dialog elements through a primitive of components/ui.',
+          message: 'Render native form, dialog, link, list and disclosure elements through a primitive of components/ui.',
         },
         {
           selector: `CallExpression[callee.property.name='createElement'][arguments.0.value=/^(${NATIVE})$/]`,
-          message: 'Render native form and dialog elements through a primitive of components/ui.',
+          message: 'Render native form, dialog, link, list and disclosure elements through a primitive of components/ui.',
         },
       ],
       'no-restricted-imports': [

@@ -1,6 +1,7 @@
 import type { Ref } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { downloadText } from '../../components/ui/download';
 import { Editor, type EditorHandle, type LineMark } from '../../components/ui/Editor';
 
 interface PhpCardProps {
@@ -12,12 +13,7 @@ interface PhpCardProps {
 }
 
 function download(text: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/x-php' }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'saml20-sp-remote.php';
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  downloadText(text, 'saml20-sp-remote.php', 'application/x-php');
 }
 
 export function PhpCard({ value, marks, editor, busy, onChange }: PhpCardProps) {

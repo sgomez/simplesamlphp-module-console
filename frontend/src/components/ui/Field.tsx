@@ -6,14 +6,21 @@ interface FieldProps {
   label: string;
   help?: string;
   error?: string;
+  optional?: boolean;
   children: ReactNode;
 }
 
-export function Field({ id, label, help, error, children }: FieldProps) {
+export function Field({ id, label, help, error, optional, children }: FieldProps) {
   return (
     <div className="field">
       <label className="label" htmlFor={id}>
         {label}
+        {optional && (
+          <>
+            {' '}
+            <span className="faint label-optional">(optional)</span>
+          </>
+        )}
       </label>
       {children}
       {help && <span className="help">{help}</span>}

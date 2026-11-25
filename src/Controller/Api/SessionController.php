@@ -28,6 +28,7 @@ final class SessionController
             'adminUrl' => Module::getModuleURL('admin/'),
             'logoutUrl' => $this->access->logoutUrl(Module::getModuleURL('console/')),
             'pendingCount' => $this->repositories->publication()->pendingCount(),
+            'current' => $this->repositories->currentSnapshot(),
         ]);
     }
 }

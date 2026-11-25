@@ -53,6 +53,17 @@ describe('Field', () => {
     expect(container.querySelector('.help, .msg-error')).toBeNull();
     expect(container.firstElementChild?.className).toBe('field');
   });
+
+  it('marks an optional field in its label', () => {
+    render(
+      <Field id="c" label="Comment" optional>
+        <Input id="c" />
+      </Field>,
+    );
+
+    expect(screen.getByRole('textbox', { name: 'Comment (optional)' })).toBeDefined();
+    expect(screen.getByText('(optional)').className).toBe('faint label-optional');
+  });
 });
 
 describe('Select', () => {

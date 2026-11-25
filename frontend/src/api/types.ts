@@ -1,3 +1,8 @@
+export interface CurrentSnapshot {
+  number: number;
+  createdAt: string | null;
+}
+
 export interface SessionLinks {
   identity: string;
   adminUrl: string;
@@ -6,6 +11,47 @@ export interface SessionLinks {
 
 export interface Session extends SessionLinks {
   pendingCount: number;
+  current: CurrentSnapshot | null;
+}
+
+export type ChangeState = 'Unpublished' | 'Modified' | 'Deleted' | 'Unreadable';
+
+// edit: a Console path; null for Deleted and Unreadable, which have nothing to open.
+export interface PendingChange {
+  entityId: string;
+  loadError: string | null;
+  edit: string | null;
+}
+
+export interface ChangeGroup {
+  state: ChangeState;
+  changes: PendingChange[];
+}
+
+export interface PublicationProblem {
+  entityId: string | null;
+  message: string;
+  edit: string | null;
+}
+
+export interface PublicationReview {
+  groups: ChangeGroup[];
+  problems: PublicationProblem[];
+  warnings: PublicationProblem[];
+  hash: string;
+  nextNumber: number;
+  current: CurrentSnapshot | null;
+  canPublish: boolean;
+}
+
+export interface Published {
+  number: number;
+  build: string | null;
+}
+
+export interface PublicationRefused {
+  error: 'moved' | 'blocked';
+  review: PublicationReview;
 }
 
 export interface Migration {

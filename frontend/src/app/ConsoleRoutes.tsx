@@ -1,18 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate, Route, Routes, useLocation, useNavigationType } from 'react-router';
-import type { DatabaseRefusal, MigrationRun } from '../api/types';
-import { EditServiceProvider } from '../screens/edit/EditServiceProvider';
+import { useLocation, useNavigationType } from 'react-router';
+import type { DatabaseRefusal, MigrationRun, Session } from '../api/types';
 import { RunMessage } from '../screens/RunMessage';
-import { ServiceProviders } from '../screens/ServiceProviders';
 import { StatePage, stateCrumb } from '../screens/StatePage';
 import { FailurePage, failureTrail, ReportFailure, type Failure } from './failure';
+import { LiveSnapshot } from './LiveSnapshot';
 import { Page, PageNotice } from './Page';
 import { crumbsOf } from './crumbs';
-import { SP_EDIT, SP_LIST } from './paths';
+import { PUBLISH } from './paths';
 import { refusalOf, ReportRefusal } from './refusals';
+import { Screens } from './Screens';
 import { Shell } from './Shell';
-import { Unknown } from './Unknown';
-import { useSession } from './useSession';
+import { useApi } from './useApi';
 
 // The outcome of Run migrations and the location it is shown at; redirects carry it along, the admin's next move ends it.
 interface Outcome {
@@ -28,7 +27,7 @@ interface ConsoleProps {
 
 function Console({ outcome, onRun, onMove }: ConsoleProps) {
   const [revision, setRevision] = useState(0);
-  const answer = useSession(revision);
+  const answer = useApi<Session>('/session', { revision });
   const [reported, setReported] = useState<DatabaseRefusal | null>(null);
   const { pathname, search, key } = useLocation();
   const navigation = useNavigationType();
@@ -40,7 +39,7 @@ function Console({ outcome, onRun, onMove }: ConsoleProps) {
   const at = pathname + search;
   const [title, setTitle] = useState<{ at: string; text: string } | null>(null);
   const onTitle = useCallback((text: string) => setTitle({ at, text }), [at]);
-  const onSaved = useCallback(() => setRevision((n) => n + 1), []);
+  const changed = useCallback(() => setRevision((n) => n + 1), []);
   const shown = title?.at === at ? title.text : (new URLSearchParams(search).get('entityid') ?? '');
 
   useEffect(() => {
@@ -84,22 +83,22 @@ function Console({ outcome, onRun, onMove }: ConsoleProps) {
     );
   }
 
+  // On Publish the header shows the current Snapshot instead of the Review button (SPEC 10.3).
+  const live = session?.current ? <LiveSnapshot current={session.current} /> : null;
+
   // The screen waits for the state check, so it never shows before the state page that replaces it.
   return (
-    <Shell session={session} pending={pending} crumbs={crumbsOf(pathname, shown)}>
+    <Shell
+      session={session}
+      pending={pending}
+      crumbs={crumbsOf(pathname, shown)}
+      {...(pathname === PUBLISH ? { end: live } : {})}
+    >
       {answer.state !== 'loading' && (
         <PageNotice value={message}>
           <ReportRefusal value={setReported}>
             <ReportFailure value={report}>
-              <Routes>
-                <Route index element={<Navigate to={SP_LIST} replace />} />
-                <Route path={SP_LIST} element={<ServiceProviders />} />
-                <Route
-                  path={SP_EDIT}
-                  element={<EditServiceProvider pending={pending} onSaved={onSaved} onTitle={onTitle} />}
-                />
-                <Route path="*" element={<Unknown />} />
-              </Routes>
+              <Screens pending={pending} onChange={changed} onTitle={onTitle} />
             </ReportFailure>
           </ReportRefusal>
         </PageNotice>
