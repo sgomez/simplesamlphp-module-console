@@ -64,6 +64,16 @@ it('answers the errors of a stored entity that the current schema rejects, and n
         ->and(Api::get(EntityApi::existing(), EntityApi::ENTITY)['errors'])->toBe([]);
 });
 
+it('answers the errors of a stored entity with a valid endpoint and an unknown option', function (): void {
+    $client = (new ConsoleClient())->loginAsAdmin();
+    EntityDb::seed($client, 'https://bogus.example.org', ['bogus' => true]);
+
+    $entity = Api::get($client, '/entities/saml20-sp-remote/entity?entityid=https%3A%2F%2Fbogus.example.org');
+
+    expect($entity['errors'])->not->toBe([])
+        ->and($entity['errors'][0]['line'])->toBeNull();
+});
+
 it('answers no warnings for a sound entity', function (): void {
     expect(Api::get(EntityApi::existing(), EntityApi::ENTITY)['warnings'])->toBe([]);
 });

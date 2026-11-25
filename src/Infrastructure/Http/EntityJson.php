@@ -39,6 +39,9 @@ final class EntityJson
         $sp = new SpRemote();
         $php = $document === null ? null : $sp->toText($entityId, $document);
         $errors = $php === null ? [] : $sp->fromText($php, $entityId)->errors;
+        if ($document !== null) {
+            $errors = StoredErrors::merge($errors, $sp->check($document));
+        }
 
         return self::respond([
             'entityId' => $entityId,
