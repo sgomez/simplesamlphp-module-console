@@ -33,7 +33,7 @@ export const Default: Story = {
   },
 };
 
-const widths = { narrow: '760px', wide: '1240px', publish: '1180px' } as const;
+const widths = { narrow: '760px', wide: '1240px', publish: '1180px', changes: '1180px' } as const;
 
 function width(name: keyof typeof widths): Story {
   return {
@@ -50,6 +50,7 @@ function width(name: keyof typeof widths): Story {
 export const Narrow = width('narrow');
 export const Wide = width('wide');
 export const Publish = width('publish');
+export const Changes = width('changes');
 
 export const WithBar: Story = {
   name: 'With a bar',

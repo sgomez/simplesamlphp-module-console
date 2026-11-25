@@ -1,8 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router';
 import type { EditedEntity } from '../domain/entities';
 import { AddServiceProvider } from '../screens/edit/AddServiceProvider';
-import { Publish } from '../screens/Publish';
 import { EditServiceProviderPage } from '../pages/EditServiceProviderPage';
+import { PublishPage } from '../pages/PublishPage';
 import { ServiceProvidersPage } from '../pages/ServiceProvidersPage';
 import { CARRY } from './Page';
 import { PUBLISH, SP_EDIT, SP_LIST, SP_NEW } from './paths';
@@ -30,7 +30,7 @@ export function Screens({ pending, onChange, onTitle, created }: ScreensProps) {
         path={SP_EDIT}
         element={<EditServiceProviderPage pending={pending} onSaved={onChange} onTitle={onTitle} created={created} />}
       />
-      <Route path={PUBLISH} element={<Publish onChange={onChange} />} />
+      <Route path={PUBLISH} element={<PublishPage onChange={onChange} />} />
       <Route path="*" element={<Unknown />} />
     </Routes>
   );

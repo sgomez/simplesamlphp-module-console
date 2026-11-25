@@ -13,6 +13,7 @@ describe('the Publish screen', () => {
 
     expect(empty.parentElement?.className).toBe('card empty');
     expect(screen.getByText('Everything saved is live in Snapshot #41.').className).toBe('muted empty-text');
+    expect(empty.parentElement?.querySelector('.empty-actions')).toBeNull();
     expect(screen.queryByRole('complementary')).toBeNull();
   });
 
@@ -25,7 +26,7 @@ describe('the Publish screen', () => {
     expect(empty.parentElement?.querySelector('p')).toBeNull();
   });
 
-  it('lists every Pending change by state, linking to the ones that can be opened', async () => {
+  it('lists every Pending change in the order of SPEC 10.14, by name or identifier, linking to the ones that open', async () => {
     servePublication([ready]);
     await shown();
     const list = document.querySelector('.card-list') as HTMLElement;
@@ -35,15 +36,15 @@ describe('the Publish screen', () => {
       row.className,
       row.querySelector('.change-sign')?.textContent,
       row.querySelector('.change-verb')?.textContent,
-      row.querySelector('.eid')?.getAttribute('title'),
+      row.querySelector('.row-name')?.textContent,
       row.querySelector('.small.faint')?.textContent,
       row.getAttribute('href'),
     ]);
 
     expect(rows).toEqual([
-      ['A', 'row row-tight', '+', 'Unpublished', 'https://a.example.org', 'Service provider', EDIT_A],
       ['A', 'row row-tight', '~', 'Modified', 'https://m.example.org', 'Service provider', EDIT_M],
-      ['DIV', 'row row-tight', '×', 'Deleted', 'https://d.example.org', 'Service provider', null],
+      ['A', 'row row-tight', '+', 'Added', 'Alpha', 'Service provider', EDIT_A],
+      ['DIV', 'row row-tight', '×', 'Deleted', 'Delta', 'Service provider', null],
       ['DIV', 'row row-tight', '!', 'Unreadable', 'https://u.example.org', 'Service provider', null],
     ]);
     expect(within(list).getByText('Syntax error').className).toBe('small muted change-end');
@@ -53,7 +54,7 @@ describe('the Publish screen', () => {
     servePublication([ready]);
     await shown();
 
-    fireEvent.click(within(document.querySelector('.card-list') as HTMLElement).getAllByRole('link')[1] as HTMLElement);
+    fireEvent.click(within(document.querySelector('.card-list') as HTMLElement).getAllByRole('link')[0] as HTMLElement);
 
     expect(location()).toBe(EDIT_M);
   });
@@ -89,6 +90,8 @@ describe('the Publish screen', () => {
     expect((within(panel).getByRole('button', { name: 'Publish 4 changes' }) as HTMLButtonElement).disabled).toBe(
       false,
     );
+    expect(within(panel).queryByText('Nodes')).toBeNull();
     expect(screen.queryByText(/Discard/)).toBeNull();
+    expect(screen.queryByRole('button', { name: /Alpha/ })).toBeNull();
   });
 });

@@ -10,10 +10,10 @@ export const CURRENT = { number: 41, createdAt: '2026-11-20 10:15:00' };
 
 export const ready = review({
   groups: [
-    { state: 'Unpublished', changes: [{ entityId: 'https://a.example.org', loadError: null, opens: true }] },
-    { state: 'Modified', changes: [{ entityId: 'https://m.example.org', loadError: null, opens: true }] },
-    { state: 'Deleted', changes: [{ entityId: 'https://d.example.org', loadError: null, opens: false }] },
-    { state: 'Unreadable', changes: [{ entityId: 'https://u.example.org', loadError: 'Syntax error', opens: false }] },
+    { state: 'Unpublished', changes: [{ entityId: 'https://a.example.org', name: 'Alpha', loadError: null, opens: true }] },
+    { state: 'Modified', changes: [{ entityId: 'https://m.example.org', name: null, loadError: null, opens: true }] },
+    { state: 'Deleted', changes: [{ entityId: 'https://d.example.org', name: 'Delta', loadError: null, opens: false }] },
+    { state: 'Unreadable', changes: [{ entityId: 'https://u.example.org', name: null, loadError: 'Syntax error', opens: false }] },
   ],
   hash: 'h1',
   nextNumber: 42,

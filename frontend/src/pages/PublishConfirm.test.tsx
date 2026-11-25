@@ -1,20 +1,22 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { review, session, stubApi } from '../app/test/api';
-import { PUBLISH, calls, ready, servePublication, shown } from '../app/test/publication';
-import { renderAt } from '../app/test/render';
+import { review } from '../app/test/api';
+import { calls, ready, servePublication, shown } from '../app/test/publication';
 
 describe('the confirming request of the Publish screen', () => {
-  it('publishes with the hash and the comment, then says so and shows what is now live', async () => {
+  it('publishes with the hash and the comment, then says so in place of the review', async () => {
     const fetch = servePublication([ready, review({ current: { number: 42, createdAt: null }, nextNumber: 43 })]);
     const panel = await shown();
 
     fireEvent.change(within(panel).getByRole('textbox'), { target: { value: 'New SPs' } });
     fireEvent.click(within(panel).getByRole('button', { name: 'Publish 4 changes' }));
 
-    const done = await screen.findByText('Snapshot 42 published');
+    const done = await screen.findByText('Snapshot #42 is published');
     expect(done.closest('.callout')?.className).toBe('callout callout-success');
-    expect(await screen.findByText('Everything saved is live in Snapshot #42.')).toBeDefined();
+    expect(done.closest('.callout')?.textContent).toBe('Snapshot #42 is published4 changes.');
+    expect(screen.queryByRole('complementary')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Nodes' })).toBeNull();
+    expect(document.querySelector('main')?.className).toBe('page');
     expect(calls(fetch, '/api/publication', 'POST')[0]?.[1]?.body).toBe('{"hash":"h1","comment":"New SPs"}');
     await waitFor(() => expect(calls(fetch, '/api/session')).toHaveLength(2));
   });
@@ -25,9 +27,9 @@ describe('the confirming request of the Publish screen', () => {
 
     fireEvent.click(within(panel).getByRole('button', { name: /Publish/ }));
 
-    const done = await screen.findByText('Snapshot 42 published');
+    const done = await screen.findByText('Snapshot #42 is published');
     expect(done.closest('.callout')?.className).toBe('callout callout-warning');
-    expect(screen.getByText('This node could not build it: disk full.')).toBeDefined();
+    expect(screen.getByText('4 changes. This node could not build it: disk full.')).toBeDefined();
   });
 
   it('shows the current changes with a message, keeping the comment, when they moved', async () => {
@@ -39,7 +41,9 @@ describe('the confirming request of the Publish screen', () => {
     fireEvent.click(within(panel).getByRole('button', { name: 'Publish 4 changes' }));
 
     expect(await screen.findByText('The changes moved while this page was open')).toBeDefined();
+    expect(screen.getByText('This is the current list.')).toBeDefined();
     expect(screen.getByRole('heading', { name: '1 change' })).toBeDefined();
+    expect(document.querySelector('main')?.className).toBe('page page-changes');
     expect(screen.queryByText('Ready to publish')).toBeNull();
     expect((within(panel).getByRole('textbox') as HTMLTextAreaElement).value).toBe('Why');
     await waitFor(() => expect(calls(fetch, '/api/session')).toHaveLength(2));
@@ -49,7 +53,7 @@ describe('the confirming request of the Publish screen', () => {
   });
 
   it('says the changes moved and shows the new problem that blocks the confirming request', async () => {
-    const blocked = review({ ...ready, canPublish: false, problems: [{ entityId: null, message: 'Too large.' }] });
+    const blocked = review({ ...ready, canPublish: false, problems: [{ entityId: null, name: null, message: 'Too large.' }] });
     servePublication([ready], { status: 409, body: { code: 'blocked', problems: blocked.problems, review: blocked } });
     const panel = await shown();
 
@@ -68,17 +72,10 @@ describe('the confirming request of the Publish screen', () => {
     fireEvent.click(button);
 
     expect(button.getAttribute('data-pending')).toBe('true');
+    expect(button.textContent).toBe('Publishing');
     expect(button.disabled).toBe(true);
     await waitFor(() => expect(button.disabled).toBe(false));
+    expect(button.textContent).toBe('Publish 4 changes');
     expect(screen.getByText('Ready to publish')).toBeDefined();
-  });
-
-  it('shows only the title while the review loads or when the API refuses it', async () => {
-    const fetch = stubApi({ '/api/session': { body: session }, '/api/publication': { status: 503, body: {} } });
-    const { container } = renderAt(PUBLISH);
-
-    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Publish');
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
-    expect(container.querySelector('main')?.childElementCount).toBe(1);
   });
 });

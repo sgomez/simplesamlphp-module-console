@@ -10,8 +10,8 @@ describe('the problems and warnings of the Publish screen', () => {
         ...ready,
         canPublish: false,
         problems: [
-          { entityId: 'https://a.example.org', message: 'No ACS.' },
-          { entityId: null, message: 'The Snapshot is too large.' },
+          { entityId: 'https://a.example.org', name: 'Alpha', message: 'No ACS.' },
+          { entityId: null, name: null, message: 'The Snapshot is too large.' },
         ],
       }),
     ]);
@@ -20,10 +20,10 @@ describe('the problems and warnings of the Publish screen', () => {
 
     expect(alert.querySelector('.callout-title')?.textContent).toBe('2 problems block publishing');
     expect(within(alert).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-      'https://a.example.org: No ACS.',
+      'Alpha: No ACS.',
       'The Snapshot is too large.',
     ]);
-    expect(within(alert).getByRole('link', { name: 'https://a.example.org' }).getAttribute('href')).toBe(EDIT_A);
+    expect(within(alert).getByRole('link', { name: 'Alpha' }).getAttribute('href')).toBe(EDIT_A);
     expect(within(alert).getByRole('link').className).toBe('link link-inherit');
     expect(alert.compareDocumentPosition(document.querySelector('.card-list') as Node)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
@@ -34,7 +34,7 @@ describe('the problems and warnings of the Publish screen', () => {
   });
 
   it('names a single problem in the singular, as a line rather than a list', async () => {
-    const problem = { entityId: 'https://a.example.org', message: 'No ACS.' };
+    const problem = { entityId: 'https://a.example.org', name: null, message: 'No ACS.' };
     servePublication([review({ ...ready, canPublish: false, problems: [problem] })]);
     const panel = await shown();
     const alert = screen.getByRole('alert');
@@ -51,8 +51,8 @@ describe('the problems and warnings of the Publish screen', () => {
       review({
         ...ready,
         warnings: [
-          { entityId: 'https://a.example.org', message: 'The certificate expires in 12 days.' },
-          { entityId: null, message: 'A collision.' },
+          { entityId: 'https://a.example.org', name: 'Alpha', message: 'The certificate expires in 12 days.' },
+          { entityId: null, name: null, message: 'A collision.' },
         ],
       }),
     ]);
@@ -65,7 +65,7 @@ describe('the problems and warnings of the Publish screen', () => {
     expect(fold.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(fold);
     expect(Array.from(group.querySelectorAll('.msg-warning')).map((w) => w.textContent)).toEqual([
-      'https://a.example.org: The certificate expires in 12 days.',
+      'Alpha: The certificate expires in 12 days.',
       'A collision.',
     ]);
     expect(within(group).getByRole('link').getAttribute('href')).toBe(EDIT_A);
@@ -73,7 +73,7 @@ describe('the problems and warnings of the Publish screen', () => {
   });
 
   it('counts a single warning in the singular', async () => {
-    servePublication([review({ ...ready, warnings: [{ entityId: null, message: 'A collision.' }] })]);
+    servePublication([review({ ...ready, warnings: [{ entityId: null, name: null, message: 'A collision.' }] })]);
     await shown();
 
     expect(screen.getByText('1 warning').className).toBe('row-name');

@@ -1,7 +1,8 @@
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { refusal, review } from '../app/test/api';
-import { ready, servePublication, shown } from '../app/test/publication';
+import { refusal, review, session, stubApi } from '../app/test/api';
+import { PUBLISH, ready, servePublication, shown } from '../app/test/publication';
+import { renderAt } from '../app/test/render';
 
 describe('a refused confirming request', () => {
   it('replaces the screen with Request refused when the token is refused', async () => {
@@ -38,7 +39,7 @@ describe('a refused confirming request', () => {
     expect(within(panel).getByRole('button', { name: 'Publish 4 changes' })).toBeDefined();
   });
 
-  it('shows no change of the earlier review once a Publication after a move succeeds', async () => {
+  it('shows only the Publication once a Publication after a move succeeds', async () => {
     const moved = review({ ...ready, groups: ready.groups.slice(0, 1), hash: 'h2' });
     const fetch = servePublication([ready, review()], { status: 409, body: { code: 'moved', review: moved } });
     const panel = await shown();
@@ -48,8 +49,18 @@ describe('a refused confirming request', () => {
 
     fireEvent.click(within(panel).getByRole('button', { name: 'Publish 1 change' }));
 
-    await screen.findByText('Snapshot 42 published');
+    await screen.findByText('Snapshot #42 is published');
+    expect(screen.getByText('1 change.')).toBeDefined();
     expect(screen.queryByRole('complementary')).toBeNull();
-    expect(await screen.findByRole('heading', { name: 'Nothing to publish' })).toBeDefined();
+    expect(screen.queryByText('The changes moved while this page was open')).toBeNull();
+  });
+
+  it('shows only the title while the review loads or when the API refuses it', async () => {
+    const fetch = stubApi({ '/api/session': { body: session }, '/api/publication': { status: 503, body: {} } });
+    const { container } = renderAt(PUBLISH);
+
+    expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe('Publish');
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    expect(container.querySelector('main')?.childElementCount).toBe(1);
   });
 });
