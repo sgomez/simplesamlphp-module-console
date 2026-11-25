@@ -14,6 +14,11 @@ declare module 'vitest/browser' {
 setProjectAnnotations(preview);
 
 const modules = import.meta.glob<Parameters<typeof composeStories>[0]>('./*.stories.tsx', { eager: true });
+type Composed = ComponentType & {
+  parameters: Record<string, unknown>;
+  play?: (context: { canvasElement: HTMLElement }) => Promise<void>;
+};
+
 const SCHEMES = ['light', 'dark'] as const;
 const WIDTHS = [1440, 400] as const;
 const HEIGHT = 900;
@@ -34,13 +39,17 @@ for (const [file, module] of Object.entries(modules)) {
   const prefix = kebab(file.replace(/^\.\/(.+)\.stories\.tsx$/, '$1'));
 
   describe(prefix, () => {
-    for (const [key, Story] of Object.entries(composeStories(module)) as [string, ComponentType][]) {
+    for (const [key, Story] of Object.entries(composeStories(module)) as [string, Composed][]) {
       for (const scheme of SCHEMES) {
         for (const width of WIDTHS) {
           test(`${key} ${scheme} ${width}`, async () => {
             await commands.emulate(scheme);
             await page.viewport(width, HEIGHT);
-            render(<Story />);
+            const { container } = render(<Story />);
+            // A state reached by interaction, such as the open navigation, is screenshot after its play function.
+            if (Story.parameters['screenshot'] === 'after-play') {
+              await Story.play?.({ canvasElement: container });
+            }
             await settle(width);
 
             await expect(page.elementLocator(document.body)).toMatchScreenshot(`${prefix}-${kebab(key)}-${scheme}-${width}`, {

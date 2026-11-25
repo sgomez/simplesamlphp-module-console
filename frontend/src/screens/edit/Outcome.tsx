@@ -1,5 +1,5 @@
 import { plural } from '../../lib/plural';
-import { ReviewChanges } from '../../app/ReviewChanges';
+import { ReviewChanges } from '../../domain/publication';
 import { failureText } from '../../lib/failureText';
 import { Callout } from '../../design-system/Callout';
 

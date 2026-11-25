@@ -1,4 +1,5 @@
 import type { SessionLinks } from '../database';
+import type { Counts } from './navigation';
 
 export interface CurrentSnapshot {
   number: number;
@@ -8,4 +9,5 @@ export interface CurrentSnapshot {
 export interface Session extends SessionLinks {
   pendingCount: number;
   current: CurrentSnapshot | null;
+  counts: Counts;
 }

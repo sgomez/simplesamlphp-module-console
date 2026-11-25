@@ -1,9 +1,8 @@
-import type { PublicationReview } from '../domain/publication';
+import { changeCount, type PublicationReview } from '../domain/publication';
 import { Button } from '../design-system/Button';
 import { Facts } from '../design-system/Facts';
 import { Field } from '../design-system/Field';
 import { TextArea } from '../design-system/TextArea';
-import { changeCount } from '../app/counts';
 import { plural } from '../lib/plural';
 
 interface PanelProps {

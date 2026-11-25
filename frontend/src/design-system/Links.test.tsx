@@ -57,11 +57,11 @@ describe('Facts', () => {
 });
 
 describe('IdentityCard', () => {
-  it('shows the identity with the admin link and logout', () => {
-    render(<IdentityCard identity="admin" adminUrl="/admin" logoutUrl="/logout" />);
+  it('shows the identity and logout, and no other link', () => {
+    render(<IdentityCard identity="admin" logoutUrl="/logout" />);
 
     expect(screen.getByText('admin').className).toBe('identity-name');
-    expect(screen.getByRole('link', { name: 'Administration' }).className).toBe('identity-link');
+    expect(screen.getAllByRole('link')).toHaveLength(1);
     const logout = screen.getByRole('link', { name: 'Log out' });
     expect([logout.className, logout.getAttribute('href'), logout.getAttribute('title')]).toEqual([
       'logout',

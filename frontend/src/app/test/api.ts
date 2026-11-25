@@ -28,10 +28,15 @@ export function stubApi(answers: Record<string, Answer | ((url: URL, init?: Requ
 
 export const session: Session = {
   identity: 'admin',
-  adminUrl: 'http://localhost/simplesaml/module.php/admin/',
+  core: {
+    configuration: 'http://localhost/simplesaml/module.php/admin/',
+    test: 'http://localhost/simplesaml/module.php/admin/test',
+    federation: 'http://localhost/simplesaml/module.php/admin/federation',
+  },
   logoutUrl: 'http://localhost/simplesaml/module.php/core/logout/admin',
   pendingCount: 0,
   current: null,
+  counts: { 'saml20-sp-remote': 0 },
 };
 
 export function sp(entityId: string, more: Partial<EntityRow> = {}): EntityRow {
@@ -73,7 +78,7 @@ export function refusal(more: Partial<DatabaseRefusal> = {}): Answer {
     sqliteVersion: null,
     sqliteMinimum: '3.24.0',
     detail: null,
-    session: { identity: session.identity, adminUrl: session.adminUrl, logoutUrl: session.logoutUrl },
+    session: { identity: session.identity, core: session.core, logoutUrl: session.logoutUrl },
     ...more,
   };
 

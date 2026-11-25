@@ -1,6 +1,5 @@
-import type { ChangeState, PendingChange, PublicationReview } from '../domain/publication';
+import { changeCount, type ChangeState, type PendingChange, type PublicationReview } from '../domain/publication';
 import type { CurrentSnapshot } from '../domain/session';
-import { changeCount } from '../app/counts';
 import { plural } from '../lib/plural';
 import { editPath } from '../app/paths';
 import { Card } from '../design-system/Card';
