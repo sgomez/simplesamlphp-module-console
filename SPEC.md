@@ -92,7 +92,7 @@ The Console does none of the following in v1.
 
 The module is the Composer package `sgomez/simplesamlphp-module-console` and installs as the SimpleSAMLphp module `console`. Its production dependencies beyond SimpleSAMLphp 2.5 are listed in section 3.7.
 
-The package ships the built front end under `public/assets/app/`, with Vite's manifest, and the JSON Schemas under `docs/spec/schemas/`. The front-end sources, `package.json`, `package-lock.json` and the Node tooling are `export-ignore`. Installing the module needs no Node.
+The package ships the built front end under `public/assets/app/`, with Vite's manifest, and the JSON Schemas under `docs/spec/schemas/`. The front-end sources with their stories and reference screenshots, the Storybook configuration, `package.json`, `package-lock.json` and the Node tooling are `export-ignore`. Installing the module needs no Node.
 
 ### 2.2 Installation steps
 
@@ -317,7 +317,7 @@ The module's code under `src/` is split in three layers. Dependencies point inwa
 
 These boundaries are enforced by the architecture checks of section 12.
 
-The front end lives in `frontend/`, outside `src/`. It is a client of the JSON API only. The API is a client of `Application`, as any other controller.
+The front end lives in `frontend/`, outside `src/`, in the layers of section 10.17. It is a client of the JSON API only. The API is a client of `Application`, as any other controller.
 
 ### 3.7 Dependencies
 
@@ -335,10 +335,13 @@ The front end has a build step (section 10.17). Its npm dependencies are pinned 
 | --- | --- |
 | `react`, `react-dom` | Components |
 | `react-router` | Client routing over the Console's paths |
+| `react-aria-components` | Keyboard, focus, ARIA and press behaviour of the design-system primitives |
 | `ajv` | Compiling the schemas into standalone JSON Schema 2020-12 validators at build time. Only the compiled validators ship; the `format` rules they call are implemented in the front end to match opis |
 | `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`, `@types/react-dom` | Build and type checking |
-| `eslint`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks` | Lint, including the rules of section 12.4 |
-| `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/dom`, `jsdom` | Component tests and their coverage |
+| `eslint`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks`, `eslint-plugin-boundaries`, `eslint-import-resolver-typescript` | Lint, including the rules of section 12.4 |
+| `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/dom`, `jsdom` | Unit tests in jsdom and the coverage of every test project |
+| `@vitest/browser`, `@vitest/browser-playwright`, `playwright` | Story tests and page screenshots in Chromium |
+| `storybook`, `@storybook/react-vite`, `@storybook/addon-vitest`, `@storybook/addon-a11y`, `@storybook/addon-docs` | Stories, Foundations docs, and the axe check on every story |
 | `json-schema-to-typescript` | Types generated from the schemas |
 
 Adding an npm package is a decision recorded in this table.
@@ -1729,7 +1732,7 @@ Replacing from PHP is pasting over the text of the PHP view. Authsources have no
 
 ## 10. Console UI
 
-This section specifies what the administrator sees and the requests behind it. The branches [`prototype/console-ui`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/console-ui/prototype/console-ui) (a design export of every screen, light and dark, with `console.css`) and [`prototype/authsource-form`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/authsource-form/prototype/authsource-form) (the form over three authsource schemas; its Twig rendering is superseded by section 10.17) illustrate it. The visual design of `prototype/console-ui` is normative: the tokens and component classes of its `console.css`, and the layout and look of its boards, light and dark. The implementation does not depart from it unless the maintainer decides so, and such a decision is recorded here. Where a board is missing for a screen or state, or the implementation would contradict a board, the maintainer decides before it is built. The boards' Google Fonts and inline styles are artefacts of the design tool and are not adopted. The content of a screen (its fields, texts and actions) follows this section.
+This section specifies what the administrator sees and the requests behind it. The branches [`prototype/console-ui`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/console-ui/prototype/console-ui) (a design export of every screen, light and dark, with `console.css`) and [`prototype/authsource-form`](https://github.com/sgomez/simplesamlphp-module-console/tree/prototype/authsource-form/prototype/authsource-form) (the form over three authsource schemas; its Twig rendering is superseded by section 10.17) illustrate it. The boards of `prototype/console-ui` are normative: the tokens and component classes of its `console.css`, and the layout, wording and components of its boards, light and dark. When a board and this section disagree, the board wins and this section is changed to match. The implementation does not depart from a board unless the maintainer decides so, and such a decision is recorded here. Where a board is missing for a screen or state, or a board needs a capability the product lacks, the maintainer decides before it is built. The boards' webfonts and inline styles are artefacts of the design tool and are not adopted.
 
 **Fundamental rule: a clean interface.** The UI shows data, labels and actions, and nothing that explains what is obvious from them. A sentence appears only when the administrator cannot act correctly without it: an error, a warning about the configuration, or a confirmation of an action that cannot be undone. No sentence restates what a control does, what just happened when the page already shows it, or how the Console works internally. When in doubt, leave it out.
 
@@ -2092,12 +2095,27 @@ Two tabs.
 
 The front end lives in `frontend/`, outside `src/`, and talks to the module only through the API of section 10.4. See [ADR 0012](docs/adr/0012-console-ui-as-a-spa.md).
 
+**Layers.** `frontend/src/` is organised in five layers, and a layer imports only from layers to its left:
+
+| Layer | Holds |
+| --- | --- |
+| `tokens` | The custom properties of `console.css`, light and dark. `lib/` sits beside it, for helpers with no business meaning |
+| `design-system` | The primitives, which know no term of the glossary |
+| `domain` | One slice per area: `database`, `session`, `entities`, `publication`, `documents`. A slice owns its components, state and use cases and reaches the API only through its ports |
+| `pages` | One composition per route, with no logic of its own |
+| `app` | The entry, the router, the providers, and the adapters of the ports: HTTP, and in memory for stories and tests |
+
+Domain slices import each other without cycles and only through their `index.ts`.
+
 **Design system.**
 
-- One stylesheet: the `console.css` of `prototype/console-ui`, with its tokens and component classes, plus layout classes for what the boards write inline. It is linked by the shell, never imported into a component. There are no CSS modules, no CSS-in-JS and no `style` prop.
+- One stylesheet: the `console.css` of `prototype/console-ui`, with its tokens and component classes, plus layout classes for what the boards write inline and `[data-…]` selectors for the states React Aria exposes, with the values of the class selectors they mirror. It is linked by the shell, never imported into a component. There are no CSS modules, no CSS-in-JS and no `style` prop.
 - No colour, size or font is written outside the token definitions.
-- `frontend/src/components/ui/` holds the primitives, one per component class of `console.css`: button, field, select, text area, switch, check, segmented control, callout, status, chip, row, card, tabs, menu, code, diff, editor, empty state and the confirmation dialog. Only they render `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, `<a>`, `<dl>`, `<details>` and `<summary>`; every screen composes them.
+- The primitives map to the component classes of `console.css`: button, field, select, text area, switch, check, segmented control, callout, status, chip, row, card, tabs, menu, code, diff, editor, empty state and the confirmation dialog. Those with behaviour build on `react-aria-components`; the rest are plain markup. Only the design system renders `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, `<a>`, `<dl>`, `<details>` and `<summary>`; every page composes primitives and domain components.
+- The shell's stylesheet link carries the id `react-aria-pressable-style`, and `console.css` holds React Aria's `touch-action` rule for pressable elements, so React Aria adds no `<style>` element.
 - The confirmation dialog asks before Delete, Discard, Promote and Discard all, with a text that says what will happen and a button that repeats the verb. Publish and Rollback have confirmation screens instead, which carry a diff.
+
+**Storybook.** Every primitive, domain component and page has stories next to it, rendered over the in-memory adapters, with one story per state of its board. The tokens appear first, as Foundations docs generated from the custom properties of `console.css`, light and dark. Storybook is not built into the package.
 
 **Types.** TypeScript in strict mode. The types of the Console documents are generated from `docs/spec/schemas` and committed; the API's request and response types are written by hand next to the client that calls it.
 
@@ -2190,9 +2208,11 @@ The Console's link on core's Configuration tab never queries the database, so no
 | PCOV | Coverage, for the coverage threshold and for mutation testing |
 | TypeScript `tsc` in strict mode | Type checking of the front end |
 | ESLint with `typescript-eslint` and the React plugins | Front-end lint and the rules of section 12.4 |
-| Vitest with Testing Library and jsdom, coverage through V8 | Component and client tests |
+| Vitest with Testing Library and jsdom, coverage through V8 | Unit tests of domain logic and the API client |
+| Vitest browser mode on Playwright's Chromium, through Storybook's Vitest addon, with axe | Every story as a test, its `play` function and its accessibility check |
+| Vitest `toMatchScreenshot`, with the browser in the official Playwright Docker image pinned by digest | Screenshots of page stories |
 
-There are no end-to-end browser tests in v1: no Pest browser plugin and no Playwright. Component tests run in jsdom. Node runs only in development and CI. Mago is not used. PHP test files are not under static analysis.
+There are no end-to-end tests against a running SimpleSAMLphp in v1: no Pest browser plugin, and stories run over the in-memory adapters. Node runs only in development and CI. Mago is not used. PHP test files are not under static analysis.
 
 ### 12.2 Checks
 
@@ -2213,7 +2233,9 @@ There are no end-to-end browser tests in v1: no Pest browser plugin and no Playw
 
 **API-level tests** cover every API route with a client that keeps cookies and sends JSON, and assert status, body and headers, `Cache-Control: no-store` included. They also check that the page shell answers every screen path, references only files named by the manifest and carries no inline script or style. They boot the SimpleSAMLphp kernel in-process against SQLite, with no web server and no dependency on the local environment of section 12.7.
 
-**Component tests** cover the primitives of `components/ui/`, the form engine (presence, `x-groups` counts, `x-when`, list rows, the finder) and every screen against a stubbed API.
+**Story tests** cover every primitive, domain component and page. Every story renders in Chromium and passes axe with no violation; interactive stories drive the keyboard and check focus in a `play` function. Domain logic (the form engine's presence, `x-groups` counts, `x-when`, list rows and finder, and the use cases of each slice) has unit tests in jsdom. The HTTP adapters are tested against a stubbed `fetch`.
+
+**Page screenshots.** Every page story is compared with its committed reference screenshot, light and dark, at desktop width and at 400 px. The browser runs in the Playwright Docker image, locally and in CI, so that a reference taken on one machine matches on another. `npm run test:visual` runs it locally and `npm run test:visual -- --update` writes new references. Primitives and domain components have no screenshots.
 
 ### 12.3 Thresholds
 
@@ -2227,13 +2249,13 @@ Every threshold blocks.
 | Method length | At most 30 lines (`SlevomatCodingStandard.Functions.FunctionLength`) |
 | Cognitive complexity | At most 8 per method |
 | PHP file size | At most 5000 characters per file in `src/` and `tests/` |
-| Front-end line coverage | At least 90 %, on `frontend/src/`, generated types excluded |
+| Front-end line coverage | At least 90 %, on `frontend/src/`, measured over the jsdom and browser test projects in one run; generated types, stories and the in-memory adapters excluded |
 | TypeScript | `tsc --noEmit` in strict mode, no errors; ESLint, no errors and no warnings |
 | Front-end file size | At most 5000 characters per file in `frontend/src/` |
 
 Line coverage is measured in one process that runs the persistence, migration and Publication tests on every engine whose DSN is set (section 12.6), so the code of every engine counts towards the 90 %, engine-only branches included, with no exclusion and no merging of reports. The threshold binds in CI, where every engine runs (section 13.2). Locally it is reached only with every engine that has its own implementation running, which means the `postgres` profile next to the default MariaDB (section 12.7).
 
-The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, the page shell template, the stylesheet, generated types, the built output, lock files and fixtures are exempt.
+The file size cap keeps every file cheap for an agent to read. JSON Schemas, migration SQL, the page shell template, the stylesheet, generated types, the built output, lock files, fixtures and reference screenshots are exempt.
 
 PHP coverage thresholds are enforced by Pest, front-end ones by Vitest. No external coverage service is used.
 
@@ -2252,7 +2274,8 @@ Code carries no descriptive comments or docblocks. A type annotation PHPStan nee
 
 ESLint enforces on the front end:
 
-- `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, `<a>`, `<dl>`, `<details>` and `<summary>` only inside `frontend/src/components/ui/`;
+- the layers of section 10.17: a layer imports only from layers to its left, `design-system` imports no `domain`, domain slices form no cycle and are imported only through their `index.ts`, and every file belongs to a layer;
+- `<button>`, `<input>`, `<select>`, `<textarea>`, `<dialog>`, `<a>`, `<dl>`, `<details>` and `<summary>` only inside `frontend/src/design-system/`;
 - no `style` prop and no `dangerouslySetInnerHTML` anywhere;
 - no import of a stylesheet from a module;
 - no import from `src/` or of PHP-side files; schemas only through the build's generated validators and types.
@@ -2304,7 +2327,7 @@ Services wait for each other with `depends_on: service_healthy`. Data is synthet
 
 | Trigger | Runs | Blocking |
 | --- | --- | --- |
-| Every pull request (`pull_request`) and every push to `main` | Every job of section 13.2 | Yes |
+| Every pull request (`pull_request`, also when a label is added or removed) and every push to `main` | Every job of section 13.2 | Yes |
 | Weekly schedule | The jobs of section 13.3 | No |
 
 `pull_request_target` is never used. There are no path filters: every pull request runs everything.
@@ -2321,7 +2344,9 @@ The matrix is not the full product of PHP versions and engines. The SQL does not
 | Full suite | Every stable release from 8.4 that SimpleSAMLphp 2.5 supports | SQLite |
 | Lowest dependencies: `composer update --prefer-lowest`, full suite | 8.4 | SQLite |
 | `composer audit --locked` | 8.4 | None |
-| Front end, on the Node version of `mise.toml`: `npm ci --ignore-scripts`, ESLint, `tsc`, Vitest with its coverage threshold, generated types up to date, `vite build` with no difference from the committed `public/assets/app/` | | None |
+| Front end, on the Node version of `mise.toml`: `npm ci --ignore-scripts`, ESLint, `tsc`, Vitest in jsdom and in Chromium with its coverage threshold, generated types up to date, `vite build` with no difference from the committed `public/assets/app/` | | None |
+| Visual: the page screenshots of section 12.2, with the browser in the pinned Playwright image; on a failure the diffs are uploaded as a workflow artefact | | None |
+| Visual gate: fails when a pull request adds, changes or deletes a reference screenshot and does not carry the `visual-change` label. Only the maintainer applies the label | | None |
 | Package contents: `git archive` holds `public/assets/app/` with its manifest and `docs/spec/schemas/`, and none of `frontend/`, `package.json`, `package-lock.json` or `node_modules` | | None |
 | `npm audit --omit=dev` | | None |
 | CodeQL on the workflows and on `javascript-typescript` (section 14.5) | | None |
