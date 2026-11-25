@@ -1,9 +1,9 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
-import { page, session, sp, stubApi } from './test/api';
-import { location, renderAt } from './test/render';
-import { FailurePage, failureTrail } from './failure';
+import { EDIT, ENTITY, page, session, sp, stubApi } from '../app/test/api';
+import { location, renderAt } from '../app/test/render';
+import { NotFoundPage } from './NotFoundPage';
 
 const LIST = '/entities/saml20-sp-remote';
 
@@ -77,7 +77,7 @@ describe('a failed request', () => {
   it('names the missing entity ID and links to its list when the object is not found', () => {
     render(
       <MemoryRouter>
-        <FailurePage failure={{ status: 404, entityId: 'https://wiki.example.edu/shibboleth' }} />
+        <NotFoundPage entityId="https://wiki.example.edu/shibboleth" />
       </MemoryRouter>,
     );
 
@@ -89,10 +89,12 @@ describe('a failed request', () => {
     expect(screen.getByRole('link', { name: 'Service providers' }).getAttribute('href')).toBe(LIST);
   });
 
-  it('puts the list of the missing object in the breadcrumb', () => {
-    expect(failureTrail({ status: 404, entityId: 'https://sp.example.org' })).toEqual({
-      crumb: 'Not found',
-      parent: { label: 'Service providers', to: LIST },
-    });
+  it('keeps the list of a missing object in the breadcrumb', async () => {
+    stubApi({ '/api/session': { body: session }, [ENTITY]: { status: 404, body: { error: 'not found' } } });
+    renderAt(EDIT);
+
+    await screen.findByRole('heading', { level: 1, name: 'Not found' });
+    expect(crumbs()).toEqual(['Console', 'Service providers', 'Not found']);
+    expect(screen.getByRole('main').className).toBe('page page-narrow');
   });
 });

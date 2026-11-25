@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { API } from './http/paths';
+import { httpDatabase } from './http/database';
 import { httpSession } from './http/session';
+import { DatabasePortContext } from '../domain/database';
 import { SessionPortContext, type Session } from '../domain/session';
 import { LinkRouter } from '../design-system/LinkRouter';
 import { Console, type Outcome } from './Console';
@@ -34,9 +36,11 @@ export function ConsoleRoutes() {
 
   return (
     <SessionPortContext value={httpSession}>
-      <LinkRouter>
-        <Console key={round} session={session} outcome={outcome} onOutcome={report} onChange={changed} onMove={move} />
-      </LinkRouter>
+      <DatabasePortContext value={httpDatabase}>
+        <LinkRouter>
+          <Console key={round} session={session} outcome={outcome} onOutcome={report} onChange={changed} onMove={move} />
+        </LinkRouter>
+      </DatabasePortContext>
     </SessionPortContext>
   );
 }

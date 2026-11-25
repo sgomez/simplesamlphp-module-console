@@ -311,6 +311,7 @@ a.row:focus-visible{outline-offset:-2px}
 .facts dd{margin:0}
 .facts .is-strong{font-weight:600}
 .section-head{display:flex;align-items:baseline;gap:10px;margin-top:8px}
+.state-text{margin:0;max-width:52ch}
 .empty .grp{align-self:stretch;min-width:0;text-align:start}
 .empty .grp>[slot=trigger]{justify-content:center}
 

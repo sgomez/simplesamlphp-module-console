@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
-import { refusalOf, ReportRefusal, type DatabaseRefusal } from '../domain/database';
+import { refusalOf, ReportRefusal, stateCrumb, type DatabaseRefusal } from '../domain/database';
 import { ReportFailure, type Failure, type Session } from '../domain/session';
-import { OutcomeMessage, runOf } from '../screens/RunMessage';
-import { StatePage, stateCrumb } from '../screens/StatePage';
-import { FailurePage, failureTrail } from './failure';
 import { LiveSnapshot } from '../domain/publication';
-import { Page, PageNotice } from '../design-system/Page';
-import { useCarried, type Said } from './Page';
+import { PageNotice } from '../design-system/Page';
+import { DatabaseStatePage } from '../pages/DatabaseStatePage';
+import { NotFoundPage } from '../pages/NotFoundPage';
+import { RequestRefusedPage } from '../pages/RequestRefusedPage';
+import { OutcomeMessage, runOf, useCarried, type Said } from './Page';
 import { Ports } from './Ports';
-import { crumbsOf } from './crumbs';
+import { crumbsOf, failureCrumbs } from './crumbs';
 import { PUBLISH } from './paths';
 import { Screens } from './Screens';
 import { Shell } from './Shell';
@@ -62,33 +62,24 @@ export function Console({ session: latest, outcome, onOutcome, onChange, onMove 
   const message = said && <OutcomeMessage said={said} />;
 
   if (failure !== null) {
-    const { crumb, parent } = failureTrail(failure);
-
     return (
-      <Shell session={refusal?.session ?? session} pending={pending} crumbs={[...(parent ? [parent] : []), { label: crumb }]}>
-        <Page width="narrow">
-          {message}
-          <FailurePage failure={failure} />
-        </Page>
+      <Shell session={refusal?.session ?? session} pending={pending} crumbs={failureCrumbs(failure)}>
+        <PageNotice value={message}>
+          {failure.status === 403 ? <RequestRefusedPage /> : <NotFoundPage entityId={failure.entityId} />}
+        </PageNotice>
       </Shell>
     );
   }
   if (refusal) {
     return (
       <Shell session={refusal.session} pending={0} crumbs={[{ label: stateCrumb(refusal) }]}>
-        <Page width="narrow">
-          {message}
+        <PageNotice value={message}>
           <ReportRefusal value={setReported}>
             <ReportFailure value={report}>
-              <StatePage
-                refusal={refusal}
-                flush={run !== null}
-                failedAt={run?.outcome === 'Failed' ? (run.failed?.number ?? null) : null}
-                onRun={announce}
-              />
+              <DatabaseStatePage refusal={refusal} run={run} onRun={announce} />
             </ReportFailure>
           </ReportRefusal>
-        </Page>
+        </PageNotice>
       </Shell>
     );
   }
