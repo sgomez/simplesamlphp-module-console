@@ -1,6 +1,9 @@
 import type { StatusMark, StatusTone } from '../../design-system/Status';
 import type { EntityRow } from './types';
 
+// What a row of a managed list says about its object: an entity or an authsource.
+export type Labelled = Pick<EntityRow, 'state' | 'labels' | 'unreadable' | 'error'>;
+
 export interface Note {
   tone: StatusTone;
   mark: StatusMark;
@@ -19,12 +22,12 @@ function rank(note: Note): number {
   return order[note.tone] ?? 1;
 }
 
-export function isDisabled(row: EntityRow): boolean {
+export function isDisabled(row: Pick<EntityRow, 'labels'>): boolean {
   return row.labels.some((label) => label.kind === 'disabled');
 }
 
 // The server sends disabled as a label: with a Pending change it is To be withdrawn, without one Not live.
-function stateOf(row: EntityRow): Note | undefined {
+function stateOf(row: Labelled): Note | undefined {
   const pending = row.state === null ? undefined : cycle[row.state];
   if (isDisabled(row)) {
     return pending ? { tone: 'pending', mark: 'minus', text: 'Disabled, not published' } : { tone: 'off', mark: 'minus', text: 'Disabled' };
@@ -34,7 +37,7 @@ function stateOf(row: EntityRow): Note | undefined {
 }
 
 // One line per row: Unreadable and errors, then the state, then warnings; the rest is counted.
-export function notesOf(row: EntityRow): Note[] {
+export function notesOf(row: Labelled): Note[] {
   const notes: Note[] = [];
   const state = row.unreadable ? { tone: 'danger', mark: 'full', text: 'Unreadable' } as const : stateOf(row);
   if (state) {

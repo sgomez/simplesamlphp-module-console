@@ -5,13 +5,15 @@ import { Check } from './Check';
 
 const change = fn();
 
-function Checkbox({ checked }: { checked: boolean }) {
+function Checkbox({ checked, hideLabel, disabled }: { checked: boolean; hideLabel?: boolean; disabled?: boolean }) {
   const [on, setOn] = useState(checked);
 
   return (
     <Check
       label="Checkbox"
       checked={on}
+      hideLabel={hideLabel ?? false}
+      disabled={disabled ?? false}
       onChange={(next) => {
         change(next);
         setOn(next);
@@ -68,5 +70,28 @@ export const Keyboard: Story = {
     await expect(box).toHaveStyle({ outlineStyle: 'solid' });
     await userEvent.keyboard(' ');
     await expect(change).toHaveBeenCalledWith(false);
+  },
+};
+
+export const HiddenLabel: Story = {
+  name: 'Hidden label',
+  args: { checked: false, hideLabel: true },
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByRole('checkbox', { name: 'Checkbox' });
+
+    await expect(within(canvasElement).getByText('Checkbox')).toHaveClass('sr-only');
+    await userEvent.click(box);
+    await expect(change).toHaveBeenCalledWith(true);
+  },
+};
+
+export const Disabled: Story = {
+  args: { checked: false, disabled: true },
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByRole('checkbox', { name: 'Checkbox' });
+
+    await expect(box).toBeDisabled();
+    await userEvent.click(box);
+    await expect(change).not.toHaveBeenCalled();
   },
 };

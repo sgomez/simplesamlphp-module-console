@@ -8,7 +8,7 @@ import { StoryFrame } from '../app/test/StoryFrame';
 import { PageNotice } from '../design-system/Page';
 import { RunMessage, stateCrumb, type DatabaseRefusal, type MigrationRun } from '../domain/database';
 import { DatabaseStatePage } from './DatabaseStatePage';
-import { ServiceProvidersPage } from './ServiceProvidersPage';
+import { EntityListPage } from './EntityListPage';
 
 interface Frame {
   // The state the run left the database in; null: ready, so the requested screen shows.
@@ -24,7 +24,7 @@ function Framed({ after, run, database }: Frame) {
   return (
     <StoryFrame crumbs={[{ label: crumb }]} {...(after === null ? {} : { counts: {} })} {...ports}>
       <PageNotice value={run && <RunMessage run={run} />}>
-        {after === null ? <ServiceProvidersPage /> : <DatabaseStatePage refusal={after} run={run ?? null} onRun={() => undefined} />}
+        {after === null ? <EntityListPage set="saml20-sp-remote" /> : <DatabaseStatePage refusal={after} run={run ?? null} onRun={() => undefined} />}
       </PageNotice>
     </StoryFrame>
   );

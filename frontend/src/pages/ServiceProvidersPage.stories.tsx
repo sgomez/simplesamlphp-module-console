@@ -4,7 +4,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { memoryEntities, type MemoryEntities } from '../app/adapters/memory/entities';
 import { boardList, boardRows, row, warning } from '../app/adapters/memory/rows';
 import { StoryFrame } from '../app/test/StoryFrame';
-import { ServiceProvidersPage } from './ServiceProvidersPage';
+import { EntityListPage } from './EntityListPage';
 
 interface Frame {
   entities: MemoryEntities;
@@ -16,7 +16,7 @@ function Framed({ entities, pending = 0 }: Frame) {
 
   return (
     <StoryFrame crumbs={[{ label: 'Service providers' }]} pending={pending} entities={port}>
-      <ServiceProvidersPage />
+      <EntityListPage set="saml20-sp-remote" />
     </StoryFrame>
   );
 }
