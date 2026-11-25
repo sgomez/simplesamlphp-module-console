@@ -6,7 +6,9 @@ const config: StorybookConfig = {
   framework: { name: '@storybook/react-vite', options: {} },
   core: { disableTelemetry: true },
   async viteFinal(viteConfig) {
-    return { ...viteConfig, server: { ...viteConfig.server, proxy: {} } };
+    // vendor/simplesamlphp/simplesamlphp/modules/console links back to the repository root.
+    const watch = { ignored: ['**/vendor/**'], followSymlinks: false };
+    return { ...viteConfig, server: { ...viteConfig.server, proxy: {}, watch } };
   },
 };
 
