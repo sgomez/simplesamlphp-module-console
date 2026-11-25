@@ -48,7 +48,7 @@ final class EntityValidateController
         return EntityJson::respond([
             'errors' => $errors,
             'notices' => EntityJson::notices($parsed->notices),
-            'warnings' => $parsed->document === null ? [] : $this->warnings->of($entityId, $parsed->document),
+            'warnings' => $parsed->document === null ? [] : $this->warnings->labels($entityId, $parsed->document),
             'readable' => $parsed->document !== null,
         ]);
     }

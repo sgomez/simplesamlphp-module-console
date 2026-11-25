@@ -31,6 +31,17 @@ it('counts the Pending changes', function (): void {
     expect(Api::get($client, '/session')['pendingCount'])->toBe(2);
 });
 
+it('counts the service providers for the sidebar, disabled ones included', function (): void {
+    $client = (new ConsoleClient())->loginAsAdmin();
+    expect(Api::get($client, '/session')['counts'])->toBe(['saml20-sp-remote' => 0]);
+
+    EntityDb::seed($client, 'https://a.example.org');
+    EntityDb::seed($client, 'https://b.example.org');
+    $client->database()->exec("UPDATE console_entity SET enabled = 0 WHERE entity_id = 'https://b.example.org'");
+
+    expect(Api::get($client, '/session')['counts'])->toBe(['saml20-sp-remote' => 2]);
+});
+
 it('answers the current Snapshot, its number and when it was published', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
     expect(Api::get($client, '/session')['current'])->toBeNull();

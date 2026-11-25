@@ -8,6 +8,7 @@ final readonly class EntityPage
 {
     /**
      * @param list<\SimpleSAML\Module\console\Domain\Entity\StoredEntity> $rows
+     * @param array<string, int> $counts the rows the search matches under each filter, by filter value
      */
     public function __construct(
         public array $rows,
@@ -15,6 +16,8 @@ final readonly class EntityPage
         public int $page,
         public int $pages,
         public string $query,
+        public ListFilter $filter,
+        public array $counts,
     ) {
     }
 }

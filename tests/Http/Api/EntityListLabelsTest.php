@@ -6,6 +6,7 @@ use SimpleSAML\Module\console\Tests\Support\Api;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
 use SimpleSAML\Module\console\Tests\Support\EntityDb;
 use SimpleSAML\Module\console\Tests\Support\SpFixtures;
+use SimpleSAML\Module\console\Tests\Support\SpWarnings;
 
 it('lists a row that cannot be loaded as Unreadable, with its load error', function (): void {
     $client = (new ConsoleClient())->loginAsAdmin();
@@ -86,5 +87,8 @@ it('labels a certificate within the configured days of expiring, and not one far
         ->loginAsAdmin()));
     $far = $labels($seed((new ConsoleClient())->loginAsAdmin()));
 
-    expect($near)->toContain('Certificate expiring')->and($far)->not->toContain('Certificate expiring');
+    $days = (int) ceil(((new \DateTimeImmutable(SpWarnings::VALID_TO))->getTimestamp() - time()) / 86400);
+
+    expect($near)->toContain('Certificate expires in ' . $days . ' days')
+        ->and($far)->not->toContain('Certificate expires in ' . $days . ' days');
 });

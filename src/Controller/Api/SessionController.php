@@ -29,6 +29,7 @@ final class SessionController
             'logoutUrl' => $this->access->logoutUrl(Module::getModuleURL('console/')),
             'pendingCount' => $this->repositories->publication()->pendingCount(),
             'current' => $this->repositories->currentSnapshot(),
+            'counts' => ['saml20-sp-remote' => count($this->repositories->entities()->all('saml20-sp-remote'))],
         ]);
     }
 }
