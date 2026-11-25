@@ -1,8 +1,8 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { review } from '../test/api';
-import { CURRENT, EDIT_A, EDIT_M, PUBLISH, ready, servePublication, shown } from '../test/publication';
-import { location, renderAt } from '../test/render';
+import { review } from '../app/test/api';
+import { CURRENT, EDIT_A, EDIT_M, PUBLISH, ready, servePublication, shown } from '../app/test/publication';
+import { location, renderAt } from '../app/test/render';
 
 describe('the Publish screen', () => {
   it('says there is nothing to publish and what is live, and offers no Publication', async () => {

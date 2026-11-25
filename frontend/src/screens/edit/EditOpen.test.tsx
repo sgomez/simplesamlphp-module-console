@@ -1,8 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { EDIT, ENTITY, PHP, entity, session, stubApi } from '../../test/api';
-import { editor, openEdit } from '../../test/edit';
-import { renderAt } from '../../test/render';
+import { EDIT, ENTITY, PHP, entity, session, stubApi } from '../../app/test/api';
+import { editor, openEdit } from '../../app/test/edit';
+import { renderAt } from '../../app/test/render';
 
 describe('the edit screen, opened', () => {
   it('asks the API for the entity of the URL', async () => {

@@ -1,5 +1,5 @@
-import type { CurrentSnapshot } from '../api/types';
-import { Status } from '../components/ui/Status';
+import type { CurrentSnapshot } from '../domain/session';
+import { Status } from '../design-system/Status';
 
 const when = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',

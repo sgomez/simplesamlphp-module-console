@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { EDIT, entity, page, posted, refusal, session } from '../test/api';
-import { DELETE, ID, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from '../test/delete';
-import { openEdit } from '../test/edit';
-import { location } from '../test/render';
-import { LIST, withToken } from '../test/states';
+import { EDIT, entity, page, posted, refusal, session } from '../app/test/api';
+import { DELETE, ID, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from '../app/test/delete';
+import { openEdit } from '../app/test/edit';
+import { location } from '../app/test/render';
+import { LIST, withToken } from '../app/test/states';
 
 describe('deleting from the edit screen', () => {
   withToken();
@@ -13,7 +13,7 @@ describe('deleting from the edit screen', () => {
   it('asks under More actions, saying what will happen', async () => {
     const fetch = await openEdit(entity({ state: 'Modified' }), { [DELETE]: gone });
 
-    chooseDelete();
+    await chooseDelete();
 
     const dialog = screen.getByRole('dialog', { name: 'Delete Example?' });
     expect(dialog.hasAttribute('open')).toBe(true);
@@ -31,7 +31,7 @@ describe('deleting from the edit screen', () => {
 
   it('keeps the object on Cancel', async () => {
     const fetch = await openEdit(entity(), { [DELETE]: gone });
-    chooseDelete();
+    await chooseDelete();
 
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 
@@ -51,11 +51,11 @@ describe('deleting from the edit screen', () => {
       '/api/session': () => ({ body: { ...session, pendingCount: deleted ? 1 : 0 } }),
       [`/api${LIST}`]: { body: page([]) },
     });
-    chooseDelete();
+    await chooseDelete();
 
     confirmDelete('Example');
 
-    expect(screen.getByRole('button', { name: 'Delete Example' }).className).toBe('btn btn-danger-solid is-loading');
+    expect(screen.getByRole('button', { name: 'Delete Example' }).getAttribute('data-pending')).toBe('true');
     await deletedMessage();
     expect(location()).toBe(LIST);
     expect(posted(fetch, DELETE)).toEqual({ entityid: ID });
@@ -71,7 +71,7 @@ describe('deleting from the edit screen', () => {
   it('names an object without a name by its entity ID, with a plain Delete button', async () => {
     await openEdit(entity({ name: null }), { [DELETE]: gone });
 
-    chooseDelete();
+    await chooseDelete();
 
     const dialog = screen.getByRole('dialog', { name: `Delete ${ID}?` });
     expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeDefined();
@@ -80,7 +80,7 @@ describe('deleting from the edit screen', () => {
 
   it('stays on the screen and says so when the delete fails', async () => {
     await openEdit(entity(), { [DELETE]: { status: 500, body: {} } });
-    chooseDelete();
+    await chooseDelete();
 
     confirmDelete('Example');
 
@@ -97,7 +97,7 @@ describe('deleting from the edit screen', () => {
         throw new TypeError('offline');
       },
     });
-    chooseDelete();
+    await chooseDelete();
 
     confirmDelete('Example');
 
@@ -106,7 +106,7 @@ describe('deleting from the edit screen', () => {
 
   it('shows Request refused when the token is refused', async () => {
     await openEdit(entity(), { [DELETE]: { status: 403, body: { error: 'refused' } } });
-    chooseDelete();
+    await chooseDelete();
 
     confirmDelete('Example');
 
@@ -115,7 +115,7 @@ describe('deleting from the edit screen', () => {
 
   it('shows the state page when the database stopped being ready', async () => {
     await openEdit(entity(), { [DELETE]: refusal({ state: 'Unreachable', detail: 'gone' }) });
-    chooseDelete();
+    await chooseDelete();
 
     confirmDelete('Example');
 

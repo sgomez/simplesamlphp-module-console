@@ -1,10 +1,10 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { EDIT, entity, page, session, sp, stubApi } from '../test/api';
-import { BAD, DELETE, chooseDelete, gone, withDialogs } from '../test/delete';
-import { openEdit, serveEdit } from '../test/edit';
-import { renderAt } from '../test/render';
-import { LIST } from '../test/states';
+import { EDIT, entity, page, session, sp, stubApi } from '../app/test/api';
+import { BAD, DELETE, chooseDelete, gone, withDialogs } from '../app/test/delete';
+import { openEdit, serveEdit } from '../app/test/edit';
+import { renderAt } from '../app/test/render';
+import { LIST } from '../app/test/states';
 
 function text(dialog: HTMLElement) {
   return dialog.querySelector('.dialog-text')?.textContent;
@@ -16,7 +16,7 @@ describe('the confirmation text of an object never published', () => {
   it('does not say nodes serve an Unpublished object', async () => {
     await openEdit(entity({ state: 'Unpublished' }), { [DELETE]: gone });
 
-    chooseDelete();
+    await chooseDelete();
 
     const dialog = screen.getByRole('dialog', { name: 'Delete Example?' });
     expect(text(dialog)).toBe('Example is removed from the Console.');
@@ -26,7 +26,7 @@ describe('the confirmation text of an object never published', () => {
   it('says nodes keep serving an object that is in the current Snapshot', async () => {
     await openEdit(entity({ state: 'Up to date' }), { [DELETE]: gone });
 
-    chooseDelete();
+    await chooseDelete();
 
     expect(text(screen.getByRole('dialog'))).toBe(
       'Example is removed from the Console. Nodes keep serving it until the next Publication, which withdraws it.',
@@ -48,7 +48,7 @@ describe('the confirmation text of an object never published', () => {
     renderAt(EDIT);
     await screen.findByRole('alert');
 
-    chooseDelete();
+    await chooseDelete();
 
     expect(text(screen.getByRole('dialog'))).toBe('Example is removed from the Console.');
   });
@@ -65,7 +65,7 @@ describe('the confirmation text of an object never published', () => {
 
   it('hands the focus back to More actions when the dialog closes', async () => {
     await openEdit(entity(), { [DELETE]: gone });
-    chooseDelete();
+    await chooseDelete();
 
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 

@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { refusal } from '../test/api';
-import { renderAt } from '../test/render';
-import { LIST, PENDING, serveRun, update, withToken } from '../test/states';
+import { refusal } from '../app/test/api';
+import { renderAt } from '../app/test/render';
+import { LIST, PENDING, serveRun, update, withToken } from '../app/test/states';
 
 describe('a run the server does not carry out', () => {
   withToken();

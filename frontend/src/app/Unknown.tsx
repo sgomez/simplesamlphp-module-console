@@ -1,5 +1,5 @@
 import { useLayoutEffect } from 'react';
-import { useFailure } from './failure';
+import { useFailure } from '../domain/session';
 
 // A path that names no screen: Not found.
 export function Unknown() {

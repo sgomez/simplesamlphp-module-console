@@ -1,7 +1,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PHP, VALIDATE, posted, saveRefusal, validation } from '../../test/api';
-import { EDITED, editor, saveBar, saveWith } from '../../test/edit';
+import { PHP, VALIDATE, posted, saveRefusal, validation } from '../../app/test/api';
+import { EDITED, editor, saveBar, saveWith } from '../../app/test/edit';
 
 describe('a save with errors', () => {
   it('keeps the text and lists every error with its line after a save with errors', async () => {

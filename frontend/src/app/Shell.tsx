@@ -1,8 +1,8 @@
 import { Fragment, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
-import type { SessionLinks } from '../api/types';
-import { Button } from '../components/ui/Button';
-import { MenuIcon } from '../components/ui/icons';
+import type { SessionLinks } from '../domain/database';
+import { Button } from '../design-system/Button';
+import { MenuIcon } from '../design-system/icons';
 import { ReviewChanges } from './ReviewChanges';
 import { Sidebar } from './Sidebar';
 
@@ -32,7 +32,7 @@ export function Shell({ session, pending, crumbs, end, children }: ShellProps) {
       </div>
       <div className="shell-main">
         <header className="shell-head">
-          <Button menu iconOnly label="Menu" controls="nav" expanded={open} onClick={() => setOpenAt(open ? null : key)}>
+          <Button menu iconOnly label="Menu" controls="nav" expanded={open} onPress={() => setOpenAt(open ? null : key)}>
             <MenuIcon />
           </Button>
           <nav className="crumbs" aria-label="Breadcrumb">

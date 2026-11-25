@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { API } from '../api/paths';
-import type { Session } from '../api/types';
+import { API } from './http/paths';
+import type { Session } from '../domain/session';
 import { Console, type Outcome } from './Console';
 import { CARRY, type Said } from './Page';
 import { useApi } from './useApi';

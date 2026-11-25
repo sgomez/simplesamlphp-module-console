@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PHP, VALIDATE, entity, posted, validation } from '../../test/api';
-import { editor, openEdit, saveBar } from '../../test/edit';
+import { PHP, VALIDATE, entity, posted, validation } from '../../app/test/api';
+import { editor, openEdit, saveBar } from '../../app/test/edit';
 
 const typed = `${PHP}\n'x' => 1,`;
 

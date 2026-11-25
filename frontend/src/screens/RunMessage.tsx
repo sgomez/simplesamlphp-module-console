@@ -1,6 +1,6 @@
-import type { MigrationRun } from '../api/types';
+import type { MigrationRun } from '../domain/database';
 import type { Said } from '../app/Page';
-import { Callout } from '../components/ui/Callout';
+import { Callout } from '../design-system/Callout';
 
 export function RunMessage({ run }: { run: MigrationRun }) {
   switch (run.outcome) {

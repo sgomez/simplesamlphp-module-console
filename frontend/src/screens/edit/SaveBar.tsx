@@ -1,5 +1,5 @@
-import { Button } from '../../components/ui/Button';
-import { Status, type StatusMark, type StatusTone } from '../../components/ui/Status';
+import { Button } from '../../design-system/Button';
+import { Status, type StatusMark, type StatusTone } from '../../design-system/Status';
 
 const states: Record<string, { tone: StatusTone; mark: StatusMark }> = {
   Unpublished: { tone: 'pending', mark: 'dot' },
@@ -43,10 +43,10 @@ export function SaveBar({ dirty, state, saving, onSave, onDiscard, onCancel }: S
             Unsaved
           </Status>
         </div>
-        <Button variant="quiet" onClick={onCancel}>
+        <Button variant="quiet" onPress={onCancel}>
           Cancel
         </Button>
-        <Button variant="primary" disabled={saving} loading={saving} onClick={onSave}>
+        <Button variant="primary" disabled={saving} loading={saving} onPress={onSave}>
           Save
         </Button>
       </div>
@@ -59,11 +59,11 @@ export function SaveBar({ dirty, state, saving, onSave, onDiscard, onCancel }: S
         <SaveState dirty={dirty} state={state} />
       </div>
       {dirty && (
-        <Button variant="quiet" onClick={onDiscard}>
+        <Button variant="quiet" onPress={onDiscard}>
           Discard edits
         </Button>
       )}
-      <Button variant="primary" disabled={!dirty || saving} loading={saving} onClick={onSave}>
+      <Button variant="primary" disabled={!dirty || saving} loading={saving} onPress={onSave}>
         Save
       </Button>
     </div>

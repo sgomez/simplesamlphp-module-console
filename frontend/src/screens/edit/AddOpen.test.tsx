@@ -1,9 +1,9 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { ENTITY, VALIDATE, posted } from '../../test/api';
-import { STARTER, TYPED, openNew } from '../../test/add';
-import { editor, saveBar } from '../../test/edit';
-import { location } from '../../test/render';
+import { ENTITY, VALIDATE, posted } from '../../app/test/api';
+import { STARTER, TYPED, openNew } from '../../app/test/add';
+import { editor, saveBar } from '../../app/test/edit';
+import { location } from '../../app/test/render';
 
 describe('adding a service provider, opened', () => {
   it('opens the editor with the starter text the API gives', async () => {

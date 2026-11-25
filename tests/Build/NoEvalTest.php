@@ -7,5 +7,5 @@ it('ships no script that compiles code at runtime, which core\'s CSP forbids', f
         ->toBe(0, $file);
 })->with(static fn (): array => [
     ...glob(dirname(__DIR__, 2) . '/public/assets/app/assets/*.js') ?: [],
-    dirname(__DIR__, 2) . '/frontend/src/generated/validators.js',
+    dirname(__DIR__, 2) . '/frontend/src/domain/documents/generated/validators.js',
 ]);

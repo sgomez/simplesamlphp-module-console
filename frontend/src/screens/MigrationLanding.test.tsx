@@ -1,8 +1,8 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import type { MigrationRun } from '../api/types';
-import { location, renderAt } from '../test/render';
-import { LIST, PENDING, serveRun, update, withToken } from '../test/states';
+import type { MigrationRun } from '../domain/database';
+import { location, renderAt } from '../app/test/render';
+import { LIST, PENDING, serveRun, update, withToken } from '../app/test/states';
 
 const APPLIED: MigrationRun = { outcome: 'Applied', applied: [7, 8, 9], failed: null, reason: null };
 const AUDIT = 'The migrations were applied but the Audit trail row failed: disk full';

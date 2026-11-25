@@ -1,7 +1,7 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { refusal, review } from '../test/api';
-import { ready, servePublication, shown } from '../test/publication';
+import { refusal, review } from '../app/test/api';
+import { ready, servePublication, shown } from '../app/test/publication';
 
 describe('a refused confirming request', () => {
   it('replaces the screen with Request refused when the token is refused', async () => {

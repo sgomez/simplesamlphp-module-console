@@ -1,5 +1,8 @@
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
+import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
+import { visual } from './frontend/visual/config.ts';
 
 // The dev node's baseurlpath is /simplesaml/; the shell points at these paths when dev_server is set.
 const DEV_BASE = '/simplesaml/module.php/console/assets/app/';
@@ -31,16 +34,43 @@ export default defineConfig(({ command }) => ({
   },
   test: {
     root: '.',
-    environment: 'jsdom',
-    include: ['frontend/src/**/*.test.{ts,tsx}', 'frontend/lint/**/*.test.ts', 'frontend/build/**/*.test.ts'],
-    restoreMocks: true,
-    unstubGlobals: true,
-    setupFiles: ['frontend/src/test/setup.ts'],
     coverage: {
       provider: 'v8',
       include: ['frontend/src/**/*.{ts,tsx}'],
-      exclude: ['frontend/src/**/*.test.{ts,tsx}', 'frontend/src/test/**', 'frontend/src/generated/**'],
+      exclude: [
+        'frontend/src/**/*.{test,stories}.{ts,tsx}',
+        'frontend/src/app/test/**',
+        'frontend/src/app/adapters/memory/**',
+        'frontend/src/domain/documents/generated/**',
+      ],
       thresholds: { lines: 90 },
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'jsdom',
+          include: ['frontend/src/**/*.test.{ts,tsx}', 'frontend/lint/**/*.test.ts', 'frontend/build/**/*.test.ts'],
+          restoreMocks: true,
+          unstubGlobals: true,
+          setupFiles: ['frontend/src/app/test/setup.ts'],
+        },
+      },
+      {
+        extends: true,
+        plugins: [storybookTest({ configDir: `${import.meta.dirname}/.storybook` })],
+        test: {
+          name: 'storybook',
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+      visual,
+    ],
   },
 }));

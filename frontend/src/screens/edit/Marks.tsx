@@ -1,6 +1,6 @@
-import { Card } from '../../components/ui/Card';
-import { Row } from '../../components/ui/Row';
-import { TextLink } from '../../components/ui/TextLink';
+import { Card } from '../../design-system/Card';
+import { Row } from '../../design-system/Row';
+import { TextLink } from '../../design-system/TextLink';
 import { editPath } from '../../app/paths';
 import type { Mark } from './marks';
 

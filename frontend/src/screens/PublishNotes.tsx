@@ -1,10 +1,10 @@
-import type { PublicationProblem } from '../api/types';
-import { plural } from '../app/counts';
+import type { PublicationProblem } from '../domain/publication';
+import { plural } from '../lib/plural';
 import { editPath } from '../app/paths';
-import { Callout } from '../components/ui/Callout';
-import { Disclosure } from '../components/ui/Disclosure';
-import { WarningIcon } from '../components/ui/icons';
-import { TextLink } from '../components/ui/TextLink';
+import { Callout } from '../design-system/Callout';
+import { Disclosure } from '../design-system/Disclosure';
+import { WarningIcon } from '../design-system/icons';
+import { TextLink } from '../design-system/TextLink';
 
 function Note({ note }: { note: PublicationProblem }) {
   if (note.entityId === null) {

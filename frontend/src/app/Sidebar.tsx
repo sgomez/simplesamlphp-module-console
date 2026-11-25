@@ -1,7 +1,7 @@
 import { Link, NavLink } from 'react-router';
-import type { SessionLinks } from '../api/types';
-import { IdentityCard } from '../components/ui/IdentityCard';
-import { plural } from './counts';
+import type { SessionLinks } from '../domain/database';
+import { IdentityCard } from '../design-system/IdentityCard';
+import { plural } from '../lib/plural';
 import { PUBLISH, SP_LIST } from './paths';
 
 const navClass = ({ isActive }: { isActive: boolean }) => (isActive ? 'nav-item active' : 'nav-item');

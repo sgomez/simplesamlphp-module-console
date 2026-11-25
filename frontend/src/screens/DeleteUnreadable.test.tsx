@@ -1,9 +1,9 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { EDIT, ENTITY, entity, page, posted, session, sp, stubApi } from '../test/api';
-import { BAD, DELETE, ID, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from '../test/delete';
-import { location, renderAt } from '../test/render';
-import { LIST, withToken } from '../test/states';
+import { EDIT, ENTITY, entity, page, posted, session, sp, stubApi } from '../app/test/api';
+import { BAD, DELETE, ID, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from '../app/test/delete';
+import { location, renderAt } from '../app/test/render';
+import { LIST, withToken } from '../app/test/states';
 
 describe('deleting an Unreadable object', () => {
   withToken();
@@ -19,7 +19,7 @@ describe('deleting an Unreadable object', () => {
     renderAt(EDIT);
     await screen.findByRole('alert');
 
-    chooseDelete();
+    await chooseDelete();
     confirmDelete(null);
 
     await deletedMessage();

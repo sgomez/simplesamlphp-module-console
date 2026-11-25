@@ -1,29 +1,7 @@
-import { createContext, useCallback, useContext } from 'react';
-import { LinkButton } from '../components/ui/Button';
-import { Empty } from '../components/ui/Empty';
+import type { Failure } from '../domain/session';
+import { LinkButton } from '../design-system/Button';
+import { Empty } from '../design-system/Empty';
 import { SP_LIST } from './paths';
-
-export type Failure = { status: 403 } | { status: 404; entityId?: string };
-
-export const ReportFailure = createContext<(failure: Failure) => void>(() => undefined);
-
-// True when the status is not the screen's to show: 401 reloads the page, 403 and 404 replace the screen.
-export function useFailure(): (status: number, entityId?: string) => boolean {
-  const report = useContext(ReportFailure);
-
-  return useCallback(
-    (status: number, entityId?: string) => {
-      if (status === 403) {
-        report({ status });
-      } else if (status === 404) {
-        report(entityId === undefined ? { status } : { status, entityId });
-      }
-
-      return status === 401 || status === 403 || status === 404;
-    },
-    [report],
-  );
-}
 
 export interface Trail {
   crumb: string;

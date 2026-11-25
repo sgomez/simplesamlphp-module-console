@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
-import type { DatabaseRefusal, Session } from '../api/types';
+import { refusalOf, ReportRefusal, type DatabaseRefusal } from '../domain/database';
+import { EntitiesPortContext } from '../domain/entities';
+import { ReportFailure, ReportMessage, type Failure, type Session } from '../domain/session';
 import { OutcomeMessage, runOf } from '../screens/RunMessage';
 import { StatePage, stateCrumb } from '../screens/StatePage';
-import { FailurePage, failureTrail, ReportFailure, type Failure } from './failure';
+import { FailurePage, failureTrail } from './failure';
 import { LiveSnapshot } from './LiveSnapshot';
-import { Page, PageNotice, ReportOutcome, useCarried, type Said } from './Page';
+import { Page, PageNotice } from '../design-system/Page';
+import { ReportOutcome, useCarried, type Said } from './Page';
 import { crumbsOf } from './crumbs';
+import { httpEntities } from './http/entities';
 import { PUBLISH } from './paths';
-import { refusalOf, ReportRefusal } from './refusals';
 import { Screens } from './Screens';
 import { Shell } from './Shell';
 import type { ApiState } from './useApi';
@@ -107,7 +110,11 @@ export function Console({ session: latest, outcome, onOutcome, onChange, onMove 
           <ReportRefusal value={setReported}>
             <ReportFailure value={report}>
               <ReportOutcome value={announce}>
-                <Screens pending={pending} onChange={onChange} onTitle={onTitle} created={created} />
+                <ReportMessage value={announce}>
+                  <EntitiesPortContext value={httpEntities}>
+                    <Screens pending={pending} onChange={onChange} onTitle={onTitle} created={created} />
+                  </EntitiesPortContext>
+                </ReportMessage>
               </ReportOutcome>
             </ReportFailure>
           </ReportRefusal>

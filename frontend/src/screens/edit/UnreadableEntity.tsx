@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import type { EditedEntity } from '../../api/types';
-import { Page } from '../../app/Page';
+import type { EditedEntity } from '../../domain/entities';
+import { Page } from '../../design-system/Page';
 import { SP_LIST } from '../../app/paths';
-import { Callout } from '../../components/ui/Callout';
-import { Pre } from '../../components/ui/Code';
-import { useDeleteEntity } from '../DeleteEntity';
+import { Callout } from '../../design-system/Callout';
+import { Pre } from '../../design-system/Code';
+import { useDeleteEntity } from '../../domain/entities';
 import { EditHeader } from './EditHeader';
 
 // Read-only: the stored bytes as they are (SPEC 10.8), with no form and no PHP view.

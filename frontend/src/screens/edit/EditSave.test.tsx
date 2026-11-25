@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { SAVE, entity, posted } from '../../test/api';
-import { EDITED, editor, saveBar, saveWith } from '../../test/edit';
+import { SAVE, entity, posted } from '../../app/test/api';
+import { EDITED, editor, saveBar, saveWith } from '../../app/test/edit';
 
 describe('saving the edit screen', () => {
   it('sends the entity ID, the version it was loaded with and the text', async () => {

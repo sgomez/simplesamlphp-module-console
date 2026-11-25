@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { postJson } from '../../api/client';
-import { API } from '../../api/paths';
-import type { EditedEntity, Validation } from '../../api/types';
+import { postJson } from '../../app/http/client';
+import { API } from '../../app/http/paths';
+import type { EditedEntity, Validation } from '../../domain/entities';
 import { checkedOf, marksOf } from './marks';
 
 const VALIDATE_DELAY = 400;
