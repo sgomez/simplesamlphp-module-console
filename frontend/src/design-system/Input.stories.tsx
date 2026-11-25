@@ -89,3 +89,21 @@ export const Disabled: Story = {
     await expect(args.onChange).not.toHaveBeenCalled();
   },
 };
+
+export const Suggestions: Story = {
+  args: { suggestions: ['%secret(sp-key)%'] },
+  play: async ({ canvasElement }) => {
+    const input = within(canvasElement).getByRole('combobox', { name: 'Text input' });
+    const list = canvasElement.querySelector(`#${input.getAttribute('list') ?? ''}`);
+
+    await expect(list?.tagName).toBe('DATALIST');
+    await expect(list?.querySelector('option')).toHaveValue('%secret(sp-key)%');
+  },
+};
+
+export const Number: Story = {
+  args: { type: 'number', value: '3' },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('spinbutton', { name: 'Text input' })).toHaveValue(3);
+  },
+};

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test';
+import { GripIcon } from './icons';
 import { MenuButton } from './Menu';
 
 const meta = {
@@ -94,5 +95,18 @@ export const OutsidePress: Story = {
     await userEvent.click(document.body);
 
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull());
+  },
+};
+
+export const Icon: Story = {
+  name: 'An icon button',
+  args: { label: 'Move row 1', icon: <GripIcon />, entries: [{ label: 'Move down', onSelect: fn() }] },
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Move row 1' });
+
+    await expect(button).toHaveClass('btn-quiet', 'btn-icon');
+    await userEvent.click(button);
+    await expect(await screen.findByRole('menuitem', { name: 'Move down' })).toBeVisible();
+    await userEvent.keyboard('{Escape}');
   },
 };

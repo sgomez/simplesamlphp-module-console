@@ -26,3 +26,14 @@ export const Default: Story = {
     await expect(args.onChange).toHaveBeenCalledWith('transient');
   },
 };
+
+export const NotChosen: Story = {
+  args: { value: '', empty: true, invalid: true, options: [{ value: 'persistent', label: 'Persistent' }] },
+  play: async ({ canvasElement }) => {
+    const select = within(canvasElement).getByRole('combobox', { name: 'Format' });
+
+    await expect(select).toHaveValue('');
+    await expect(select).toHaveAttribute('aria-invalid', 'true');
+    await expect(within(select).getByRole('option', { name: 'Persistent' })).toHaveValue('persistent');
+  },
+};

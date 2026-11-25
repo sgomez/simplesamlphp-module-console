@@ -426,6 +426,44 @@ a.row:focus-visible{outline-offset:-2px}
 .page>.seg{align-self:flex-start}
 .save-state .is-strong{font-weight:600}
 
+/* Settings form (Form, FormServiceProvider, FormMultiAuth) */
+.search-pick{position:relative;display:flex;align-items:center;gap:8px}
+.search-pick .input{padding-inline-end:40px}
+.search-pick .kbd{position:absolute;inset-inline-end:10px}
+.search-pick-list{width:var(--trigger-width);max-height:320px;overflow-y:auto}
+.search-pick-item{display:flex;flex-direction:column;align-items:flex-start;gap:1px;cursor:pointer}
+.search-pick-item[data-focused]{background:var(--hover);color:var(--text)}
+.search-pick-item[data-disabled]{cursor:default;color:var(--text-3)}
+.search-pick-none{padding:6px 10px}
+.grp-errors{margin-inline-start:auto}
+.opt{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 20px;padding:14px 16px;border-top:1px solid var(--border)}
+.opt-head{display:flex;flex-direction:column;gap:1px;flex:1 1 190px;max-width:240px;min-width:0;padding-top:7px}
+.opt-body{display:flex;flex-direction:column;gap:6px;flex:3 1 340px;min-width:0}
+.opt-unset{flex:none;margin-top:4px}
+.opt-spacer{flex:0 0 28px}
+.opt-adds{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:12px 16px;border-top:1px solid var(--border)}
+.opt-adds-label{margin-inline-end:4px}
+.opt-edited{font-weight:600}
+.form-rows{display:flex;flex-direction:column;gap:6px}
+.form-row{display:flex;align-items:center;gap:6px}
+.form-row>.input{flex:1 1 160px}
+.form-row>.row-key{display:flex;flex:0 1 150px}
+.form-row>.btn{flex:none}
+.form-row-fields{display:flex;flex-direction:column;gap:10px;flex:1 1 auto;min-width:0;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-md)}
+.form-row-top{align-items:flex-start}
+.form-row-add{align-self:flex-start;margin-inline-start:34px}
+.form-fields{display:flex;flex-direction:column;gap:10px}
+.with-chip{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.with-chip>.input{flex:1 1 220px}
+.cert{display:flex;align-items:flex-start;gap:12px;padding:10px 12px}
+.cert .facts{flex:1 1 auto}
+.form-aside{display:flex;flex-direction:column;gap:20px;flex:1 1 320px;max-width:420px;min-width:0}
+.page-index{display:flex;flex-direction:column;gap:2px}
+.page-index .nav-head{padding:0}
+.index-link{display:flex;align-items:baseline;gap:8px;padding:3px 0;font-size:13px}
+.index-note{color:var(--danger-text);font-weight:600}
+.index-count{margin-inline-start:auto;font-variant-numeric:tabular-nums}
+
 /* last, so it wins over .input's font */
 .mono{font-family:var(--mono);font-size:12.5px}
 .input.mono{font-size:13px}

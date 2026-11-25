@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { Menu as AriaMenu, MenuItem, MenuTrigger, Popover, Separator } from 'react-aria-components';
 import { Button } from './Button';
 import { cx } from './classes';
@@ -13,7 +13,14 @@ export interface MenuEntry {
 
 // React Aria hands the focus back to the button one frame after the menu closes; the entry acts in the frame after,
 // so a dialog it opens returns the focus to the button.
-export function MenuButton({ label, entries }: { label: string; entries: readonly MenuEntry[] }) {
+interface MenuButtonProps {
+  label: string;
+  entries: readonly MenuEntry[];
+  // A quiet icon button in place of the label, which then only names it.
+  icon?: ReactNode;
+}
+
+export function MenuButton({ label, entries, icon }: MenuButtonProps) {
   const choose = (key: string | number) => {
     const entry = entries.find(({ label: text }) => text === key);
     requestAnimationFrame(() => requestAnimationFrame(() => entry?.onSelect()));
@@ -21,11 +28,17 @@ export function MenuButton({ label, entries }: { label: string; entries: readonl
 
   return (
     <MenuTrigger>
-      <Button>
-        {label}
-        <ChevronDownIcon />
-      </Button>
-      <Popover placement="bottom end" offset={4}>
+      {icon ? (
+        <Button variant="quiet" iconOnly label={label}>
+          {icon}
+        </Button>
+      ) : (
+        <Button>
+          {label}
+          <ChevronDownIcon />
+        </Button>
+      )}
+      <Popover placement={icon ? 'bottom start' : 'bottom end'} offset={4}>
         <AriaMenu className="card menu" onAction={choose}>
           {entries.map(({ label: text, danger, separated }) => (
             <Fragment key={text}>
