@@ -359,6 +359,36 @@ a.row:focus-visible{outline-offset:-2px}
 .save-state{display:flex;flex-direction:column;flex:1 1 200px;min-width:0}
 @media (max-width:600px){.save-bar{padding-inline:16px}}
 
+/* History, Rollback, Audit, Nodes, Compare (HistorySnapshots, Rollback, Audit, Nodes, NodesSingle, Compare) */
+.page-slim{max-width:920px}
+.page-compare{max-width:1180px}
+.snap-row{flex-wrap:wrap;gap:4px 16px}
+.snap-number{font-weight:600;flex:0 0 48px}
+.snap-main{display:flex;flex-direction:column;flex:1 1 280px;min-width:0}
+.rb-name{font-weight:600}
+.rb-kind{font-weight:400}
+.toolbar>.input{width:auto}
+.grp.fold{border-top:1px solid var(--border)}
+.grp.fold:first-child{border-top:0}
+.grp.fold>[slot=trigger]{border-radius:0;flex-wrap:wrap;gap:4px 12px;padding:10px 16px}
+.fold .grp-body{padding-inline-start:46px}
+.audit-at{flex:0 0 132px}
+.audit-who{flex:0 0 56px}
+.audit-action{flex:0 0 84px}
+.node-main{display:flex;flex-direction:column;gap:1px;flex:1 1 300px;min-width:0}
+.mono.node-name{font-weight:600;font-size:13.5px}
+.node-name .chip{margin-inline-start:8px}
+.node-end{flex:0 1 auto;min-width:0}
+.node-checked{margin-inline-start:16px}
+.node-problems{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.node-problems-head{display:flex;align-items:center;gap:10px}
+.node-problem{align-items:flex-start}
+.node-problem-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.node-problem-fix{gap:8px;flex:1 1 auto}
+.cmp-title{gap:6px}
+.card-scroll{overflow-x:auto}
+.tbl .is-strong{font-weight:600}
+
 /* last, so it wins over .input's font */
 .mono{font-family:var(--mono);font-size:12.5px}
 .input.mono{font-size:13px}

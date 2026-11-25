@@ -5,8 +5,8 @@ import { cx } from './classes';
 export const PageNotice = createContext<ReactNode>(null);
 
 interface PageProps {
-  // narrow: a state or failure page; publish: the width and spacing of the Publish boards.
-  width?: 'wide' | 'narrow' | 'publish' | undefined;
+  // narrow: a state or failure page; publish: the width and spacing of the Publish boards; slim: History and Nodes.
+  width?: 'wide' | 'narrow' | 'publish' | 'slim' | 'compare' | undefined;
   bar?: ReactNode;
   children: ReactNode;
 }

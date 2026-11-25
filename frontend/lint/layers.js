@@ -7,6 +7,9 @@ const SLICES = {
   documents: [],
   entities: ['session', 'documents'],
   publication: ['session', 'entities'],
+  nodes: ['session'],
+  audit: ['session'],
+  overrides: ['session', 'entities'],
 };
 
 const types = (...names) => ({ element: { types: names } });
