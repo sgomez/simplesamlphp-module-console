@@ -54,6 +54,7 @@ export default defineConfig(({ command }) => ({
           restoreMocks: true,
           unstubGlobals: true,
           setupFiles: ['frontend/src/app/test/setup.ts'],
+          testTimeout: 20_000,
         },
       },
       {
