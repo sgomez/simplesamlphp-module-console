@@ -25,9 +25,9 @@ export async function chooseDelete() {
   await screen.findByRole('dialog');
 }
 
-// The confirming button: "Delete <name>", or "Delete" when only the entity ID is known.
-export function confirmDelete(name: string | null) {
-  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: name === null ? 'Delete' : `Delete ${name}` }));
+// The confirming button, "Delete <name>", the entity ID standing for a missing name.
+export function confirmDelete(name: string) {
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: `Delete ${name}` }));
 }
 
 export async function deletedMessage() {

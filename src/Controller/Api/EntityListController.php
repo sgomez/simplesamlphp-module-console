@@ -9,6 +9,7 @@ use SimpleSAML\Module\console\Application\ListFilter;
 use SimpleSAML\Module\console\Domain\Entity\SpRemote;
 use SimpleSAML\Module\console\Domain\Entity\StoredEntity;
 use SimpleSAML\Module\console\Domain\Entity\ValidationError;
+use SimpleSAML\Module\console\Domain\Publication\SnapshotContent;
 use SimpleSAML\Module\console\Infrastructure\Http\ApiGate;
 use SimpleSAML\Module\console\Infrastructure\Http\EntityWarnings;
 use SimpleSAML\Module\console\Infrastructure\Persistence\Repositories;
@@ -36,6 +37,7 @@ final class EntityListController
         foreach ($changes as $change) {
             $states[$change->set . "\0" . $change->entityId] = $change->state->value;
         }
+        $live = $this->repositories->currentContent();
         $page = (new ListEntities($this->repositories->entities(), $this->warnings))->page(
             $set,
             (string) $request->query->get('q', ''),
@@ -45,7 +47,7 @@ final class EntityListController
         );
 
         return new JsonResponse([
-            'rows' => array_map(fn (StoredEntity $entity): array => $this->row($entity, $states), $page->rows),
+            'rows' => array_map(fn (StoredEntity $entity): array => $this->row($entity, $states, $live), $page->rows),
             'total' => $page->total,
             'page' => $page->page,
             'pages' => $page->pages,
@@ -61,7 +63,7 @@ final class EntityListController
      * @param array<string, string> $states
      * @return array<string, mixed>
      */
-    private function row(StoredEntity $entity, array $states): array
+    private function row(StoredEntity $entity, array $states, SnapshotContent $live): array
     {
         $labels = [];
         $entity->enabled || $labels[] = ['text' => 'Disabled', 'kind' => 'disabled', 'title' => null];
@@ -85,6 +87,7 @@ final class EntityListController
             'state' => $states[$entity->set . "\0" . $entity->entityId] ?? null,
             'labels' => $labels,
             'unreadable' => $entity->document === null,
+            'inSnapshot' => $live->document($entity->set, $entity->entityId) !== null,
             'error' => $entity->loadError,
         ];
     }

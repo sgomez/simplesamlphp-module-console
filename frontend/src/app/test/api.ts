@@ -3,6 +3,7 @@ import type { DatabaseRefusal } from '../../domain/database';
 import type { EditedEntity, EntityPage, EntityRow, Refusal, Validation } from '../../domain/entities';
 import type { PublicationReview } from '../../domain/publication';
 import type { Session } from '../../domain/session';
+import { inSnapshot } from '../adapters/memory/rows';
 
 type Answer = { status?: number; body: unknown };
 
@@ -40,7 +41,7 @@ export const session: Session = {
 };
 
 export function sp(entityId: string, more: Partial<EntityRow> = {}): EntityRow {
-  return { entityId, name: null, state: 'Up to date', labels: [], unreadable: false, error: null, ...more };
+  return { entityId, name: null, state: 'Up to date', labels: [], unreadable: false, inSnapshot: inSnapshot(more.state), error: null, ...more };
 }
 
 export function review(more: Partial<PublicationReview> = {}): PublicationReview {
@@ -98,6 +99,7 @@ export function entity(more: Partial<EditedEntity> = {}): EditedEntity {
     version: 1,
     state: 'Unpublished',
     unreadable: false,
+    inSnapshot: inSnapshot(more.state ?? 'Unpublished'),
     error: null,
     php: PHP,
     raw: null,

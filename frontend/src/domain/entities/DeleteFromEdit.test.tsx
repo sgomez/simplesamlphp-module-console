@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { EDIT, entity, page, posted, refusal, session } from '../app/test/api';
-import { DELETE, ID, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from '../app/test/delete';
-import { openEdit } from '../app/test/edit';
-import { location } from '../app/test/render';
-import { LIST, withToken } from '../app/test/states';
+import { EDIT, entity, page, posted, refusal, session } from '../../app/test/api';
+import { DELETE, ID, chooseDelete, confirmDelete, deletedMessage, gone, withDialogs } from '../../app/test/delete';
+import { openEdit } from '../../app/test/edit';
+import { location } from '../../app/test/render';
+import { LIST, withToken } from '../../app/test/states';
 
 describe('deleting from the edit screen', () => {
   withToken();
@@ -68,13 +68,13 @@ describe('deleting from the edit screen', () => {
     await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
   });
 
-  it('names an object without a name by its entity ID, with a plain Delete button', async () => {
+  it('names an unnamed object by its entity ID', async () => {
     await openEdit(entity({ name: null }), { [DELETE]: gone });
 
     await chooseDelete();
 
     const dialog = screen.getByRole('dialog', { name: `Delete ${ID}?` });
-    expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeDefined();
+    expect(within(dialog).getByRole('button', { name: `Delete ${ID}` })).toBeDefined();
     expect(within(dialog).getByText(`${ID} is removed from the Console.`)).toBeDefined();
   });
 

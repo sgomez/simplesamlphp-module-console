@@ -22,6 +22,7 @@ it('lists the managed service providers with name, entity ID and state, by name 
             'state' => 'Unpublished',
             'labels' => [],
             'unreadable' => false,
+            'inSnapshot' => false,
             'error' => null,
         ],
         [
@@ -30,6 +31,7 @@ it('lists the managed service providers with name, entity ID and state, by name 
             'state' => 'Unpublished',
             'labels' => [],
             'unreadable' => false,
+            'inSnapshot' => false,
             'error' => null,
         ],
     ])->and($page['total'])->toBe(2)
