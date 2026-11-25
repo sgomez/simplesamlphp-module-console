@@ -1,0 +1,42 @@
+[
+  {
+    "name": "a metadata signature algorithm without metadata signing",
+    "pointer": "",
+    "document": {"host": "idp.example.org", "auth": "a", "key": {"privatekey": "idp.key", "certificate": {"source": "file", "file": "idp.crt"}}, "metadata.sign.algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"}
+  },
+  {
+    "name": "metadata signing settings with metadata signing off",
+    "pointer": "/metadata.sign.enable",
+    "document": {"host": "idp.example.org", "auth": "a", "key": {"privatekey": "idp.key", "certificate": {"source": "file", "file": "idp.crt"}}, "metadata.sign.enable": false, "metadata.sign.algorithm": "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", "metadata_sign_key": {"privatekey": "m.key", "certificate": {"source": "file", "file": "m.crt"}}}
+  },
+  {
+    "name": "an organization name without its URL",
+    "pointer": "",
+    "document": {"host": "idp.example.org", "auth": "a", "key": {"privatekey": "idp.key", "certificate": {"source": "file", "file": "idp.crt"}}, "OrganizationName": {"en": "Example"}}
+  },
+  {
+    "name": "a binding listed twice",
+    "pointer": "/SingleSignOnService/Bindings",
+    "document": {"host": "idp.example.org", "auth": "a", "key": {"privatekey": "idp.key", "certificate": {"source": "file", "file": "idp.crt"}}, "SingleSignOnService": {"Bindings": ["urn:oasis:names:tc:SAML:2.0:bindings:SOAP", "urn:oasis:names:tc:SAML:2.0:bindings:SOAP"]}}
+  },
+  {
+    "name": "an endpoint without bindings",
+    "pointer": "/SingleLogoutService/Bindings",
+    "document": {"host": "idp.example.org", "auth": "a", "key": {"privatekey": "idp.key", "certificate": {"source": "file", "file": "idp.crt"}}, "SingleLogoutService": {"Location": "https://idp.example.org/slo", "Bindings": []}}
+  },
+  {
+    "name": "a signing key without its certificate",
+    "pointer": "/key",
+    "document": {"host": "idp.example.org", "auth": "a", "key": {"privatekey": "idp.key"}}
+  },
+  {
+    "name": "an HTTPS certificate from a file without the file",
+    "pointer": "/https_certificate",
+    "document": {"host": "idp.example.org", "auth": "a", "key": {"privatekey": "idp.key", "certificate": {"source": "file", "file": "idp.crt"}}, "https_certificate": {"source": "file", "pem": "x"}}
+  },
+  {
+    "name": "several faults at once",
+    "pointer": "",
+    "document": {"key": {"privatekey": "idp.key", "certificate": {"source": "elsewhere"}}, "logouttype": "popup", "errorURL": "", "saml20.ecp": "yes", "assertion.lifetime": 0, "OrganizationName": {"English!": "X", "Spanish!": "Y"}, "metadata_sign_key": {"privatekey": "m.key", "certificate": {"source": "file", "file": "m.crt"}}, "metadata.sign.algorithm": "md5", "bogus": 1}
+  }
+]

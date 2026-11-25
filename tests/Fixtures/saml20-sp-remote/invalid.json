@@ -123,5 +123,40 @@
     "name": "a processing filter priority that is not an integer",
     "pointer": "/authproc/0/priority",
     "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "authproc": [{"priority": "high", "filter": {"class": "core:A"}}]}
+  },
+  {
+    "name": "two options the schema does not catalog",
+    "pointer": "",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "bogus": 1, "other": 2}
+  },
+  {
+    "name": "two languages that are not codes",
+    "pointer": "/name",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "name": {"English!": "X", "Spanish!": "Y"}}
+  },
+  {
+    "name": "an endpoint with a binding and a location that are both wrong",
+    "pointer": "/AssertionConsumerService/0/Location",
+    "document": {"AssertionConsumerService": [{"Binding": "not a uri", "Location": "ftp://sp.example.org/acs"}]}
+  },
+  {
+    "name": "a signing key without its certificate",
+    "pointer": "/signature_key",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "signature_key": {"privatekey": "sp.key"}}
+  },
+  {
+    "name": "a pasted certificate without its PEM",
+    "pointer": "/signature_key/certificate",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "signature_key": {"privatekey": "sp.key", "certificate": {"source": "pasted", "file": "sp.crt"}}}
+  },
+  {
+    "name": "a contact with an unknown type and no email addresses",
+    "pointer": "/contacts/0/emailAddress",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "contacts": [{"contactType": "boss", "emailAddress": [], "fax": "1"}]}
+  },
+  {
+    "name": "a name format that is a number",
+    "pointer": "/attributes.NameFormat",
+    "document": {"AssertionConsumerService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST", "Location": "https://sp.example.org/acs"}], "attributes.NameFormat": 5}
   }
 ]

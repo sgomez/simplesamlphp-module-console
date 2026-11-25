@@ -335,7 +335,7 @@ The front end has a build step (section 10.17). Its npm dependencies are pinned 
 | --- | --- |
 | `react`, `react-dom` | Components |
 | `react-router` | Client routing over the Console's paths |
-| `ajv`, and `ajv-formats` when the schemas use `format` | JSON Schema 2020-12 validation in the browser, compiled at build time |
+| `ajv` | Compiling the schemas into standalone JSON Schema 2020-12 validators at build time. Only the compiled validators ship; the `format` rules they call are implemented in the front end to match opis |
 | `vite`, `@vitejs/plugin-react`, `typescript`, `@types/react`, `@types/react-dom` | Build and type checking |
 | `eslint`, `typescript-eslint`, `eslint-plugin-react`, `eslint-plugin-react-hooks` | Lint, including the rules of section 12.4 |
 | `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/dom`, `jsdom` | Component tests and their coverage |
@@ -1990,7 +1990,7 @@ A select whose values come from the same document, such as the database of a que
 
 **Validation while editing.**
 
-- The schemas are compiled with Ajv for JSON Schema 2020-12 at build time into standalone validators; the browser never compiles a schema. `$error` and `x-when` are declared once as Ajv keywords. Defaults are never applied.
+- The schemas are compiled with Ajv for JSON Schema 2020-12 at build time into standalone validators; the browser never compiles a schema, and the bundle holds the compiled validators but nothing of Ajv. `$error` and `x-when` are declared once as Ajv keywords. Defaults are never applied.
 - Every change is checked against the schema at once. Cross-field rules, identifier checks and warnings come from the API's validate route, debounced; the browser holds no copy of them. Which rules the schema carries and which only the server checks is stated in sections 5 and 6 under "Rules".
 - The server validates again on save, with `opis/json-schema` and the cross-field rules, and is authoritative.
 

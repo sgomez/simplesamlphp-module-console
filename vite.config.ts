@@ -31,14 +31,14 @@ export default defineConfig(({ command }) => ({
   test: {
     root: '.',
     environment: 'jsdom',
-    include: ['frontend/src/**/*.test.{ts,tsx}', 'frontend/lint/**/*.test.ts'],
+    include: ['frontend/src/**/*.test.{ts,tsx}', 'frontend/lint/**/*.test.ts', 'frontend/build/**/*.test.ts'],
     restoreMocks: true,
     unstubGlobals: true,
     setupFiles: ['frontend/src/test/setup.ts'],
     coverage: {
       provider: 'v8',
       include: ['frontend/src/**/*.{ts,tsx}'],
-      exclude: ['frontend/src/**/*.test.{ts,tsx}', 'frontend/src/test/**'],
+      exclude: ['frontend/src/**/*.test.{ts,tsx}', 'frontend/src/test/**', 'frontend/src/generated/**'],
       thresholds: { lines: 90 },
     },
   },

@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 const NATIVE = 'button|input|select|textarea|dialog|a|dl|details|summary';
 
 export default tseslint.config(
-  { ignores: ['frontend/lint/fixtures/**', 'public/**', 'vendor/**', 'coverage/**'] },
+  { ignores: ['frontend/lint/fixtures/**', 'frontend/src/generated/**', 'public/**', 'vendor/**', 'coverage/**'] },
   {
     files: ['frontend/**/*.{ts,tsx}', '*.{js,ts}'],
     extends: [tseslint.configs.strict],

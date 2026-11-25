@@ -25,3 +25,5 @@
 /vite.config.ts export-ignore
 /tsconfig.json export-ignore
 /eslint.config.js export-ignore
+/frontend/src/generated/** linguist-generated
+/tests/Fixtures/validation-parity.json linguist-generated

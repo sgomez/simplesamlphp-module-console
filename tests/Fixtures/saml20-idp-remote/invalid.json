@@ -1,0 +1,47 @@
+[
+  {
+    "name": "no certificate for signing",
+    "pointer": "/certificates",
+    "document": {"SingleSignOnService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect", "Location": "https://idp.example.org/sso"}], "certificates": [{"pem": "x", "use": "encryption"}]}
+  },
+  {
+    "name": "an empty list of certificates",
+    "pointer": "/certificates",
+    "document": {"SingleSignOnService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect", "Location": "https://idp.example.org/sso"}], "certificates": []}
+  },
+  {
+    "name": "no single sign-on service with a binding core uses",
+    "pointer": "/SingleSignOnService",
+    "document": {"SingleSignOnService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:SOAP", "Location": "https://idp.example.org/soap"}], "certificates": [{"pem": "x", "use": "signing"}]}
+  },
+  {
+    "name": "a single sign-on service with a location that is not http or https",
+    "pointer": "/SingleSignOnService/0/Location",
+    "document": {"SingleSignOnService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:SOAP", "Location": "ftp://idp.example.org/sso"}], "certificates": [{"pem": "x", "use": "signing"}]}
+  },
+  {
+    "name": "display names in languages that are not codes",
+    "pointer": "/UIInfo/DisplayName",
+    "document": {"SingleSignOnService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect", "Location": "https://idp.example.org/sso"}], "certificates": [{"pem": "x", "use": "signing"}], "UIInfo": {"DisplayName": {"en": "X", "English!": "X", "Spanish!": "Y"}}}
+  },
+  {
+    "name": "keywords with an empty list",
+    "pointer": "/UIInfo/Keywords/en",
+    "document": {"SingleSignOnService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect", "Location": "https://idp.example.org/sso"}], "certificates": [{"pem": "x", "use": "signing"}], "UIInfo": {"Keywords": {"en": []}}}
+  },
+  {
+    "name": "discovery hints with an empty list",
+    "pointer": "/DiscoHints/IPHint",
+    "document": {"SingleSignOnService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect", "Location": "https://idp.example.org/sso"}], "certificates": [{"pem": "x", "use": "signing"}], "DiscoHints": {"IPHint": []}}
+  },
+  {
+    "name": "a signing key without its certificate",
+    "pointer": "/signature_key",
+    "document": {"SingleSignOnService": [{"Binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect", "Location": "https://idp.example.org/sso"}], "certificates": [{"pem": "x", "use": "signing"}], "signature_key": {"privatekey": "sp.key"}}
+  },
+  {
+    "name": "several faults at once",
+    "pointer": "",
+    "document": {"SingleSignOnService": [{"Binding": "not a uri", "Location": "ftp://idp.example.org/sso"}, {"Location": "https://idp.example.org/sso"}], "hide.from.discovery": "yes", "AuthnContextComparison": "best", "ProxyCount": -1, "contacts": [{"contactType": "boss", "telephoneNumber": [""]}], "bogus": 1, "other": [1]}
+  }
+]
