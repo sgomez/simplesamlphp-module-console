@@ -10,12 +10,10 @@ import { useDeleteEntity } from '../DeleteEntity';
 import { EditHeader } from './EditHeader';
 import { Marks } from './Marks';
 import { checkedOf, lineMarks, marksOf } from './marks';
+import { useValidation, VALIDATE_PATH } from './useValidation';
 import { Outcome, type SaveOutcome } from './Outcome';
 import { PhpCard } from './PhpCard';
 import { SaveBar } from './SaveBar';
-
-export const VALIDATE_DELAY = 400;
-const VALIDATE_PATH = '/entities/saml20-sp-remote/validate';
 
 interface EntityEditorProps {
   initial: EditedEntity;
@@ -32,13 +30,12 @@ interface EntityEditorProps {
 export function EntityEditor({ initial, pending, onSaved, onTitle, onCreated, onCancel, saved }: EntityEditorProps) {
   const [view, setView] = useState(initial);
   const [text, setText] = useState(initial.php ?? '');
-  const [checked, setChecked] = useState(() => checkedOf(initial));
   // An outcome stands for the text it was reached with, and clears once that text changes.
   const [outcome, setOutcome] = useState<{ text: string; shown: SaveOutcome } | null>(
     saved ? { text: initial.php ?? '', shown: { kind: 'saved' } } : null,
   );
   const [saving, setSaving] = useState(false);
-  const current = useRef(text);
+  const { checked, setChecked, current } = useValidation(initial, text, view.entityId);
   const editor = useRef<EditorHandle>(null);
   const fail = useFailure();
   const refuse = useContext(ReportRefusal);
@@ -47,24 +44,6 @@ export function EntityEditor({ initial, pending, onSaved, onTitle, onCreated, on
   const deletion = useDeleteEntity(view, SP_LIST);
 
   useEffect(() => onTitle(title), [title, onTitle]);
-
-  useEffect(() => {
-    current.current = text;
-    if (text === checked.text) {
-      return;
-    }
-    const timer = setTimeout(() => {
-      void postJson<Validation>(VALIDATE_PATH, { entityid: view.entityId, php: text }).then(
-        (result) => {
-          if (result.ok && current.current === text) {
-            setChecked({ text, marks: marksOf(result.data) });
-          }
-        },
-      );
-    }, VALIDATE_DELAY);
-
-    return () => clearTimeout(timer);
-  }, [text, checked.text, view.entityId]);
 
   const show = (entity: EditedEntity) => {
     setView(entity);
