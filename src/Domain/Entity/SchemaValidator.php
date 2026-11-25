@@ -52,8 +52,13 @@ final class SchemaValidator
     public function validate(array $document): array
     {
         $data = json_decode(json_encode($document, JSON_THROW_ON_ERROR), false, 512, JSON_THROW_ON_ERROR);
-        $result = $this->validator->validate($data, $this->catalog->uri($this->set));
-        $error = $result->error();
+        $uri = $this->catalog->uri($this->set);
+        $error = $this->validator->validate($data, $uri)->error();
+        // PHP cannot tell [] from {}: an empty array where the schema wants an object is the empty object.
+        while ($error !== null && ($path = EmptyObjects::path($error, $data)) !== null) {
+            $data = EmptyObjects::set($data, $path);
+            $error = $this->validator->validate($data, $uri)->error();
+        }
 
         return $error === null ? [] : $this->flatten($error);
     }
