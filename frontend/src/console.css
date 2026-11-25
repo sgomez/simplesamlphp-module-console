@@ -298,6 +298,17 @@ a.row:focus-visible{outline-offset:-2px}
   font-size:14px;background:var(--surface-2);border:1px solid var(--border)}
 .change-verb{flex:0 0 82px;font-size:13px}
 .change-end{margin-inline-start:auto}
+.grp-row{border-top:1px solid var(--border)}
+.grp-row:first-child{border-top:0}
+.grp-row>[slot=trigger]{border-radius:0;flex-wrap:wrap;gap:4px 10px;padding:12px 16px}
+.grp-row .grp-body{padding-inline-start:46px}
+.change-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.panel-foot{border-top:1px solid var(--border);padding-top:16px;margin-top:8px}
+.page-changes{max-width:1180px}
+.node-id{font-weight:600;font-size:13.5px}
+.node-id .chip{margin-inline-start:8px}
+.node-state{flex:0 1 auto;min-width:0}
+.node-check{margin-inline-start:16px}
 @media (max-width:600px){.page,.shell-head{padding-inline:16px}.row-main{flex-basis:300px}.row-note{flex:0 1 auto}
   .grp-body{padding-inline-start:16px}}
 
