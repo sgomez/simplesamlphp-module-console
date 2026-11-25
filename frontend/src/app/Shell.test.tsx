@@ -1,7 +1,9 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { page, session, stubApi } from '../test/api';
 import { location, renderAt } from '../test/render';
+import { Shell } from './Shell';
 
 const LIST = '/entities/saml20-sp-remote';
 
@@ -101,10 +103,21 @@ describe('the shell', () => {
     await waitFor(() => expect(side.className).toBe('shell-side'));
   });
 
-  it('renders the shell without a screen for a path it does not know', () => {
-    serve();
-    const { container } = renderAt('/nowhere');
+  it('links the parent of the current crumb', () => {
+    render(
+      <MemoryRouter>
+        <Shell session={session} crumb="Not found" parent={{ label: 'Service providers', to: LIST }}>
+          {null}
+        </Shell>
+      </MemoryRouter>,
+    );
+    const trail = screen.getByRole('navigation', { name: 'Breadcrumb' });
 
-    expect(container.querySelector('main.page')?.childElementCount).toBe(0);
+    expect([...trail.querySelectorAll('.crumb, .crumb-current')].map((crumb) => crumb.textContent)).toEqual([
+      'Console',
+      'Service providers',
+      'Not found',
+    ]);
+    expect(within(trail).getByRole('link', { name: 'Service providers' }).getAttribute('href')).toBe(LIST);
   });
 });

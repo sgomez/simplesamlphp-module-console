@@ -37,7 +37,7 @@ function Listing({ result }: { result: EntityPage }) {
   );
 }
 
-// No skeleton: DesignSystem keeps it for a URL fetch or a Publication. Refusals (401, 503) get their pages in #105/#106.
+// No skeleton: DesignSystem keeps it for a URL fetch or a Publication. useApi replaces the screen on 401, 403 and 404.
 function Result({ answer }: { answer: ApiState<EntityPage> }) {
   switch (answer.state) {
     case 'ready':

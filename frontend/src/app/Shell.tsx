@@ -9,6 +9,9 @@ import { Sidebar } from './Sidebar';
 interface ShellProps {
   session: Session | null;
   crumb: string | undefined;
+  parent?: { label: string; to: string } | undefined;
+  // The width of a state or failure page.
+  narrow?: boolean;
   children: ReactNode;
 }
 
@@ -21,7 +24,7 @@ function Review({ count }: { count: number }) {
   );
 }
 
-export function Shell({ session, crumb, children }: ShellProps) {
+export function Shell({ session, crumb, parent, narrow, children }: ShellProps) {
   const { key } = useLocation();
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === key;
@@ -41,6 +44,16 @@ export function Shell({ session, crumb, children }: ShellProps) {
             <Link className="crumb" to="/">
               Console
             </Link>
+            {parent && (
+              <>
+                <span aria-hidden="true" className="faint">
+                  /
+                </span>
+                <Link className="crumb" to={parent.to}>
+                  {parent.label}
+                </Link>
+              </>
+            )}
             {crumb && (
               <>
                 <span aria-hidden="true" className="faint">
@@ -54,7 +67,7 @@ export function Shell({ session, crumb, children }: ShellProps) {
           </nav>
           {pending > 0 && <Review count={pending} />}
         </header>
-        <main className="page">{children}</main>
+        <main className={narrow ? 'page page-narrow' : 'page'}>{children}</main>
       </div>
     </div>
   );
