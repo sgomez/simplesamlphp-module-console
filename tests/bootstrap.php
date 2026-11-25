@@ -16,7 +16,8 @@ register_shutdown_function(static function () use ($work): void {
 });
 
 $link = $root . '/vendor/simplesamlphp/simplesamlphp/modules/console';
-if (!is_link($link)) {
+if (!is_link($link) || readlink($link) !== $root) {
+    @unlink($link);
     symlink($root, $link);
 }
 

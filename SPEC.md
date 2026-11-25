@@ -2101,7 +2101,7 @@ The front end lives in `frontend/`, outside `src/`, and talks to the module only
 
 **Types.** TypeScript in strict mode. The types of the Console documents are generated from `docs/spec/schemas` and committed; the API's request and response types are written by hand next to the client that calls it.
 
-**Build.** `composer build` runs `npm ci --ignore-scripts` and `vite build`. The output, hashed files and `.vite/manifest.json`, is written to `public/assets/app/` and committed. The Node version is pinned in `.nvmrc`.
+**Build.** `composer build` runs `npm ci --ignore-scripts` and `vite build`. The output, hashed files and `.vite/manifest.json`, is written to `public/assets/app/` and committed. The Node and PHP versions are pinned in `mise.toml`.
 
 **Development.** `composer dev` starts the `dev` profile of section 12.7 with a Vite service in front of the SimpleSAMLphp container. The browser opens the Console through Vite, which serves the front end with hot module replacement and proxies everything else to SimpleSAMLphp on the same origin. The node's module configuration sets `dev_server`, so the shell references Vite's client and the entry module instead of the manifest. Page, scripts, API and the HMR connection share one origin, so the default CSP and the admin session hold unchanged.
 
@@ -2276,7 +2276,7 @@ The DSN of each engine comes from an environment variable. The persistence, migr
 
 One `docker-compose` file defines two separate environments. No automated test depends on the development one. The whole environment is excluded from the distributed package (`export-ignore`).
 
-**Test environment.** Databases only. Pest and PHPStan run on the host's PHP against the published database ports.
+**Test environment.** Databases only. Pest and PHPStan run on the host, on the PHP and Node that `mise install` sets up from `mise.toml`, against the published database ports.
 
 | Service | Image | Starts |
 | --- | --- | --- |
@@ -2321,7 +2321,7 @@ The matrix is not the full product of PHP versions and engines. The SQL does not
 | Full suite | Every stable release from 8.4 that SimpleSAMLphp 2.5 supports | SQLite |
 | Lowest dependencies: `composer update --prefer-lowest`, full suite | 8.4 | SQLite |
 | `composer audit --locked` | 8.4 | None |
-| Front end, on the Node version of `.nvmrc`: `npm ci --ignore-scripts`, ESLint, `tsc`, Vitest with its coverage threshold, generated types up to date, `vite build` with no difference from the committed `public/assets/app/` | | None |
+| Front end, on the Node version of `mise.toml`: `npm ci --ignore-scripts`, ESLint, `tsc`, Vitest with its coverage threshold, generated types up to date, `vite build` with no difference from the committed `public/assets/app/` | | None |
 | Package contents: `git archive` holds `public/assets/app/` with its manifest and `docs/spec/schemas/`, and none of `frontend/`, `package.json`, `package-lock.json` or `node_modules` | | None |
 | `npm audit --omit=dev` | | None |
 | CodeQL on the workflows and on `javascript-typescript` (section 14.5) | | None |

@@ -21,7 +21,7 @@
 /node_modules export-ignore
 /package.json export-ignore
 /package-lock.json export-ignore
-/.nvmrc export-ignore
+/mise.toml export-ignore
 /vite.config.ts export-ignore
 /tsconfig.json export-ignore
 /eslint.config.js export-ignore
