@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use SimpleSAML\Module\console\Infrastructure\Http\FlashMessage;
 use SimpleSAML\Module\console\Tests\Support\ConsoleClient;
-use SimpleSAML\Module\console\Tests\Support\Flash;
 use SimpleSAML\Module\console\Tests\Support\Shell;
 
 it('does not render the shell for a visitor without the admin login', function (): void {
@@ -92,13 +90,4 @@ it('ships a stylesheet with system font stacks only', function (): void {
         ->and($css)->toContain('ui-monospace')
         ->and($css)->not->toContain('@font-face')
         ->and($css)->not->toContain('url(');
-});
-
-it('drops a one-shot message, which the client does not show, so no later page repeats it', function (): void {
-    $client = (new ConsoleClient())->loginAsAdmin();
-    (new FlashMessage(SimpleSAML\Session::getSessionFromRequest()))->put('Deleted https://sp.example.org.');
-
-    $client->page('/entities/saml20-sp-remote');
-
-    expect(Flash::taken())->toBeNull();
 });

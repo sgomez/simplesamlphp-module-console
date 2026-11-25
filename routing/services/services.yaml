@@ -7,8 +7,6 @@ services:
 
   SimpleSAML\Module\console\Infrastructure\Http\AdminAccess: ~
   SimpleSAML\Module\console\Infrastructure\Http\CsrfToken: ~
-  SimpleSAML\Module\console\Infrastructure\Http\FlashMessage: ~
-  SimpleSAML\Module\console\Infrastructure\Http\RequestGate: ~
   SimpleSAML\Module\console\Infrastructure\Http\ApiGate: ~
   SimpleSAML\Module\console\Infrastructure\Http\FrontendAssets: ~
   SimpleSAML\Module\console\Infrastructure\Http\DatabaseGate: ~
