@@ -4,6 +4,7 @@ import { AddServiceProvider } from '../screens/edit/AddServiceProvider';
 import { EditServiceProvider } from '../screens/edit/EditServiceProvider';
 import { Publish } from '../screens/Publish';
 import { ServiceProviders } from '../screens/ServiceProviders';
+import { CARRY } from './Page';
 import { PUBLISH, SP_EDIT, SP_LIST, SP_NEW } from './paths';
 import { Unknown } from './Unknown';
 
@@ -19,7 +20,7 @@ interface ScreensProps {
 export function Screens({ pending, onChange, onTitle, created }: ScreensProps) {
   return (
     <Routes>
-      <Route index element={<Navigate to={SP_LIST} replace />} />
+      <Route index element={<Navigate to={SP_LIST} replace state={CARRY} />} />
       <Route path={SP_LIST} element={<ServiceProviders />} />
       <Route
         path={SP_NEW}

@@ -1,7 +1,7 @@
 import { useLayoutEffect } from 'react';
 import { useFailure } from './failure';
 
-// A path the router does not know: Not found.
+// A path that names no screen: Not found.
 export function Unknown() {
   const fail = useFailure();
   useLayoutEffect(() => {
