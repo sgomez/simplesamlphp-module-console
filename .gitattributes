@@ -27,3 +27,4 @@
 /eslint.config.js export-ignore
 /frontend/src/generated/** linguist-generated
 /tests/Fixtures/validation-parity.json linguist-generated
+/.githooks export-ignore

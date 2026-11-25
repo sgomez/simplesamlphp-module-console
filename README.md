@@ -15,6 +15,7 @@ Enable the module in `config/config.php` (`'module.enable' => ['console' => true
 
 ```bash
 composer install
+git config core.hooksPath .githooks   # rebuild public/assets/app on commits that touch the front end
 composer test       # Pest suite
 composer static     # PHPStan, PHP_CodeSniffer, file size
 composer coverage   # line coverage, at least 90 %
