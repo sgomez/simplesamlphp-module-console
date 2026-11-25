@@ -9,17 +9,6 @@ use Symfony\Component\Yaml\Yaml;
 final class Routes
 {
     /**
-     * The path of every form route that accepts POST, keyed by route name.
-     *
-     * @return array<string, array{string}>
-     */
-    public static function post(): array
-    {
-        return array_filter(self::all(), static fn (array $path): bool => !str_starts_with($path[0], '/api/'));
-    }
-
-
-    /**
      * The path below api/ of every API route that accepts POST, keyed by route name.
      *
      * @return array<string, array{string}>

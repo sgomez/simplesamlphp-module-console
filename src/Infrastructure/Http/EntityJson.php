@@ -7,6 +7,7 @@ namespace SimpleSAML\Module\console\Infrastructure\Http;
 use SimpleSAML\Module\console\Domain\Entity\Notice;
 use SimpleSAML\Module\console\Domain\Entity\SpRemote;
 use SimpleSAML\Module\console\Domain\Entity\ValidationError;
+use SimpleSAML\Module\console\Domain\Php\PhpReader;
 use SimpleSAML\Module\console\Infrastructure\Persistence\Repositories;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -35,6 +36,7 @@ final class EntityJson
             return self::respond(['error' => 'not found'], 404);
         }
         $document = $entity->document;
+        $php = $document === null ? null : (new SpRemote())->toText($entityId, $document);
 
         return self::respond([
             'entityId' => $entityId,
@@ -43,10 +45,41 @@ final class EntityJson
             'state' => $this->state($set, $entityId),
             'unreadable' => $document === null,
             'error' => $entity->loadError,
-            'php' => $document === null ? null : (new SpRemote())->toText($entityId, $document),
+            'php' => $php,
             'warnings' => $document === null ? [] : $this->warnings->of($entityId, $document),
-            'notices' => self::notices($notices),
+            'notices' => self::notices(self::relocated((string) $php, $notices)),
         ], $status);
+    }
+
+
+    /**
+     * The notices of a save, moved to the lines of the normalised text it answers; a notice whose option the text
+     * no longer holds keeps no line.
+     *
+     * @param list<\SimpleSAML\Module\console\Domain\Entity\Notice> $notices
+     * @return list<\SimpleSAML\Module\console\Domain\Entity\Notice>
+     */
+    private static function relocated(string $text, array $notices): array
+    {
+        $lines = (new PhpReader())->read($text)->block->lines ?? [];
+
+        return array_map(static fn (Notice $n): Notice => $n->at($lines[$n->option ?? ''] ?? null), $notices);
+    }
+
+
+    /**
+     * The 422 of a save with errors.
+     *
+     * @param list<array<string, mixed>> $errors
+     * @param list<\SimpleSAML\Module\console\Domain\Entity\Notice> $notices
+     */
+    public static function refused(string $text, array $errors, array $notices): JsonResponse
+    {
+        return self::respond([
+            'errors' => $errors,
+            'notices' => self::notices($notices),
+            'readable' => (new PhpReader())->read($text)->error === null,
+        ], 422);
     }
 
 

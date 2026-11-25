@@ -17,16 +17,6 @@ it('answers with the shell whatever the state of the database', function (string
         ->and(Shell::token(ConsoleClient::body($response)))->toMatch('/^[0-9a-f]{64}$/');
 })->with(['unreachable', 'pending migrations', 'console older']);
 
-it('sends a Twig screen or form post to the shell while the database is not ready', function (string $method): void {
-    $client = (new ConsoleClient())->withDatabase(null)->loginAsAdmin();
-    $response = $method === 'GET'
-        ? $client->get('/entities/saml20-sp-remote/new')
-        : $client->post('/entities/saml20-sp-remote/save', []);
-
-    expect($response->getStatusCode())->toBe(302)
-        ->and($response->headers->get('Location'))->toBe(ConsoleClient::BASE . '/');
-})->with(['GET', 'POST']);
-
 it('asks for the admin login before it looks at the database', function (): void {
     $script = escapeshellarg(__DIR__ . '/../Support/visit-without-login.php');
     $output = (string) shell_exec(PHP_BINARY . ' ' . $script . ' unreachable 2>/dev/null');

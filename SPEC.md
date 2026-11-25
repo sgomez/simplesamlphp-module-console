@@ -595,7 +595,7 @@ No advisory locks and no global edit counter are used. Races are settled by cond
 
 **Saving an object.** A save sends the `version` the object was loaded with. The save is `UPDATE … SET version = version + 1 … WHERE version = ?`. Zero rows means the object changed or was deleted meanwhile, and the save is rejected. Every change that can become a Pending change increments `version`, enabling and disabling included.
 
-**Creating an object that already exists.** On save the Console first checks whether the (set, entity ID) or the authsource id exists. If it does, the editor keeps what was typed and shows an "already exists" error at the identity field and a link to the existing object. A primary-key clash on `console_entity` or `console_authsource` after that check passed, a lost race, gives the same field error and not the conflict error below, which would reload someone else's object and throw away what was typed. In a multi-entity create (section 9.6) such an entity is skipped with the reason "already exists".
+**Creating an object that already exists.** On save the Console first checks whether the (set, entity ID) or the authsource id exists. If it does, the editor keeps what was typed and shows an "already exists" error at the line that holds the entity ID or authsource id, with a link to the existing object. A primary-key clash on `console_entity` or `console_authsource` after that check passed, a lost race, gives the same error and not the conflict error below, which would reload someone else's object and throw away what was typed. In a multi-entity create (section 9.6) such an entity is skipped with the reason "already exists".
 
 **Publication.** One transaction:
 
@@ -1814,10 +1814,10 @@ A path the router does not know shows "Not found".
 | GET | `/api/session` | Identity, the two links to core, the number of Pending changes and the current Snapshot (sections 10.2 and 10.3) |
 | GET | `/api/overview` | Section 10.7 |
 | GET | `/api/entities/{set}` | A page of the entity list; `q`, filters and `page` in the query string |
-| GET | `/api/entities/{set}/entity?entityid=…` | The object of the edit screen: document, PHP text, `version`, state, notices and warnings; an Unreadable row's stored bytes |
+| GET | `/api/entities/{set}/entity?entityid=…` | The object of the edit screen: document, PHP text, `version`, state, notices and warnings; an Unreadable row's stored bytes. Without `entityid`, the starter text of a new object, its entity ID left empty in the `$metadata[...]` line |
 | POST | `/api/entities/{set}/read` | Reads pasted entity configuration: the editor's content unsaved with its report, or the selectable list of several entities (section 9.6) |
 | POST | `/api/entities/{set}/create` | Saves the selected entities and returns the report (section 9.6) |
-| POST | `/api/entities/{set}/save` | Create or edit, from the form or the PHP view |
+| POST | `/api/entities/{set}/save` | Create or edit, from the form or the PHP view; an edit sends the `version` it was loaded with, a create sends none |
 | POST | `/api/entities/{set}/validate` | Validates the editor's content as a save would, saving nothing (section 10.10) |
 | POST | `/api/entities/{set}/view` | Translates the editor's content to the other view, or returns the PHP view with sensitive values for Reveal; a switch records the view in the session (section 10.9) |
 | POST | `/api/entities/{set}/{op}` | Enable, disable, delete, discard, Promote, Replace from…; `op` is `enable`, `disable`, `delete`, `discard`, `promote` or `replace` (sections 8.1 and 9.7); `replace` returns the merged document, unsaved |

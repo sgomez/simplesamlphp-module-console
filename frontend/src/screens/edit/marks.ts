@@ -1,4 +1,4 @@
-import type { EditedEntity, EntityError, EntityNotice, EntityWarning, Refusal } from '../../api/types';
+import type { EditedEntity, EntityError, EntityNotice, EntityWarning, ExistingEntity, Refusal } from '../../api/types';
 import type { LineMark } from '../../components/ui/Editor';
 
 export interface Mark {
@@ -6,14 +6,16 @@ export interface Mark {
   line: number | null;
   option: string | null;
   message: string;
+  existing?: ExistingEntity;
 }
 
-function ofError({ pointer, message, line, column }: EntityError): Mark {
+function ofError({ pointer, message, line, column, existing }: EntityError): Mark {
   return {
     kind: 'err',
     line,
     option: pointer.split('/')[1] || null,
     message: column === null ? message : `Column ${column}: ${message}`,
+    ...(existing && { existing }),
   };
 }
 
@@ -52,4 +54,14 @@ export function lineMarks(marks: readonly Mark[]): Record<number, LineMark> {
   }
 
   return lines;
+}
+
+// The marks shown belong to the text they were computed for.
+export interface Checked {
+  text: string;
+  marks: Mark[];
+}
+
+export function checkedOf(entity: EditedEntity): Checked {
+  return { text: entity.php ?? '', marks: entityMarks(entity) };
 }

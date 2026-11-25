@@ -52,6 +52,15 @@ final class EntityApi
     }
 
 
+    /**
+     * A save without a version: a create, its entity ID taken from the text.
+     */
+    public static function create(ConsoleClient $client, string $php): Response
+    {
+        return self::post($client, self::SAVE, ['php' => $php]);
+    }
+
+
     public static function validate(ConsoleClient $client, string $php, string $id = self::ID): Response
     {
         return self::post($client, self::VALIDATE, ['entityid' => $id, 'php' => $php]);
@@ -61,6 +70,21 @@ final class EntityApi
     public static function delete(ConsoleClient $client, string $id): Response
     {
         return self::post($client, self::DELETE, ['entityid' => $id]);
+    }
+
+
+    /**
+     * The number of the first line of the text that holds the needle.
+     */
+    public static function lineOf(string $php, string $needle): int
+    {
+        foreach (explode("\n", $php) as $index => $line) {
+            if (str_contains($line, $needle)) {
+                return $index + 1;
+            }
+        }
+
+        return 0;
     }
 
 

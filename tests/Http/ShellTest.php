@@ -32,6 +32,7 @@ it('answers every screen path with the shell', function (string $path): void {
     '/publish',
     '/entities/saml20-sp-remote',
     '/entities/saml20-sp-remote?q=a&page=2',
+    '/entities/saml20-sp-remote/new',
     '/entities/saml20-sp-remote/edit?entityid=https%3A%2F%2Fsp.example.org',
     '/entities/nonsense',
     '/x/y',

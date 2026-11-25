@@ -1,4 +1,5 @@
 import type { MigrationRun } from '../api/types';
+import type { Said } from '../app/Page';
 import { Callout } from '../components/ui/Callout';
 
 export function RunMessage({ run }: { run: MigrationRun }) {
@@ -23,7 +24,16 @@ export function RunMessage({ run }: { run: MigrationRun }) {
   }
 }
 
-// The one-shot message of a POST: the outcome of Run migrations, or a text such as "Deleted.".
-export function OutcomeMessage({ said }: { said: MigrationRun | string }) {
-  return typeof said === 'string' ? <Callout kind="success" title={said} /> : <RunMessage run={said} />;
+export function runOf(said: Said | null): MigrationRun | null {
+  return said === null || typeof said === 'string' || 'created' in said ? null : said;
+}
+
+// The one-shot message of a POST at the top of the page; a created entity's edit screen says it is saved itself.
+export function OutcomeMessage({ said }: { said: Said }) {
+  if (typeof said === 'string') {
+    return <Callout kind="success" title={said} />;
+  }
+  const run = runOf(said);
+
+  return run && <RunMessage run={run} />;
 }
