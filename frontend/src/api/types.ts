@@ -113,11 +113,18 @@ export interface EntityNotice {
   line: number | null;
 }
 
+export interface ExistingEntity {
+  entityId: string;
+  name: string | null;
+}
+
 export interface EntityError {
   pointer: string;
   message: string;
   line: number | null;
   column: number | null;
+  // "Already exists" on a create: the entity it clashes with.
+  existing?: ExistingEntity;
 }
 
 // The object of the edit screen; an Unreadable row has no text.

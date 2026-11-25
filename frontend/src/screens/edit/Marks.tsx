@@ -1,6 +1,7 @@
 import { Card } from '../../components/ui/Card';
 import { Row } from '../../components/ui/Row';
 import { TextLink } from '../../components/ui/TextLink';
+import { SP_EDIT } from '../../app/paths';
 import type { Mark } from './marks';
 
 interface MarksProps {
@@ -34,13 +35,23 @@ export function Marks({ marks, onLine }: MarksProps) {
 
   return (
     <Card list as="ul" className="marks">
-      {marks.map(({ kind, line, option, message }, index) => (
+      {marks.map(({ kind, line, option, message, existing }, index) => (
         <Row key={index} plain as="li" className="mark-row">
           <At line={line} onLine={onLine} />
           <span className={kind === 'err' ? 'msg-error' : 'msg-warning'}>
             <span className="mark-label">{kind === 'err' ? 'Error' : 'Warning'}</span>
             {option !== null && <span className="mono">{option}</span>}
-            <span>{message}</span>
+            <span>
+              {message}
+              {existing && (
+                <>
+                  {' '}
+                  <TextLink to={`${SP_EDIT}?entityid=${encodeURIComponent(existing.entityId)}`}>
+                    {`Open ${existing.name ?? existing.entityId}`}
+                  </TextLink>
+                </>
+              )}
+            </span>
           </span>
         </Row>
       ))}

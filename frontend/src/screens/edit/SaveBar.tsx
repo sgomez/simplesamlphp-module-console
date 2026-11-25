@@ -13,6 +13,8 @@ interface SaveBarProps {
   saving: boolean;
   onSave: () => void;
   onDiscard: () => void;
+  // A new object, unsaved whatever its text: Cancel leaves it.
+  onCancel?: (() => void) | undefined;
 }
 
 function SaveState({ dirty, state }: { dirty: boolean; state: string | null }) {
@@ -32,7 +34,25 @@ function SaveState({ dirty, state }: { dirty: boolean; state: string | null }) {
   );
 }
 
-export function SaveBar({ dirty, state, saving, onSave, onDiscard }: SaveBarProps) {
+export function SaveBar({ dirty, state, saving, onSave, onDiscard, onCancel }: SaveBarProps) {
+  if (onCancel) {
+    return (
+      <div className="save-bar">
+        <div className="save-state">
+          <Status tone="unsaved" mark="dot">
+            Unsaved
+          </Status>
+        </div>
+        <Button variant="quiet" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button variant="primary" disabled={saving} loading={saving} onClick={onSave}>
+          Save
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="save-bar">
       <div className="save-state">

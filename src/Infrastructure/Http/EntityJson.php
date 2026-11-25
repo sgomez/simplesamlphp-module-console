@@ -7,6 +7,7 @@ namespace SimpleSAML\Module\console\Infrastructure\Http;
 use SimpleSAML\Module\console\Domain\Entity\Notice;
 use SimpleSAML\Module\console\Domain\Entity\SpRemote;
 use SimpleSAML\Module\console\Domain\Entity\ValidationError;
+use SimpleSAML\Module\console\Domain\Php\PhpReader;
 use SimpleSAML\Module\console\Infrastructure\Persistence\Repositories;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,6 +48,22 @@ final class EntityJson
             'warnings' => $document === null ? [] : $this->warnings->of($entityId, $document),
             'notices' => self::notices($notices),
         ], $status);
+    }
+
+
+    /**
+     * The 422 of a save with errors.
+     *
+     * @param list<array<string, mixed>> $errors
+     * @param list<\SimpleSAML\Module\console\Domain\Entity\Notice> $notices
+     */
+    public static function refused(string $text, array $errors, array $notices): JsonResponse
+    {
+        return self::respond([
+            'errors' => $errors,
+            'notices' => self::notices($notices),
+            'readable' => (new PhpReader())->read($text)->error === null,
+        ], 422);
     }
 
 

@@ -9,7 +9,7 @@ import type { EditorHandle } from '../../components/ui/Editor';
 import { useDeleteEntity } from '../DeleteEntity';
 import { EditHeader } from './EditHeader';
 import { Marks } from './Marks';
-import { entityMarks, lineMarks, marksOf, type Mark } from './marks';
+import { checkedOf, lineMarks, marksOf } from './marks';
 import { Outcome, type SaveOutcome } from './Outcome';
 import { PhpCard } from './PhpCard';
 import { SaveBar } from './SaveBar';
@@ -22,30 +22,27 @@ interface EntityEditorProps {
   pending: number;
   onSaved: () => void;
   onTitle: (title: string) => void;
+  // A new object: Save creates it.
+  onCreated?: (entity: EditedEntity) => void;
+  onCancel?: () => void;
+  // Opened right after the save that produced it.
+  saved?: boolean;
 }
 
-// The marks shown belong to the text they were computed for.
-interface Checked {
-  text: string;
-  marks: Mark[];
-}
-
-function checkedOf(entity: EditedEntity): Checked {
-  return { text: entity.php ?? '', marks: entityMarks(entity) };
-}
-
-export function EntityEditor({ initial, pending, onSaved, onTitle }: EntityEditorProps) {
+export function EntityEditor({ initial, pending, onSaved, onTitle, onCreated, onCancel, saved }: EntityEditorProps) {
   const [view, setView] = useState(initial);
   const [text, setText] = useState(initial.php ?? '');
   const [checked, setChecked] = useState(() => checkedOf(initial));
   // An outcome stands for the text it was reached with, and clears once that text changes.
-  const [outcome, setOutcome] = useState<{ text: string; shown: SaveOutcome } | null>(null);
+  const [outcome, setOutcome] = useState<{ text: string; shown: SaveOutcome } | null>(
+    saved ? { text: initial.php ?? '', shown: { kind: 'saved' } } : null,
+  );
   const [saving, setSaving] = useState(false);
   const current = useRef(text);
   const editor = useRef<EditorHandle>(null);
   const fail = useFailure();
   const refuse = useContext(ReportRefusal);
-  const title = view.name ?? view.entityId;
+  const title = onCreated ? 'New service provider' : (view.name ?? view.entityId);
   const dirty = text !== (view.php ?? '');
   const deletion = useDeleteEntity(view, SP_LIST);
 
@@ -78,13 +75,18 @@ export function EntityEditor({ initial, pending, onSaved, onTitle }: EntityEdito
   const save = async () => {
     setSaving(true);
     const sent = text;
-    const result = await postJson<EditedEntity>(`/entities/saml20-sp-remote/save`, {
-      entityid: view.entityId,
-      version: view.version,
-      php: sent,
-    });
+    const result = await postJson<EditedEntity>(
+      `/entities/saml20-sp-remote/save`,
+      onCreated ? { php: sent } : { entityid: view.entityId, version: view.version, php: sent },
+    );
     setSaving(false);
     if (!result.ok && fail(result.status, view.entityId)) {
+      return;
+    }
+    if (result.ok && onCreated) {
+      onSaved();
+      onCreated(result.data);
+
       return;
     }
     if (result.ok || result.status === 409) {
@@ -118,9 +120,22 @@ export function EntityEditor({ initial, pending, onSaved, onTitle }: EntityEdito
   return (
     <Page
       wide
-      bar={<SaveBar dirty={dirty} state={view.state} saving={saving} onSave={() => void save()} onDiscard={discard} />}
+      bar={
+        <SaveBar
+          dirty={dirty}
+          state={view.state}
+          saving={saving}
+          onSave={() => void save()}
+          onDiscard={discard}
+          onCancel={onCancel}
+        />
+      }
     >
-      <EditHeader title={title} entityId={view.entityId} onDelete={deletion.ask} />
+      {onCreated ? (
+        <EditHeader title={title} entityId={null} />
+      ) : (
+        <EditHeader title={title} entityId={view.entityId} onDelete={deletion.ask} />
+      )}
       {deletion.element}
       <Outcome outcome={outcome?.text === text ? outcome.shown : null} title={title} state={view.state} pending={pending} />
       <div className="cols">

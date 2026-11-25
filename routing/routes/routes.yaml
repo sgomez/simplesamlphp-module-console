@@ -73,24 +73,6 @@ console-api-migrate:
   }
   methods: [POST]
 
-console-entity-new:
-  path: /entities/{set}/new
-  defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\EntityEditController::add'
-  }
-  requirements:
-    set: saml20-sp-remote
-  methods: [GET]
-
-console-entity-save:
-  path: /entities/{set}/save
-  defaults: {
-    _controller: 'SimpleSAML\Module\console\Controller\EntitySaveController::save'
-  }
-  requirements:
-    set: saml20-sp-remote
-  methods: [POST]
-
 # Last: every other GET that is not under api/ or assets/ is a screen of the client router.
 console-shell:
   path: /{path}

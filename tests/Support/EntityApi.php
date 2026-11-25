@@ -52,6 +52,15 @@ final class EntityApi
     }
 
 
+    /**
+     * A save without a version: a create, its entity ID taken from the text.
+     */
+    public static function create(ConsoleClient $client, string $php): Response
+    {
+        return self::post($client, self::SAVE, ['php' => $php]);
+    }
+
+
     public static function validate(ConsoleClient $client, string $php, string $id = self::ID): Response
     {
         return self::post($client, self::VALIDATE, ['entityid' => $id, 'php' => $php]);

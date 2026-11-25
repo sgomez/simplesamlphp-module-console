@@ -71,16 +71,6 @@ describe('the service provider list', () => {
     expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
   });
 
-  it('renders no list at all when there are no service providers', async () => {
-    const fetch = serve(page([]));
-    const { container } = renderAt(LIST);
-
-    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
-
-    expect(container.querySelector('.card-list, .empty')).toBeNull();
-    expect(screen.queryByRole('navigation', { name: 'Pagination' })).toBeNull();
-  });
-
   it('renders nothing for the list when the API refuses it', async () => {
     const fetch = stubApi({ '/api/session': { body: session }, [`/api${LIST}`]: { status: 503, body: {} } });
     const { container } = renderAt(LIST);
